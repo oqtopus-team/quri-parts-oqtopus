@@ -8,15 +8,15 @@ This project adopts a [Code of Conduct](./CODE_OF_CONDUCT.md). Please adhere to 
 
 ## Reporting Bugs
 
-If you find a bug, please create an issue following the [Bug Report Template](https://github.com/oqtopus-team/tranqu/tree/main/.github/ISSUE_TEMPLATE/BUG_REPORT.yaml).
+If you find a bug, please create an issue following the [Bug Report Template](https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/.github/ISSUE_TEMPLATE/BUG_REPORT.yaml).
 
 ## Questions
 
-If you have any questions, please create an issue following the [Question Template](https://github.com/oqtopus-team/tranqu/tree/main/.github/ISSUE_TEMPLATE/QUESTION.yaml).
+If you have any questions, please create an issue following the [Question Template](https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/.github/ISSUE_TEMPLATE/QUESTION.yaml).
 
 ## Feature Requests
 
-If you have a new feature request, please create an issue following the [Feature Request Template](https://github.com/oqtopus-team/tranqu/tree/main/.github/ISSUE_TEMPLATE/FEATURE_REQUEST.yaml).
+If you have a new feature request, please create an issue following the [Feature Request Template](https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/.github/ISSUE_TEMPLATE/FEATURE_REQUEST.yaml).
 
 ## Coding Guidelines
 

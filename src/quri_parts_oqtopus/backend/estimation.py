@@ -40,14 +40,8 @@ class OqtopusEstimationResult:
             {
                 "estimation": {
                     "exp_value": [2.0, 0.0],
-                    "stds": 1.1,
-                },
-                "transpiler_info": {
-                    "virtual_physical_mapping": {
-                        "0": 1,
-                        "1": 0,
-                    },
-                },
+                    "stds": 1.1
+                }
             }
 
         ``exp_value`` represents the expectation value.
@@ -65,17 +59,11 @@ class OqtopusEstimationResult:
 
         self._result = result
         self._estimation: dict | None = result.get("estimation")
-        self._transpile_result: dict | None = result.get("transpile_result")
 
     @property
     def estimation(self) -> dict | None:
         """Returns the result for estimation."""
         return self._estimation
-
-    @property
-    def transpile_result(self) -> dict | None:
-        """Returns transpile_result."""
-        return self._transpile_result
 
     def __repr__(self) -> str:
         """Return a string representation.
@@ -398,7 +386,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             self._job = job
 
         # edit json for OqtopusEstimationResult
-        result = self.job_info["result"]
+        result = self.job_info["result"]["estimation"]
 
         return OqtopusEstimationResult(result)
 
