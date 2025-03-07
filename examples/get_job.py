@@ -30,8 +30,6 @@ if job.job_info:
     print(f"message={job.job_info['message']}")
 print("### transpiler_info")
 print(job.transpiler_info)  # dict
-if job.transpiler_info:
-    print(job.transpiler_info["transpiler_lib"])  # dict
 print("### simulator_info")
 print(job.simulator_info)  # dict
 print("### mitigation_info")

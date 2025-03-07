@@ -36,9 +36,9 @@ class JobsGetJobsResponse(object):
         'device_id': 'str',
         'shots': 'int',
         'job_info': 'JobsJobInfo',
-        'transpiler_info': 'JobsTranspilerInfo',
-        'simulator_info': 'JobsSimulatorInfo',
-        'mitigation_info': 'JobsMitigationInfo',
+        'transpiler_info': 'dict(str, object)',
+        'simulator_info': 'dict(str, object)',
+        'mitigation_info': 'dict(str, object)',
         'execution_time': 'float',
         'submitted_at': 'datetime',
         'ready_at': 'datetime',
@@ -291,7 +291,7 @@ class JobsGetJobsResponse(object):
 
 
         :return: The transpiler_info of this JobsGetJobsResponse.  # noqa: E501
-        :rtype: JobsTranspilerInfo
+        :rtype: dict(str, object)
         """
         return self._transpiler_info
 
@@ -301,7 +301,7 @@ class JobsGetJobsResponse(object):
 
 
         :param transpiler_info: The transpiler_info of this JobsGetJobsResponse.  # noqa: E501
-        :type: JobsTranspilerInfo
+        :type: dict(str, object)
         """
 
         self._transpiler_info = transpiler_info
@@ -312,7 +312,7 @@ class JobsGetJobsResponse(object):
 
 
         :return: The simulator_info of this JobsGetJobsResponse.  # noqa: E501
-        :rtype: JobsSimulatorInfo
+        :rtype: dict(str, object)
         """
         return self._simulator_info
 
@@ -322,7 +322,7 @@ class JobsGetJobsResponse(object):
 
 
         :param simulator_info: The simulator_info of this JobsGetJobsResponse.  # noqa: E501
-        :type: JobsSimulatorInfo
+        :type: dict(str, object)
         """
 
         self._simulator_info = simulator_info
@@ -333,7 +333,7 @@ class JobsGetJobsResponse(object):
 
 
         :return: The mitigation_info of this JobsGetJobsResponse.  # noqa: E501
-        :rtype: JobsMitigationInfo
+        :rtype: dict(str, object)
         """
         return self._mitigation_info
 
@@ -343,7 +343,7 @@ class JobsGetJobsResponse(object):
 
 
         :param mitigation_info: The mitigation_info of this JobsGetJobsResponse.  # noqa: E501
-        :type: JobsMitigationInfo
+        :type: dict(str, object)
         """
 
         self._mitigation_info = mitigation_info

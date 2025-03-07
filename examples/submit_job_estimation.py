@@ -8,8 +8,8 @@ circuit.add_H_gate(0)
 circuit.add_CNOT_gate(0, 1)
 
 operator = Operator({
-    pauli_label("X0 X1"): 1 + 2j,
-    pauli_label("Z0 Z1"): 1,
+    pauli_label("X 0 X 1"): 1 + 0j,
+    pauli_label("Z 0 Z 1"): 1 + 0j,
 })
 
 backend = OqtopusEstimationBackend(OqtopusConfig.from_file("oqtopus-dev"))

@@ -33,9 +33,9 @@ class JobsSubmitJobRequest(object):
         'device_id': 'str',
         'job_type': 'JobsJobType',
         'job_info': 'JobsSubmitJobInfo',
-        'transpiler_info': 'str',
-        'simulator_info': 'str',
-        'mitigation_info': 'str',
+        'transpiler_info': 'dict(str, object)',
+        'simulator_info': 'dict(str, object)',
+        'mitigation_info': 'dict(str, object)',
         'shots': 'int'
     }
 
@@ -193,10 +193,9 @@ class JobsSubmitJobRequest(object):
     def transpiler_info(self):
         """Gets the transpiler_info of this JobsSubmitJobRequest.  # noqa: E501
 
-        When specified, valid JSON string is required.  # noqa: E501
 
         :return: The transpiler_info of this JobsSubmitJobRequest.  # noqa: E501
-        :rtype: str
+        :rtype: dict(str, object)
         """
         return self._transpiler_info
 
@@ -204,10 +203,9 @@ class JobsSubmitJobRequest(object):
     def transpiler_info(self, transpiler_info):
         """Sets the transpiler_info of this JobsSubmitJobRequest.
 
-        When specified, valid JSON string is required.  # noqa: E501
 
         :param transpiler_info: The transpiler_info of this JobsSubmitJobRequest.  # noqa: E501
-        :type: str
+        :type: dict(str, object)
         """
 
         self._transpiler_info = transpiler_info
@@ -218,7 +216,7 @@ class JobsSubmitJobRequest(object):
 
 
         :return: The simulator_info of this JobsSubmitJobRequest.  # noqa: E501
-        :rtype: str
+        :rtype: dict(str, object)
         """
         return self._simulator_info
 
@@ -228,7 +226,7 @@ class JobsSubmitJobRequest(object):
 
 
         :param simulator_info: The simulator_info of this JobsSubmitJobRequest.  # noqa: E501
-        :type: str
+        :type: dict(str, object)
         """
 
         self._simulator_info = simulator_info
@@ -237,10 +235,9 @@ class JobsSubmitJobRequest(object):
     def mitigation_info(self):
         """Gets the mitigation_info of this JobsSubmitJobRequest.  # noqa: E501
 
-        When specified, valid JSON string is required  # noqa: E501
 
         :return: The mitigation_info of this JobsSubmitJobRequest.  # noqa: E501
-        :rtype: str
+        :rtype: dict(str, object)
         """
         return self._mitigation_info
 
@@ -248,10 +245,9 @@ class JobsSubmitJobRequest(object):
     def mitigation_info(self, mitigation_info):
         """Sets the mitigation_info of this JobsSubmitJobRequest.
 
-        When specified, valid JSON string is required  # noqa: E501
 
         :param mitigation_info: The mitigation_info of this JobsSubmitJobRequest.  # noqa: E501
-        :type: str
+        :type: dict(str, object)
         """
 
         self._mitigation_info = mitigation_info

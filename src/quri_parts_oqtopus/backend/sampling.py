@@ -305,34 +305,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             dict: The detail information of the job.
 
         """
-        # If the content of job_info["result"]["sampling"]["counts"] is of type str,
-        # it is a JSON string, so it converts the JSON string to a dict.
-        if self._job.job_info:
-            job_info = self._job.job_info.to_dict()
-
-            # convert type of `program` from list to str, if length is 1
-            if (
-                "program" in job_info
-                and isinstance(job_info["program"], list)
-                and len(job_info["program"]) == 1
-            ):
-                job_info["program"] = job_info["program"][0]
-
-            # convert type of `counts` and `divided_counts` from str to dict
-            if job_info.get("result") and job_info["result"].get("sampling"):
-                if "counts" in job_info["result"]["sampling"]:
-                    value = job_info["result"]["sampling"]["counts"]
-                    if isinstance(value, str):
-                        job_info["result"]["sampling"]["counts"] = json.loads(value)
-                if "divided_counts" in job_info["result"]["sampling"]:
-                    value = job_info["result"]["sampling"]["divided_counts"]
-                    if isinstance(value, str):
-                        job_info["result"]["sampling"]["divided_counts"] = json.loads(
-                            value
-                        )
-
-            return job_info
-        return {}
+        return self._job.job_info.to_dict()
 
     @property
     def transpiler_info(self) -> dict:
@@ -342,9 +315,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             dict: The transpiler info of the job.
 
         """
-        if self._job.transpiler_info:
-            return json.loads(self._job.transpiler_info)
-        return {}
+        return self._job.transpiler_info
 
     @property
     def simulator_info(self) -> dict:
@@ -354,9 +325,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             dict: The simulator info of the job.
 
         """
-        if self._job.simulator_info:
-            return json.loads(self._job.simulator_info)
-        return {}
+        return self._job.simulator_info
 
     @property
     def mitigation_info(self) -> dict:
@@ -835,9 +804,9 @@ class OqtopusSamplingBackend:
                 device_id=device_id,
                 job_type=job_type,
                 job_info=job_info,
-                transpiler_info=json.dumps(transpiler_info),
-                simulator_info=json.dumps(simulator_info),
-                mitigation_info=json.dumps(mitigation_info),
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
                 shots=shots,
             )
             response_submit_job = self._job_api.submit_job(body=body)

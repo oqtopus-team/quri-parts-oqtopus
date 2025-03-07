@@ -39,13 +39,10 @@ from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
 from quri_parts_oqtopus.rest.models.jobs_job_result import JobsJobResult
 from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
-from quri_parts_oqtopus.rest.models.jobs_mitigation_info import JobsMitigationInfo
 from quri_parts_oqtopus.rest.models.jobs_operator_item import JobsOperatorItem
 from quri_parts_oqtopus.rest.models.jobs_sampling_result import JobsSamplingResult
-from quri_parts_oqtopus.rest.models.jobs_simulator_info import JobsSimulatorInfo
 from quri_parts_oqtopus.rest.models.jobs_submit_job_info import JobsSubmitJobInfo
 from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest
 from quri_parts_oqtopus.rest.models.jobs_submit_job_response import JobsSubmitJobResponse
 from quri_parts_oqtopus.rest.models.jobs_transpile_result import JobsTranspileResult
-from quri_parts_oqtopus.rest.models.jobs_transpiler_info import JobsTranspilerInfo
 from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse
