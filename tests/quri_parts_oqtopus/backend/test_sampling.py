@@ -90,14 +90,14 @@ def get_dummy_job(status: str = "succeeded") -> JobsJobDef:
             ),
             result={
                 "sampling": JobsJobResult(
-                    counts=json.dumps({"00": 490, "01": 10, "10": 20, "11": 480}),
+                    counts={"00": 490, "01": 10, "10": 20, "11": 480},
                 )
             },
         ),
-        transpiler_info=json.dumps({
+        transpiler_info={
             "transpiler_lib": "qiskit",
             "transpiler_options": {"optimization_level": 2},
-        }),
+        },
         simulator_info={},
         mitigation_info={},
         execution_time=5.123,
@@ -117,11 +117,11 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJobDef:
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];',
     ]
     job.job_info.result["sampling"] = JobsJobResult(
-        counts=json.dumps({"0000": 490, "0001": 10, "0110": 20, "1111": 480}),
-        divided_counts=json.dumps({
+        counts={"0000": 490, "0001": 10, "0110": 20, "1111": 480},
+        divided_counts={
             "0": {"00": 490, "01": 10, "10": 20, "11": 480},
             "1": {"00": 500, "01": 20, "11": 480},
-        }),
+        },
     )
     return job
 
@@ -141,12 +141,12 @@ def get_dummy_JobsSubmitJobRequest(  # noqa: N802
         device_id="dummy_device_id",
         job_type=job_type,
         job_info=JobsSubmitJobInfo(program=program),
-        transpiler_info=json.dumps({
+        transpiler_info={
             "transpiler_lib": "qiskit",
             "transpiler_options": {"optimization_level": 2},
-        }),
-        simulator_info="{}",
-        mitigation_info="{}",
+        },
+        simulator_info={},
+        mitigation_info={},
         shots=1000,
     )
 
@@ -252,10 +252,9 @@ class TestOqtopusSamplingJob:
         assert job.status == "succeeded"
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
-        assert (
-            job.job_info["program"]
-            == 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
-        )
+        assert job.job_info["program"] == [
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        ]
         assert (
             job.job_info["transpile_result"]["stats"]
             == '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}'  # noqa: E501
@@ -660,10 +659,9 @@ class TestOqtopusSamplingBackend:
         assert job.status == "succeeded"
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
-        assert (
-            job.job_info["program"]
-            == 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
-        )
+        assert job.job_info["program"] == [
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        ]
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
             == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1];'  # noqa: E501
@@ -783,10 +781,9 @@ class TestOqtopusSamplingBackend:
         assert job.status == "succeeded"
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
-        assert (
-            job.job_info["program"]
-            == 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
-        )
+        assert job.job_info["program"] == [
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        ]
         assert (
             job.job_info["transpile_result"]["stats"]
             == '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}'  # noqa: E501

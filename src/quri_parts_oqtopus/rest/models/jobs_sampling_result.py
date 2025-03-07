@@ -28,8 +28,8 @@ class JobsSamplingResult(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'counts': 'str',
-        'divided_counts': 'str'
+        'counts': 'dict(str, object)',
+        'divided_counts': 'dict(str, object)'
     }
 
     attribute_map = {
@@ -53,7 +53,7 @@ class JobsSamplingResult(object):
 
 
         :return: The counts of this JobsSamplingResult.  # noqa: E501
-        :rtype: str
+        :rtype: dict(str, object)
         """
         return self._counts
 
@@ -63,7 +63,7 @@ class JobsSamplingResult(object):
 
 
         :param counts: The counts of this JobsSamplingResult.  # noqa: E501
-        :type: str
+        :type: dict(str, object)
         """
 
         self._counts = counts
@@ -74,7 +74,7 @@ class JobsSamplingResult(object):
 
 
         :return: The divided_counts of this JobsSamplingResult.  # noqa: E501
-        :rtype: str
+        :rtype: dict(str, object)
         """
         return self._divided_counts
 
@@ -84,7 +84,7 @@ class JobsSamplingResult(object):
 
 
         :param divided_counts: The divided_counts of this JobsSamplingResult.  # noqa: E501
-        :type: str
+        :type: dict(str, object)
         """
 
         self._divided_counts = divided_counts

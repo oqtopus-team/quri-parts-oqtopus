@@ -607,9 +607,9 @@ class OqtopusEstimationBackend:
                 device_id=device_id,
                 job_type=job_type,
                 job_info=job_info,
-                transpiler_info=json.dumps(transpiler_info),
-                simulator_info=json.dumps(simulator_info),
-                mitigation_info=json.dumps(mitigation_info),
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
                 shots=shots,
             )
             response_submit_job = self._job_api.submit_job(body=body)
