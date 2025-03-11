@@ -59,6 +59,15 @@ qubit[2] q;
 h q[0];
 cx q[0], q[1];"""
 
+qasm_data_with_measure = """OPENQASM 3;
+include "stdgates.inc";
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cx q[0], q[1];
+c = measure q;"""
+
 qasm_data2 = """OPENQASM 3;
 include "stdgates.inc";
 qubit[3] q;
@@ -81,11 +90,11 @@ def get_dummy_job(status: str = "succeeded") -> JobsJobDef:
         shots=1000,
         job_info=JobsJobInfo(
             program=[
-                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
             ],
             transpile_result=JobsTranspileResult(
                 stats='{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}',  # noqa: E501
-                transpiled_program='OPENQASM 3; include "stdgates.inc"; qubit[2] q; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1];',  # noqa: E501
+                transpiled_program='OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;',  # noqa: E501
                 virtual_physical_mapping='{"0": 0, "1": 1}',
             ),
             result={
@@ -112,9 +121,9 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJobDef:
     job = get_dummy_job(status)
     job.job_type = "multi_manual"
     job.job_info.program = [
-        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];',
-        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];',  # noqa: E501
-        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];',
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
     ]
     job.job_info.result["sampling"] = JobsJobResult(
         counts={"0000": 490, "0001": 10, "0110": 20, "1111": 480},
@@ -132,7 +141,7 @@ def get_dummy_JobsSubmitJobRequest(  # noqa: N802
 ) -> JobsSubmitJobRequest:
     if program is None:
         program = [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
 
     return JobsSubmitJobRequest(
@@ -253,7 +262,7 @@ class TestOqtopusSamplingJob:
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
         assert job.job_info["program"] == [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
         assert (
             job.job_info["transpile_result"]["stats"]
@@ -261,7 +270,7 @@ class TestOqtopusSamplingJob:
         )
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
-            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1];'  # noqa: E501
+            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;'  # noqa: E501
         )
         assert (
             job.job_info["transpile_result"]["virtual_physical_mapping"]
@@ -660,11 +669,11 @@ class TestOqtopusSamplingBackend:
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
         assert job.job_info["program"] == [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
-            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1];'  # noqa: E501
+            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;'  # noqa: E501
         )
         assert job.result().counts == {0: 490, 1: 10, 2: 20, 3: 480}
         assert job.transpiler_info == {
@@ -717,9 +726,9 @@ class TestOqtopusSamplingBackend:
         # Assert
         assert job.job_id == "dummy_job_id"
         program = [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];',  # noqa: E501
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];',  # noqa: E501
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];',  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
         ]
         mock_obj.assert_called_once_with(
             body=get_dummy_JobsSubmitJobRequest(
@@ -746,7 +755,7 @@ class TestOqtopusSamplingBackend:
 
         # Act
         job = backend.sample_qasm(
-            qasm_data,
+            qasm_data_with_measure,
             device_id="dummy_device_id",
             shots=1000,
             name="dummy_name",
@@ -782,7 +791,7 @@ class TestOqtopusSamplingBackend:
         assert job.device_id == "demmy_device_id"
         assert job.shots == 1000
         assert job.job_info["program"] == [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
         assert (
             job.job_info["transpile_result"]["stats"]
@@ -790,7 +799,7 @@ class TestOqtopusSamplingBackend:
         )
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
-            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1];'  # noqa: E501
+            == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;'  # noqa: E501
         )
         assert (
             job.job_info["transpile_result"]["virtual_physical_mapping"]
