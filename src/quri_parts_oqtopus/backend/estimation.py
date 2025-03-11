@@ -39,13 +39,13 @@ class OqtopusEstimationResult:
 
             {
                 "estimation": {
-                    "exp_value": [2.0, 0.0],
+                    "exp_value": 2.0,
                     "stds": 1.1
                 }
             }
 
         ``exp_value`` represents the expectation value.
-        In the above case, ``exp_value`` is ``2.0 + 0.0j`` in NumPy format.
+        In the above case, ``exp_value`` is defined as a real number ``2.0``.
         ``stds`` represents the standard deviation value.
 
     """
@@ -58,12 +58,16 @@ class OqtopusEstimationResult:
             raise ValueError(msg)
 
         self._result = result
-        self._estimation: dict | None = result.get("estimation")
 
     @property
-    def estimation(self) -> dict | None:
-        """Returns the result for estimation."""
-        return self._estimation
+    def exp_value(self) -> float | None:
+        """Returns the expectation value."""
+        return self._result.get("exp_value")
+
+    @property
+    def stds(self) -> float | None:
+        """Returns the  standard deviation."""
+        return self._result.get("stds")
 
     def __repr__(self) -> str:
         """Return a string representation.
@@ -567,11 +571,12 @@ class OqtopusEstimationBackend:
 
         Raises:
             ValueError: If ``shots`` is not a positive integer.
+            ValueError: Imaginary part of coefficient is not supported.
             BackendError: If job is wrong or if an authentication error occurred, etc.
 
         """
         if not shots >= 1:
-            msg = "shots should be a positive integer."
+            msg = f"shots should be a positive integer.: {shots}"
             raise ValueError(msg)
 
         job_type = "estimation"
@@ -583,35 +588,38 @@ class OqtopusEstimationBackend:
         if mitigation_info is None:
             mitigation_info = {}
 
+        operator_list = []
+        for pauli, coeff in operator.items():
+            if isinstance(coeff, complex):
+                if coeff.imag != 0.0:
+                    msg = f"Complex numbers are not supported in coefficient: {coeff}"
+                    raise ValueError(msg)
+                operator_list.append(
+                    JobsOperatorItem(
+                        pauli=str(pauli),
+                        coeff=float(coeff.real),
+                    )
+                )
+            else:
+                operator_list.append(
+                    JobsOperatorItem(
+                        pauli=str(pauli),
+                        coeff=float(coeff),
+                    )
+                )
+        job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
+        body = JobsSubmitJobRequest(
+            name=name,
+            description=description,
+            device_id=device_id,
+            job_type=job_type,
+            job_info=job_info,
+            transpiler_info=transpiler_info,
+            simulator_info=simulator_info,
+            mitigation_info=mitigation_info,
+            shots=shots,
+        )
         try:
-            operator_list = []
-            for pauli, coeff in operator.items():
-                if isinstance(coeff, complex):
-                    operator_list.append(
-                        JobsOperatorItem(
-                            pauli=str(pauli),
-                            coeff=[float(coeff.real), float(coeff.imag)],
-                        )
-                    )
-                else:
-                    operator_list.append(
-                        JobsOperatorItem(
-                            pauli=str(pauli),
-                            coeff=[float(coeff), 0.0],
-                        )
-                    )
-            job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
-            body = JobsSubmitJobRequest(
-                name=name,
-                description=description,
-                device_id=device_id,
-                job_type=job_type,
-                job_info=job_info,
-                transpiler_info=transpiler_info,
-                simulator_info=simulator_info,
-                mitigation_info=mitigation_info,
-                shots=shots,
-            )
             response_submit_job = self._job_api.submit_job(body=body)
             response = self._job_api.get_job(response_submit_job.job_id)
         except Exception as e:

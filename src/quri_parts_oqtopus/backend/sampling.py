@@ -779,7 +779,7 @@ class OqtopusSamplingBackend:
 
         """
         if not shots >= 1:
-            msg = "shots should be a positive integer."
+            msg = f"shots should be a positive integer.: {shots}"
             raise ValueError(msg)
 
         if job_type is None:
