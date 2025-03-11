@@ -723,9 +723,9 @@ class OqtopusSamplingBackend:
         """
         qasm: str | list[str]
         if isinstance(program, list):
-            qasm = [convert_to_qasm_str(c) for c in program]
+            qasm = [_convert_to_qasm_str_with_measure(c) for c in program]
         else:
-            qasm = convert_to_qasm_str(program)
+            qasm = _convert_to_qasm_str_with_measure(program)
 
         return self.sample_qasm(
             program=qasm,
@@ -838,3 +838,25 @@ class OqtopusSamplingBackend:
             raise BackendError(msg) from e
 
         return OqtopusSamplingJob(response, self._job_api)
+
+
+def _convert_to_qasm_str_with_measure(program: NonParametricQuantumCircuit) -> str:
+    qasm = convert_to_qasm_str(program)
+    # If `qasm` does not contain "measure",
+    # then add the bit declaration and append "measure"
+    if "measure" not in qasm:
+        # declare bits
+        qubit_index = qasm.find("qubit")
+        if qubit_index != -1:
+            semicolon_index = qasm.find(";", qubit_index)
+            if semicolon_index != -1:
+                size = program.qubit_count
+                declare_bit = f"\nbit[{size}] c;"
+                qasm = (
+                    qasm[: semicolon_index + 1]
+                    + declare_bit
+                    + qasm[semicolon_index + 1 :]
+                )
+        # append measure
+        qasm += "\nc = measure q;"
+    return qasm
