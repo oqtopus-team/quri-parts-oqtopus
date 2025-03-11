@@ -29,7 +29,7 @@ class JobsOperatorItem(object):
     """
     swagger_types = {
         'pauli': 'str',
-        'coeff': 'list[float]'
+        'coeff': 'object'
     }
 
     attribute_map = {
@@ -75,10 +75,10 @@ class JobsOperatorItem(object):
     def coeff(self):
         """Gets the coeff of this JobsOperatorItem.  # noqa: E501
 
-        Complex coefficient number in the Pauli string representation.  # noqa: E501
+        Coefficient number in the Pauli string representation.  # noqa: E501
 
         :return: The coeff of this JobsOperatorItem.  # noqa: E501
-        :rtype: list[float]
+        :rtype: object
         """
         return self._coeff
 
@@ -86,10 +86,10 @@ class JobsOperatorItem(object):
     def coeff(self, coeff):
         """Sets the coeff of this JobsOperatorItem.
 
-        Complex coefficient number in the Pauli string representation.  # noqa: E501
+        Coefficient number in the Pauli string representation.  # noqa: E501
 
         :param coeff: The coeff of this JobsOperatorItem.  # noqa: E501
-        :type: list[float]
+        :type: object
         """
 
         self._coeff = coeff

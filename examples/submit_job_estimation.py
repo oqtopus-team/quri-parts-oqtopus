@@ -8,8 +8,8 @@ circuit.add_H_gate(0)
 circuit.add_CNOT_gate(0, 1)
 
 operator = Operator({
-    pauli_label("X 0 X 1"): 1 + 0j,
-    pauli_label("Z 0 Z 1"): 1 + 0j,
+    pauli_label("X0 X1"): 1,
+    pauli_label("Z0 Z1"): 1,
 })
 
 backend = OqtopusEstimationBackend(OqtopusConfig.from_file("oqtopus-dev"))
@@ -21,7 +21,9 @@ job = backend.estimate(
     shots=10000,
     name="name",
     description="description",
+    transpiler_info=transpiler_info,
 )
 print(job)
-estimation = job.result().estimation
-print(estimation)
+result = job.result()
+print(result.exp_value)
+print(result.stds)
