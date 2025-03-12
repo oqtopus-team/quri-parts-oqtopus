@@ -53,10 +53,6 @@ class OqtopusEstimationResult:
     def __init__(self, result: dict[str, Any]) -> None:
         super().__init__()
 
-        if "counts" not in result:
-            msg = "'counts' does not exist in result"
-            raise ValueError(msg)
-
         self._result = result
 
     @property
@@ -384,10 +380,10 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             if job is None:
                 msg = f"Timeout occurred after {timeout} seconds."
                 raise BackendError(msg)
-            if job.status in {"failed", "cancelled"}:
-                msg = f"Job ended with status {job.status}."
-                raise BackendError(msg)
             self._job = job
+        if self._job.status in {"failed", "cancelled"}:
+            msg = f"Job ended with status {self._job.status}."
+            raise BackendError(msg)
 
         # edit json for OqtopusEstimationResult
         result = self.job_info["result"]["estimation"]
