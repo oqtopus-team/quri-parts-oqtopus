@@ -196,31 +196,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             dict: The detail information of the job.
 
         """
-        # If the content of job_info["result"]["counts"] is of type str, it is a JSON
-        # string, so it converts the JSON string to a dict.
-        if self._job.job_info:
-            job_info = self._job.job_info.to_dict()
-
-            # convert type of `program` from list to str, if length is 1
-            if (
-                "program" in job_info
-                and isinstance(job_info["program"], list)
-                and len(job_info["program"]) == 1
-            ):
-                job_info["program"] = job_info["program"][0]
-
-            # convert type of `counts` from str to dict
-            if (
-                "result" in job_info
-                and job_info["result"] is not None
-                and "estimation" in job_info["result"]
-                and isinstance(job_info["result"]["estimation"], str)
-            ):
-                job_info["result"]["estimation"] = json.loads(
-                    job_info["result"]["estimation"]
-                )
-            return job_info
-        return {}
+        return self._job.job_info.to_dict()
 
     @property
     def transpiler_info(self) -> dict:
@@ -482,7 +458,7 @@ class OqtopusEstimationBackend:
         operator: Operator,
         device_id: str,
         shots: int,
-        name: str,
+        name: str | None = None,
         description: str | None = None,
         transpiler_info: dict | None = None,
         simulator_info: dict | None = None,
@@ -499,7 +475,8 @@ class OqtopusEstimationBackend:
             operator (Operator): The observable operator applied to the circuit.
             device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
-            name (str): The name to be assigned to the job. Defaults to None.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
             description (str | None, optional): The description to be assigned to
                 the job. Defaults to None.
             transpiler_info (dict | None, optional): The transpiler information.
@@ -536,7 +513,7 @@ class OqtopusEstimationBackend:
         operator: Operator,
         device_id: str,
         shots: int,
-        name: str,
+        name: str | None = None,
         description: str | None = None,
         transpiler_info: dict | None = None,
         simulator_info: dict | None = None,
@@ -552,7 +529,8 @@ class OqtopusEstimationBackend:
             operator (Operator): The observable operator applied to the circuit.
             device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
-            name (str): The name to be assigned to the job. Defaults to None.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
             description (str | None, optional): The description to be assigned to
                 the job. Defaults to None.
             transpiler_info (dict | None, optional): The transpiler information.

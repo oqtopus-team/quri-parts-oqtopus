@@ -690,7 +690,7 @@ class OqtopusSamplingBackend:
         program: NonParametricQuantumCircuit | list[NonParametricQuantumCircuit],
         device_id: str,
         shots: int,
-        name: str,
+        name: str | None = None,
         description: str | None = None,
         transpiler_info: dict | None = None,
         simulator_info: dict | None = None,
@@ -707,7 +707,8 @@ class OqtopusSamplingBackend:
                 The circuit to be sampled.
             device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for sampling.
-            name (str): The name to be assigned to the job. Defaults to None.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
             description (str | None, optional): The description to be assigned to
                 the job. Defaults to None.
             transpiler_info (dict | None, optional): The transpiler information.
@@ -743,7 +744,7 @@ class OqtopusSamplingBackend:
         program: str | list[str],
         device_id: str,
         shots: int,
-        name: str,
+        name: str | None = None,
         description: str | None = None,
         transpiler_info: dict | None = None,
         simulator_info: dict | None = None,
@@ -759,7 +760,8 @@ class OqtopusSamplingBackend:
             program (str | list[str]): The program to be sampled.
             device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for sampling.
-            name (str): The name to be assigned to the job. Defaults to None.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
             description (str | None, optional): The description to be assigned to
                 the job. Defaults to None.
             transpiler_info (dict | None, optional): The transpiler information.
