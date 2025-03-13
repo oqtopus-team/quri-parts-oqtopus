@@ -49,10 +49,13 @@ print(result)
 
 if job.job_type == "sampling":
     print(result.counts)
-    print(result.counts[0])
-    print(result.divided_counts)
 
 if job.job_type == "estimation":
     print(result.estimation["exp_value"])
     print(result.estimation["stds"])
     print(result.transpile_result)
+
+if job.job_type == "multi_manual":
+    print(result.counts)
+    print(result.divided_counts)
+    print(result.divided_counts[0])

@@ -737,8 +737,8 @@ class TestOqtopusSamplingBackend:
         )
         assert job.result().counts == {0: 490, 1: 10, 6: 20, 15: 480}
         assert job.result().divided_counts == {
-            "0": {0: 490, 1: 10, 2: 20, 3: 480},
-            "1": {0: 500, 1: 20, 3: 480},
+            0: {0: 490, 1: 10, 2: 20, 3: 480},
+            1: {0: 500, 1: 20, 3: 480},
         }
 
     def test_sample_qasm(self, mocker: MockerFixture):

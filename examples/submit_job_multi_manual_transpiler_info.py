@@ -11,10 +11,18 @@ circuit2.add_X_gate(0)
 
 backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
+transpiler_info = {
+    "transpiler_lib": "qiskit",
+    "transpiler_options": {
+        "optimization_level": 2,
+    },
+}
+
 job = backend.sample(
     [circuit1, circuit2],
     device_id="Kawasaki",
     shots=10000,
+    transpiler_info=transpiler_info,
 )
 print(job)
 counts = job.result().divided_counts

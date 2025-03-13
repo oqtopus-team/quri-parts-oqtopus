@@ -479,7 +479,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             if isinstance(result["divided_counts"], str):
                 result["divided_counts"] = json.loads(result["divided_counts"])
             result["divided_counts"] = {
-                index: Counter({
+                int(index): Counter({
                     int(bits, 2) if isinstance(bits, str) else bits: count
                     for bits, count in result["divided_counts"][index].items()
                 })
