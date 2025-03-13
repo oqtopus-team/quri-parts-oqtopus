@@ -19,8 +19,6 @@ job = backend.sample(
     circuit,
     device_id="Kawasaki",
     shots=10000,
-    name="name",
-    description="description",
     transpiler_info=transpiler_info,
 )
 print(job)
