@@ -9,7 +9,9 @@ circuit.add_CNOT_gate(0, 1)
 backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job = backend.sample(
-    circuit, device_id="Kawasaki", shots=10000, name="name", description="description"
+    circuit,
+    device_id="Kawasaki",
+    shots=10000,
 )
 print(job)
 counts = job.result().counts
