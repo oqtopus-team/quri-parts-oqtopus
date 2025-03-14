@@ -626,7 +626,8 @@ class OqtopusConfig:
 
         """
         if os.getenv("OQTOPUS_ENV") == "sse_container":
-            # config is not needed inside SSE container
+            # This section is only for inside SSE container.
+            # Config is not needed in the container.
             return OqtopusConfig(url="", api_token="")
 
         path = Path(os.path.expandvars(path))
@@ -804,7 +805,7 @@ class OqtopusSamplingBackend:
 
         try:
             if os.getenv("OQTOPUS_ENV") == "sse_container":
-                # this section is only for inside SSE container
+                # This section is only for inside SSE container.
                 import sse_sampler  # noqa: PLC0415
 
                 response = sse_sampler.req_transpile_and_exec(
