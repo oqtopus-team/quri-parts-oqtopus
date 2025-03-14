@@ -625,7 +625,8 @@ class OqtopusConfig:
                 backend = OqtopusSamplingBackend(OqtopusConfig.from_file("sectionA"))
 
         """
-        if os.environ.get("OQTOPUS_ENV") == "sse_container":
+        if os.getenv("OQTOPUS_ENV") == "sse_container":
+            # config is not needed inside SSE container
             return OqtopusConfig(url="", api_token="")
 
         path = Path(os.path.expandvars(path))
@@ -802,7 +803,8 @@ class OqtopusSamplingBackend:
             mitigation_info = {}
 
         try:
-            if os.environ.get("OQTOPUS_ENV") == "sse_container":
+            if os.getenv("OQTOPUS_ENV") == "sse_container":
+                # this section is only for inside SSE container
                 import sse_sampler  # noqa: PLC0415
                 response = sse_sampler.req_transpile_and_exec(program,
                                                               shots,
