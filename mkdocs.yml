@@ -6,6 +6,7 @@ nav:
 - Usage:
   - Getting started: usage/getting_started.ipynb
   - QURI Parts Documentation: https://quri-parts.qunasys.com
+  - QURI Parts OQTOPUS Examples: https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/examples
 - API reference:
   - QURI Parts OQTOPUS: reference/
 - Developer Guidelines:

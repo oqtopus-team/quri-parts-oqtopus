@@ -1,3 +1,5 @@
+![OQTOPUS logo](./docs/asset/oqtopus_logo.png)
+
 # QURI Parts OQTOPUS
 
 [![CI](https://github.com/oqtopus-team/quri-parts-oqtopus/actions/workflows/ci.yaml/badge.svg)](https://github.com/oqtopus-team/quri-parts-oqtopus/actions/workflows/ci.yaml)

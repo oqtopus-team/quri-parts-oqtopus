@@ -1,3 +1,5 @@
+![OQTOPUS logo](./asset/oqtopus_logo.png)
+
 # QURI Parts OQTOPUS
 
 [![CI](https://github.com/oqtopus-team/quri-parts-oqtopus/actions/workflows/ci.yaml/badge.svg)](https://github.com/oqtopus-team/quri-parts-oqtopus/actions/workflows/ci.yaml)
@@ -25,6 +27,7 @@
 
 - [Getting Started](./usage/getting_started.ipynb)
 - [QURI Parts Documentation](https://quri-parts.qunasys.com)
+- [QURI Parts OQTOPUS Examples](https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/examples)
 
 ## API reference
 
