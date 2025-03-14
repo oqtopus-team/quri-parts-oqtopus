@@ -806,10 +806,10 @@ class OqtopusSamplingBackend:
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # this section is only for inside SSE container
                 import sse_sampler  # noqa: PLC0415
-                response = sse_sampler.req_transpile_and_exec(program,
-                                                              shots,
-                                                              transpiler_info
-                                                              )
+
+                response = sse_sampler.req_transpile_and_exec(
+                    program, shots, transpiler_info
+                )
                 job = OqtopusSamplingJob(response, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
