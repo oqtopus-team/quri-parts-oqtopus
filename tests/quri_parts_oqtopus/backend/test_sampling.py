@@ -10,8 +10,9 @@
 
 import datetime
 import json
+import sys
 import time
-from unittest.mock import mock_open
+from unittest.mock import mock_open, patch
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -557,6 +558,16 @@ class TestOqtopusConfig:
         assert actual.api_token == "test_api_token"  # noqa: S105
         assert actual.proxy == "https://testproxy:port"
 
+    def test_from_file_sse_container(self):
+        # Act
+        with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
+            actual = OqtopusConfig.from_file()
+
+        # Assert
+        assert actual.url == ""
+        assert actual.api_token == ""
+        assert actual.proxy is None
+
     def test_from_file__wrong(self, mocker: MockerFixture):
         # Arrange
         mocker.patch("builtins.open", mock_open(read_data=config_file_data))
@@ -769,6 +780,54 @@ class TestOqtopusSamplingBackend:
         # Assert
         assert job.job_id == "dummy_job_id"
         mock_obj.assert_called_once_with(body=get_dummy_JobsSubmitJobRequest())
+
+    def test_sample_qasm_sse_container(self):
+        # Arrange
+        class MockSSESampler:
+            def req_transpile_and_exec(
+                self, program: list[str], shots: int, transpiler_info: dict
+            ) -> JobsSubmitJobResponse:
+                self.program = program
+                self.shots = shots
+                self.transpiler_info = transpiler_info
+                return JobsSubmitJobResponse(job_id="dummy_job_id")
+
+            def assertion(
+                self, program: list[str], shots: int, transpiler_info: dict
+            ) -> None:
+                assert self.program == program
+                assert self.shots == shots
+                assert self.transpiler_info == transpiler_info
+
+        # mock sse_sampler
+        mock_obj = MockSSESampler()
+        sys.modules["sse_sampler"] = mock_obj
+        backend = OqtopusSamplingBackend(get_dummy_config())
+
+        # Act
+        with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
+            job = backend.sample_qasm(
+                qasm_data_with_measure,
+                device_id="dummy_device_id",
+                shots=1000,
+                name="dummy_name",
+                description="dummy_description",
+                transpiler_info={
+                    "transpiler_lib": "qiskit",
+                    "transpiler_options": {"optimization_level": 2},
+                },
+            )
+
+        # Assert
+        assert job.job_id == "dummy_job_id"
+        mock_obj.assertion(
+            program=[qasm_data_with_measure],
+            shots=1000,
+            transpiler_info={
+                "transpiler_lib": "qiskit",
+                "transpiler_options": {"optimization_level": 2},
+            },
+        )
 
     def test_retrieve_job(self, mocker: MockerFixture):
         # Arrange
