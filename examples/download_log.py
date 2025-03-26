@@ -1,10 +1,10 @@
-from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSseJob
+from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSseBackend
 
-backend = OqtopusSseJob(OqtopusConfig.from_file("oqtopus-dev"))
+backend = OqtopusSseBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job_id = "target_job_id"
-save_path = "examples"
+save_dir = "examples"
 backend.download_log(
     job_id=job_id,
-    save_path=save_path,
+    save_dir=save_dir,
 )
