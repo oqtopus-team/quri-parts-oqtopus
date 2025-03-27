@@ -1,7 +1,6 @@
-from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSseJob
+from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSseBackend
 
-backend = OqtopusSseJob(OqtopusConfig.from_file("qiqb-prod"))
-# backend = OqtopusSseJob(OqtopusConfig.from_file("oqtopus-dev"))
+backend = OqtopusSseBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job = backend.run_sse(
     file_path="examples/user_program.py",
@@ -14,5 +13,5 @@ print(counts)
 
 backend.download_log(
     job_id=job.job_id,
-    save_path="examples",
+    save_dir="examples",
 )

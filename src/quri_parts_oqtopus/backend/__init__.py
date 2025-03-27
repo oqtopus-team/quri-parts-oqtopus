@@ -9,7 +9,7 @@ from .estimation import (
     OqtopusEstimationJob,
     OqtopusEstimationResult,
 )
-from .sse import OqtopusSseJob
+from .sse import OqtopusSseBackend
 
 __all__ = [
     "OqtopusConfig",
@@ -19,5 +19,5 @@ __all__ = [
     "OqtopusSamplingBackend",
     "OqtopusSamplingJob",
     "OqtopusSamplingResult",
-    "OqtopusSseJob",
+    "OqtopusSseBackend",
 ]
