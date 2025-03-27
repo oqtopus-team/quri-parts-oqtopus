@@ -107,9 +107,7 @@ def temp_zip():
     temp_dir = tempfile.TemporaryDirectory()
     dir_path = Path(temp_dir.name).absolute()
     with tempfile.NamedTemporaryFile(
-        suffix=".zip",
-        dir=dir_path,
-        delete=False
+        suffix=".zip", dir=dir_path, delete=False
     ) as temp_file:
         path = Path(temp_file.name)
         yield path
@@ -128,9 +126,7 @@ def temp_python():
     temp_dir = tempfile.TemporaryDirectory()
     dir_path = Path(temp_dir.name).absolute()
     with tempfile.NamedTemporaryFile(
-        suffix=".py",
-        dir=dir_path,
-        delete=False
+        suffix=".py", dir=dir_path, delete=False
     ) as temp_file:
         path = Path(temp_file.name)
         yield path
@@ -245,10 +241,11 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Act and Assert
         with pytest.raises(
             ValueError,
-            match=rf"size of the base64 encoded file is larger than {10 * 1024 * 1024}"
+            match=rf"size of the base64 encoded file is larger than {10 * 1024 * 1024}",
         ):
-            sse_job.run_sse(temp_python.absolute(), device_id="test_device",
-                            name="test")
+            sse_job.run_sse(
+                temp_python.absolute(), device_id="test_device", name="test"
+            )
 
     def test_run_request_failure(self, mocker: MockerFixture, temp_python: Path):
         # Arrange
@@ -264,8 +261,9 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
             BackendError, match=r"To perform sse on OQTOPUS Cloud is failed."
         ):
             # Act
-            sse_job.run_sse(temp_python.absolute(), device_id="test_device",
-                            name="test")
+            sse_job.run_sse(
+                temp_python.absolute(), device_id="test_device", name="test"
+            )
 
         # Assert
         sj_call = mock_submit_job.call_args
@@ -370,8 +368,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
         # Act
         with pytest.raises(
-            ValueError,
-            match=r"The destination path does not exist: destination/path"
+            ValueError, match=r"The destination path does not exist: destination/path"
         ):
             # path does not exist
             sse_job.download_log(save_dir="destination/path")
@@ -395,7 +392,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Act
         with pytest.raises(
             ValueError,
-            match=rf"The destination path is not a directory: {temp_zip.absolute()}"
+            match=rf"The destination path is not a directory: {temp_zip.absolute()}",
         ):
             # not a directory, but a file
             sse_job.download_log(save_dir=temp_zip.absolute())
@@ -464,7 +461,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Act
         with pytest.raises(
             BackendError,
-            match=r"To perform sse on OQTOPUS Cloud is failed. The response does not contain valid file data."  # noqa: E501
+            match=r"To perform sse on OQTOPUS Cloud is failed. The response does not contain valid file data.",  # noqa: E501
         ):
             sse_job.download_log(save_dir="destination/path")
 
