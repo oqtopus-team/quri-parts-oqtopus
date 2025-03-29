@@ -5,16 +5,16 @@ nav:
 - Home: index.md
 - Usage:
   - Getting started: usage/getting_started.ipynb
-  - QURI Parts Documentation: https://quri-parts.qunasys.com
-  - QURI Parts OQTOPUS Examples: https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/examples
+  - QURI Parts Documentation: "https://quri-parts.qunasys.com"
+  - QURI Parts OQTOPUS Examples: "https://github.com/oqtopus-team/quri-parts-oqtopus/tree/main/examples"
 - API reference:
   - QURI Parts OQTOPUS: reference/
 - Developer Guidelines:
   - Development Flow: developer_guidelines/index.md
   - Setup Development Environment: developer_guidelines/setup.md
   - How to Contribute: CONTRIBUTING.md
-  - Code of Conduct: https://oqtopus-team.github.io/code-of-conduct/
-  - Security: https://oqtopus-team.github.io/security-policy/
+  - Code of Conduct: "https://oqtopus-team.github.io/code-of-conduct/"
+  - Security: "https://oqtopus-team.github.io/security-policy/"
 
 theme:
   name: material
@@ -24,6 +24,8 @@ theme:
   font:
     text: "Roboto"
     code: "Roboto Mono"
+  logo: asset/oqtopus-white_symbol.png
+  favicon: asset/favicon.png
   icon:
     repo: fontawesome/brands/github
   features:
