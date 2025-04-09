@@ -51,11 +51,11 @@ class OqtopusSseBackend:
                 Defaults to None.
 
         Raises:
-            ValueError: `file_path` is not set.
-            ValueError: `file_path` does not exist.
-            ValueError: `file_path` is not python file.
-            ValueError: file size is larger than max file size
-            BackendError: When an error is returned from OQTOPUS Cloud.
+            ValueError: If ``file_path`` is not set.
+            ValueError: If ``file_path`` does not exist.
+            ValueError: If ``file_path`` is not a python file.
+            ValueError: If file size is larger than max file size
+            BackendError: If an error is returned from OQTOPUS Cloud.
 
         Returns:
             OqtopusSamplingJob: The job to be executed.
@@ -118,12 +118,13 @@ class OqtopusSseBackend:
                 Defaults to None.
 
         Raises:
-            BackendError: When an error is returned from OQTOPUS Cloud.
-            ValueError: `download_path` does not exist.
-            ValueError: The file already exists.
+            BackendError: If an error is returned from OQTOPUS Cloud.
+            ValueError: If ``save_dir`` does not exist.
+            ValueError: If ``save_dir`` is not a directory.
+            ValueError: If the file already exists.
 
         Returns:
-            str: _description_
+            str: The file path of the saved SSE log.
 
         """
         # if job_id is not set, raise ValueError
