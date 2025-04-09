@@ -19,14 +19,16 @@ print("### job_info")
 print(f"job_info={job.job_info}")  # dict
 if job.job_info:
     print(f"program={job.job_info['program']}")
-    if "transpile_result" in job.job_info:
-        print(
-            f"transpiled_program={job.job_info['transpile_result']['transpiled_program']}"
-        )
-        print(f"stats={job.job_info['transpile_result']['stats']}")
-        print(
-            f"virtual_physical_mapping={job.job_info['transpile_result']['virtual_physical_mapping']}"
-        )
+    transpile_result = job.job_info.get("transpile_result")
+    if transpile_result:
+        if "transpiled_program" in transpile_result:
+            print(f"transpiled_program={transpile_result['transpiled_program']}")
+        if "stats" in transpile_result:
+            print(f"stats={transpile_result['stats']}")
+        if "virtual_physical_mapping" in transpile_result:
+            print(
+                f"virtual_physical_mapping={transpile_result['virtual_physical_mapping']}"
+            )
     print(f"message={job.job_info['message']}")
 print("### transpiler_info")
 print(job.transpiler_info)  # dict
