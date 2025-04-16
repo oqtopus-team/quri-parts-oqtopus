@@ -1,5 +1,4 @@
 from .sampling import (  # noqa: I001
-    OqtopusConfig,
     OqtopusSamplingBackend,
     OqtopusSamplingJob,
     OqtopusSamplingResult,
@@ -10,6 +9,8 @@ from .estimation import (
     OqtopusEstimationResult,
 )
 from .sse import OqtopusSseBackend
+
+from .config import OqtopusConfig
 
 __all__ = [
     "OqtopusConfig",
