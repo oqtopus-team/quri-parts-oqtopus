@@ -1,11 +1,15 @@
 import json
+import os
 from datetime import datetime
 
 from quri_parts.backend import (
     BackendError,
 )
 
+from quri_parts_oqtopus.backend import OqtopusConfig
 from quri_parts_oqtopus.rest import (
+    ApiClient,
+    Configuration,
     DeviceApi,
     DevicesDeviceInfo,
 )
@@ -187,8 +191,39 @@ class OqtopusDeviceBackend:
     It serves as a base for creating specific device backends in the future.
     """
 
-    def __init__(self, device_api: DeviceApi) -> None:
-        self._device_api = device_api
+    def __init__(
+        self,
+        config: OqtopusConfig | None = None,
+    ) -> None:
+        super().__init__()
+
+        # set config
+        if config is None:
+            # if environment variables are set, use their values
+            url = os.getenv("OQTOPUS_URL")
+            api_token = os.getenv("OQTOPUS_API_TOKEN")
+            proxy = os.getenv("OQTOPUS_PROXY")
+            if url is not None and api_token is not None:
+                config = OqtopusConfig(
+                    url=url,
+                    api_token=api_token,
+                    proxy=proxy,
+                )
+            # load config from file
+            else:
+                config = OqtopusConfig.from_file()
+
+        # construct DeviceApi
+        rest_config = Configuration()
+        rest_config.host = config.url
+        if config.proxy:
+            rest_config.proxy = config.proxy
+        api_client = ApiClient(
+            configuration=rest_config,
+            header_name="q-api-token",
+            header_value=config.api_token,
+        )
+        self._device_api: DeviceApi = DeviceApi(api_client=api_client)
 
     def get_devices(self) -> list[OqtopusDevice]:
         """Get all devices registered in Oqtopus Cloud.
