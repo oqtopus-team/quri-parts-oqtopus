@@ -4,7 +4,7 @@ backend = OqtopusSseBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job = backend.run_sse(
     file_path="examples/user_program.py",
-    device_id="Kawasaki",
+    device="Kawasaki",
     name="sse example",
 )
 print(job)

@@ -17,7 +17,7 @@ backend = OqtopusEstimationBackend(OqtopusConfig.from_file("oqtopus-dev"))
 job = backend.estimate(
     circuit,
     operator=operator,
-    device_id="Kawasaki",
+    device="Kawasaki",
     shots=10000,
 )
 print(job)

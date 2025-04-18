@@ -14,7 +14,7 @@ mitigation_info = {
 
 job = backend.sample(
     circuit,
-    device_id="Kawasaki",
+    device="Kawasaki",
     shots=10000,
     mitigation_info=mitigation_info,
 )

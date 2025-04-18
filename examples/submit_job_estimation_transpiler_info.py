@@ -24,7 +24,7 @@ transpiler_info = {
 job = backend.estimate(
     circuit,
     operator=operator,
-    device_id="Kawasaki",
+    device="Kawasaki",
     shots=10000,
     transpiler_info=transpiler_info,
 )

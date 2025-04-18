@@ -13,7 +13,7 @@ backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job = backend.sample(
     [circuit1, circuit2],
-    device_id="Kawasaki",
+    device="Kawasaki",
     shots=10000,
 )
 print(job)
