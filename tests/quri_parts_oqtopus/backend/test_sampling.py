@@ -19,8 +19,8 @@ from pytest_mock.plugin import MockerFixture
 from quri_parts.backend import BackendError
 from quri_parts.circuit import QuantumCircuit
 
+from quri_parts_oqtopus.backend.configuration import OqtopusConfig
 from quri_parts_oqtopus.backend.sampling import (
-    OqtopusConfig,
     OqtopusSamplingBackend,
     OqtopusSamplingJob,
     OqtopusSamplingResult,
@@ -661,7 +661,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample(
             circuit,
-            device_id="dummy_device_id",
+            device="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -724,7 +724,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample(
             [circuit, circuit2, circuit],
-            device_id="dummy_device_id",
+            device="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -767,7 +767,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample_qasm(
             qasm_data_with_measure,
-            device_id="dummy_device_id",
+            device="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -808,7 +808,7 @@ class TestOqtopusSamplingBackend:
         with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
             job = backend.sample_qasm(
                 qasm_data_with_measure,
-                device_id="dummy_device_id",
+                device="dummy_device_id",
                 shots=1000,
                 name="dummy_name",
                 description="dummy_description",

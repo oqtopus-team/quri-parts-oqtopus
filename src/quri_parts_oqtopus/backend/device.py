@@ -6,15 +6,16 @@ from quri_parts.backend import (
     BackendError,
 )
 
-from quri_parts_oqtopus.backend import OqtopusConfig
+from quri_parts_oqtopus.backend.configuration import (
+    DateTimeEncoder,
+    OqtopusConfig,
+)
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     DeviceApi,
     DevicesDeviceInfo,
 )
-
-from .sampling import DateTimeEncoder
 
 
 class OqtopusDevice:

@@ -5,9 +5,10 @@ from pathlib import Path, PurePath
 
 from quri_parts.backend import BackendError
 
+from quri_parts_oqtopus.backend.configuration import OqtopusConfig
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
-from .sampling import OqtopusConfig, OqtopusSamplingBackend, OqtopusSamplingJob
+from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
 
 
 class OqtopusSseBackend:
@@ -95,7 +96,7 @@ class OqtopusSseBackend:
                 program=[encoded.decode("utf-8")],
                 shots=1,
                 name=name,
-                device_id=device_id,
+                device=device_id,
                 description=description,
                 job_type="sse",
             )
