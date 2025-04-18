@@ -6,6 +6,7 @@ from pathlib import Path, PurePath
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.configuration import OqtopusConfig
+from quri_parts_oqtopus.backend.device import OqtopusDevice
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
@@ -40,13 +41,18 @@ class OqtopusSseBackend:
         self.job: OqtopusSamplingJob | None = None
 
     def run_sse(
-        self, file_path: str, device_id: str, name: str, description: str | None = None
+        self,
+        file_path: str,
+        device: str | OqtopusDevice,
+        name: str,
+        description: str | None = None,
     ) -> OqtopusSamplingJob:
         """Perform a SSE job.
 
         Args:
             file_path (str): The path to program file to upload.
-            device_id (str): The identifier of the device where the job is executed.
+            device (str | OqtopusDevice):
+                The identifier of the device where the job is executed.
             name (str): The name of the job.
             description (str | None, optional): The description of the job.
                 Defaults to None.
@@ -89,6 +95,8 @@ class OqtopusSseBackend:
         if len(encoded) >= max_file_size:
             msg = f"size of the base64 encoded file is larger than {max_file_size}"
             raise ValueError(msg)
+
+        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
 
         try:
             backend = OqtopusSamplingBackend(self.config)

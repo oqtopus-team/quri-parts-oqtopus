@@ -9,6 +9,7 @@ from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.core.operator import Operator
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
+from quri_parts_oqtopus.backend import OqtopusDevice
 from quri_parts_oqtopus.backend.configuration import (
     DateTimeEncoder,
     OqtopusConfig,
@@ -441,7 +442,7 @@ class OqtopusEstimationBackend:
         self,
         program: NonParametricQuantumCircuit,
         operator: Operator,
-        device_id: str,
+        device: str | OqtopusDevice,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -458,7 +459,7 @@ class OqtopusEstimationBackend:
         Args:
             program (NonParametricQuantumCircuit): The circuit to be estimated.
             operator (Operator): The observable operator applied to the circuit.
-            device_id (str): The device id to be executed.
+            device (str | OqtopusDevice): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -480,10 +481,12 @@ class OqtopusEstimationBackend:
         else:
             qasm = convert_to_qasm_str(program)
 
+        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
+
         return self.estimate_qasm(
             program=qasm,
             operator=operator,
-            device_id=device_id,
+            device=device_id,
             shots=shots,
             name=name,
             description=description,
@@ -496,7 +499,7 @@ class OqtopusEstimationBackend:
         self,
         program: str,
         operator: Operator,
-        device_id: str,
+        device: str | OqtopusDevice,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -512,7 +515,7 @@ class OqtopusEstimationBackend:
         Args:
             program (str): The program to be estimated.
             operator (Operator): The observable operator applied to the circuit.
-            device_id (str): The device id to be executed.
+            device (str | OqtopusDevice): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -546,6 +549,8 @@ class OqtopusEstimationBackend:
             simulator_info = {}
         if mitigation_info is None:
             mitigation_info = {}
+
+        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
 
         operator_list = []
         for pauli, coeff in operator.items():
