@@ -73,6 +73,9 @@ class OqtopusConfig:
         Returns:
             Configuration information :class:`OqtopusConfig` .
 
+        Raises:
+        ValueError: If ``path`` is None.
+
         Examples:
             The OQTOPUS configuration file describes configuration information for each
             section. A section has a header in the form ``[section]``.
@@ -107,11 +110,17 @@ class OqtopusConfig:
             # This section is only for inside SSE container.
             # Config is not needed in the container.
             return OqtopusConfig(url="", api_token="")
-
-        path = Path(os.path.expandvars(path))
-        path = Path.expanduser(path)
+        if path is None:
+            msg = "path should not be None."
+            raise ValueError(msg)
+        if section is None:
+            msg = "section should not be None."
+            raise ValueError(msg)
+        expanded = os.path.expandvars(path)
+        path_expanded = Path(expanded)
+        pat_expanduser = Path.expanduser(path_expanded)
         parser = configparser.ConfigParser()
-        parser.read(path, encoding="utf-8")
+        parser.read(pat_expanduser, encoding="utf-8")
         return OqtopusConfig(
             url=parser[section]["url"],
             api_token=parser[section]["api_token"],
