@@ -3,6 +3,7 @@ from .sampling import (  # noqa: I001
     OqtopusSamplingJob,
     OqtopusSamplingResult,
 )
+from .device import OqtopusDevice, OqtopusDeviceBackend
 from .estimation import (
     OqtopusEstimationBackend,
     OqtopusEstimationJob,
@@ -14,6 +15,8 @@ from .config import OqtopusConfig
 
 __all__ = [
     "OqtopusConfig",
+    "OqtopusDevice",
+    "OqtopusDeviceBackend",
     "OqtopusEstimationBackend",
     "OqtopusEstimationJob",
     "OqtopusEstimationResult",

@@ -40,7 +40,11 @@ class OqtopusSseBackend:
         self.job: OqtopusSamplingJob | None = None
 
     def run_sse(
-        self, file_path: str, device_id: str, name: str, description: str | None = None
+        self,
+        file_path: str,
+        device_id: str,
+        name: str,
+        description: str | None = None,
     ) -> OqtopusSamplingJob:
         """Perform a SSE job.
 
@@ -151,17 +155,20 @@ class OqtopusSseBackend:
 
         data = response.file
         file_name = response.file_name
+        path_save_dir = Path(save_dir) if save_dir else None
 
         if save_dir is None:
-            save_dir = Path.cwd()
+            path_save_dir = Path.cwd()
         elif not Path(save_dir).exists():
             msg = f"The destination path does not exist: {save_dir}"
             raise ValueError(msg)
         elif not Path(save_dir).is_dir():
             msg = f"The destination path is not a directory: {save_dir}"
             raise ValueError(msg)
+        else:
+            path_save_dir = Path(save_dir)
 
-        file_path = PurePath(save_dir).joinpath(file_name)
+        file_path = PurePath(path_save_dir).joinpath(file_name)
 
         # if the file already exists, raise ValueError
         if Path(file_path).exists():
