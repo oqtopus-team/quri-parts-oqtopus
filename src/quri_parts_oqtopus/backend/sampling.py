@@ -98,7 +98,6 @@ from quri_parts_oqtopus.backend.config import (
     DateTimeEncoder,
     OqtopusConfig,
 )
-from quri_parts_oqtopus.backend.device import OqtopusDevice
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
@@ -562,7 +561,7 @@ class OqtopusSamplingBackend:
     def sample(  # noqa: PLR0917, PLR0913
         self,
         program: NonParametricQuantumCircuit | list[NonParametricQuantumCircuit],
-        device: str | OqtopusDevice,
+        device_id: str,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -579,8 +578,7 @@ class OqtopusSamplingBackend:
         Args:
             program (NonParametricQuantumCircuit | list[NonParametricQuantumCircuit]):
                 The circuit to be sampled.
-            device (str | OqtopusDevice):
-                The OqtopusDevice object or device id to be executed.
+            device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for sampling.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -603,11 +601,9 @@ class OqtopusSamplingBackend:
         else:
             qasm = _convert_to_qasm_str_with_measure(program)
 
-        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
-
         return self.sample_qasm(
             program=qasm,
-            device=device_id,
+            device_id=device_id,
             shots=shots,
             name=name,
             description=description,
@@ -619,7 +615,7 @@ class OqtopusSamplingBackend:
     def sample_qasm(  # noqa: PLR0913, PLR0917
         self,
         program: str | list[str],
-        device: str | OqtopusDevice,
+        device_id: str,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -635,8 +631,7 @@ class OqtopusSamplingBackend:
 
         Args:
             program (str | list[str]): The program to be sampled.
-            device (str | OqtopusDevice):
-                The OqtopusDevice object or device id to be executed.
+            device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for sampling.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -675,8 +670,6 @@ class OqtopusSamplingBackend:
             simulator_info = {}
         if mitigation_info is None:
             mitigation_info = {}
-
-        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
 
         try:
             if os.getenv("OQTOPUS_ENV") == "sse_container":

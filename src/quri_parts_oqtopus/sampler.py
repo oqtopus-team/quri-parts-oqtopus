@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from itertools import starmap
-from typing import TYPE_CHECKING, Any, Optional, TypeVar
+from typing import TYPE_CHECKING, Optional, TypeVar
 
 from quri_parts.circuit import ImmutableQuantumCircuit
 from quri_parts.core.sampling import ConcurrentSampler, MeasurementCounts
@@ -27,7 +27,7 @@ def _sample(circuit: ImmutableQuantumCircuit, shots: int) -> MeasurementCounts:
 
 
 def _sample_sequentially(
-    _: Any, circuit_shots_tuples: Iterable[tuple[ImmutableQuantumCircuit, int]]
+    _: object, circuit_shots_tuples: Iterable[tuple[ImmutableQuantumCircuit, int]]
 ) -> Iterable[MeasurementCounts]:
     return list(starmap(_sample, circuit_shots_tuples))
 

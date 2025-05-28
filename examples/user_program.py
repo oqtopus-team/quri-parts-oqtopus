@@ -16,7 +16,7 @@ for index in range(3):
         job = OqtopusSamplingBackend().sample(
             circuit,
             shots=1000,
-            device="sse",
+            device_id="sse",
         )
         print(f"{job.job_id=}")
         result = job.result()

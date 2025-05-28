@@ -661,7 +661,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample(
             circuit,
-            device="dummy_device_id",
+            device_id="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -724,7 +724,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample(
             [circuit, circuit2, circuit],
-            device="dummy_device_id",
+            device_id="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -767,7 +767,7 @@ class TestOqtopusSamplingBackend:
         # Act
         job = backend.sample_qasm(
             qasm_data_with_measure,
-            device="dummy_device_id",
+            device_id="dummy_device_id",
             shots=1000,
             name="dummy_name",
             description="dummy_description",
@@ -808,7 +808,7 @@ class TestOqtopusSamplingBackend:
         with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
             job = backend.sample_qasm(
                 qasm_data_with_measure,
-                device="dummy_device_id",
+                device_id="dummy_device_id",
                 shots=1000,
                 name="dummy_name",
                 description="dummy_description",

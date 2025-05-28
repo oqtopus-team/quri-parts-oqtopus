@@ -182,7 +182,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
         # Act
         ret_job = sse_job.run_sse(
-            temp_python.absolute(), device="test_device", name="test"
+            temp_python.absolute(), device_id="test_device", name="test"
         )
 
         # Assert
@@ -197,7 +197,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Act
         sse_job = OqtopusSseBackend(get_dummy_config())
         with pytest.raises(ValueError, match=r"file_path is not set.") as e:
-            sse_job.run_sse(None, device="test_device", name="test")
+            sse_job.run_sse(None, device_id="test_device", name="test")
 
         # Assert
         assert str(e.value) == "file_path is not set."
@@ -210,7 +210,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         with pytest.raises(
             ValueError, match=r"The file does not exist: dummy/dummy.py"
         ) as e:
-            sse_job.run_sse("dummy/dummy.py", device="test_device", name="test")
+            sse_job.run_sse("dummy/dummy.py", device_id="test_device", name="test")
 
         # Assert
         assert str(e.value) == "The file does not exist: dummy/dummy.py"
@@ -223,7 +223,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         with pytest.raises(
             ValueError, match=rf"The file is not python file: {temp_zip.absolute()}"
         ):
-            sse_job.run_sse(temp_zip.absolute(), device="test_device", name="test")
+            sse_job.run_sse(temp_zip.absolute(), device_id="test_device", name="test")
 
     def test_run_largefile(self, mocker: MockerFixture, temp_python: Path):
         # Arrange
@@ -243,7 +243,9 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
             ValueError,
             match=rf"size of the base64 encoded file is larger than {10 * 1024 * 1024}",
         ):
-            sse_job.run_sse(temp_python.absolute(), device="test_device", name="test")
+            sse_job.run_sse(
+                temp_python.absolute(), device_id="test_device", name="test"
+            )
 
     def test_run_request_failure(self, mocker: MockerFixture, temp_python: Path):
         # Arrange
@@ -259,7 +261,9 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
             BackendError, match=r"To perform sse on OQTOPUS Cloud is failed."
         ):
             # Act
-            sse_job.run_sse(temp_python.absolute(), device="test_device", name="test")
+            sse_job.run_sse(
+                temp_python.absolute(), device_id="test_device", name="test"
+            )
 
         # Assert
         sj_call = mock_submit_job.call_args

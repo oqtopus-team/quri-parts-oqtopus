@@ -13,9 +13,6 @@ from quri_parts_oqtopus.backend.config import (
     DateTimeEncoder,
     OqtopusConfig,
 )
-from quri_parts_oqtopus.backend.device import (
-    OqtopusDevice,
-)
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
@@ -444,7 +441,7 @@ class OqtopusEstimationBackend:
         self,
         program: NonParametricQuantumCircuit,
         operator: Operator,
-        device: str | OqtopusDevice,
+        device_id: str,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -461,7 +458,7 @@ class OqtopusEstimationBackend:
         Args:
             program (NonParametricQuantumCircuit): The circuit to be estimated.
             operator (Operator): The observable operator applied to the circuit.
-            device (str | OqtopusDevice): The device id to be executed.
+            device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -483,12 +480,10 @@ class OqtopusEstimationBackend:
         else:
             qasm = convert_to_qasm_str(program)
 
-        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
-
         return self.estimate_qasm(
             program=qasm,
             operator=operator,
-            device=device_id,
+            device_id=device_id,
             shots=shots,
             name=name,
             description=description,
@@ -501,7 +496,7 @@ class OqtopusEstimationBackend:
         self,
         program: str,
         operator: Operator,
-        device: str | OqtopusDevice,
+        device_id: str,
         shots: int,
         name: str | None = None,
         description: str | None = None,
@@ -517,7 +512,7 @@ class OqtopusEstimationBackend:
         Args:
             program (str): The program to be estimated.
             operator (Operator): The observable operator applied to the circuit.
-            device (str | OqtopusDevice): The device id to be executed.
+            device_id (str): The device id to be executed.
             shots (int): Number of repetitions of each circuit, for estimation.
             name (str | None, optional): The name to be assigned to the job.
                 Defaults to None.
@@ -551,8 +546,6 @@ class OqtopusEstimationBackend:
             simulator_info = {}
         if mitigation_info is None:
             mitigation_info = {}
-
-        device_id = device.device_id if isinstance(device, OqtopusDevice) else device
 
         operator_list = []
         for pauli, coeff in operator.items():

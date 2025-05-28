@@ -15,7 +15,7 @@ backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
 
 job = backend.sample_qasm(
     program,
-    device="Kawasaki",
+    device_id="Kawasaki",
     shots=10000,
 )
 print(job)

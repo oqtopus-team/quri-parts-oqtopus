@@ -23,7 +23,7 @@ backend = OqtopusEstimationBackend(OqtopusConfig.from_file("oqtopus-dev"))
 job = backend.estimate_qasm(
     program,
     operator=operator,
-    device="Kawasaki",
+    device_id="Kawasaki",
     shots=10000,
 )
 print(job)
