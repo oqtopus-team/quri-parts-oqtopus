@@ -5,8 +5,8 @@ from pathlib import Path, PurePath
 
 from quri_parts.backend import BackendError
 
-from quri_parts_oqtopus.backend.device import OqtopusDevice
 from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.backend.device import OqtopusDevice
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
@@ -159,17 +159,20 @@ class OqtopusSseBackend:
 
         data = response.file
         file_name = response.file_name
+        path_save_dir = Path(save_dir) if save_dir else None
 
         if save_dir is None:
-            save_dir = Path.cwd()
+            path_save_dir = Path.cwd()
         elif not Path(save_dir).exists():
             msg = f"The destination path does not exist: {save_dir}"
             raise ValueError(msg)
         elif not Path(save_dir).is_dir():
             msg = f"The destination path is not a directory: {save_dir}"
             raise ValueError(msg)
+        else:
+            path_save_dir = Path(save_dir)
 
-        file_path = PurePath(save_dir).joinpath(file_name)
+        file_path = PurePath(path_save_dir).joinpath(file_name)
 
         # if the file already exists, raise ValueError
         if Path(file_path).exists():

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from itertools import starmap
-from typing import TYPE_CHECKING, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 from quri_parts.circuit import ImmutableQuantumCircuit
 from quri_parts.core.sampling import ConcurrentSampler, MeasurementCounts
@@ -12,7 +12,6 @@ from quri_parts_oqtopus.backend import OqtopusSamplingBackend
 T_common = TypeVar("T_common")
 T_individual = TypeVar("T_individual")
 R = TypeVar("R")
-Any = object()
 
 if TYPE_CHECKING:
     from concurrent.futures import Executor
@@ -23,7 +22,7 @@ backend = OqtopusSamplingBackend()
 # MeasurementCounts and SamplingCounts are equivalent
 def _sample(circuit: ImmutableQuantumCircuit, shots: int) -> MeasurementCounts:
     qasm = convert_to_qasm_str(circuit)
-    job = backend.sample_qasm(qasm, n_shots=shots)
+    job = backend.sample_qasm(qasm, shots=shots)
     return job.result().counts
 
 
