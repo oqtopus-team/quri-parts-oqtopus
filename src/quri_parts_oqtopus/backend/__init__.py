@@ -11,7 +11,7 @@ from .estimation import (
 )
 from .sse import OqtopusSseBackend
 
-from .configuration import OqtopusConfig
+from .config import OqtopusConfig
 
 __all__ = [
     "OqtopusConfig",

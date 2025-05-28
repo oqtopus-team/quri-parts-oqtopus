@@ -27,7 +27,7 @@ from quri_parts.backend import BackendError
 from quri_parts_oqtopus.backend import (
     OqtopusSseBackend,
 )
-from quri_parts_oqtopus.backend.configuration import OqtopusConfig
+from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.rest import (
     JobsJobDef,
     JobsSubmitJobResponse,

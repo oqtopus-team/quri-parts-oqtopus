@@ -19,7 +19,7 @@ from pytest_mock.plugin import MockerFixture
 from quri_parts.backend import BackendError
 from quri_parts.circuit import QuantumCircuit
 
-from quri_parts_oqtopus.backend.configuration import OqtopusConfig
+from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.backend.sampling import (
     OqtopusSamplingBackend,
     OqtopusSamplingJob,

@@ -5,8 +5,8 @@ from pathlib import Path, PurePath
 
 from quri_parts.backend import BackendError
 
-from quri_parts_oqtopus.backend.configuration import OqtopusConfig
 from quri_parts_oqtopus.backend.device import OqtopusDevice
+from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob

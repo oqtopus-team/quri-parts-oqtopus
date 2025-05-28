@@ -1457,19 +1457,19 @@ wheels = [
 
 [[package]]
 name = "quri-parts-openqasm"
-version = "0.20.3"
+version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "quri-parts-circuit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/90/01/90f58ba04029c565d3681af3e10aa8346dd26569c6bb66ae58e985d7a578/quri_parts_openqasm-0.20.3.tar.gz", hash = "sha256:c41bd4dc59c3b66eccd5dc50221ade1a5e9b453d89a53fcd85320b41474311ea", size = 6776 }
+sdist = { url = "https://files.pythonhosted.org/packages/02/b3/d58466b19818fcfcf7c1d60b6203254255031d90a27de759d7e3e3228ef5/quri_parts_openqasm-0.21.0.tar.gz", hash = "sha256:3e490ae9bae32bd3c6dabaa2720610b16c7ce91393adaa233afb62191d9f30c6", size = 6807 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/6f/8e69fce83cae18422838beaff40d7e80f635c4d59bb71fe14ab312340e77/quri_parts_openqasm-0.20.3-py3-none-any.whl", hash = "sha256:36bec5912695277859de76c0852073a6c6b5752dcdbfb92ac8b2491473a3258c", size = 7869 },
+    { url = "https://files.pythonhosted.org/packages/83/d3/ab6ffaa6aa5186ed59ee7a638a6cde0bb8d95b287b450b39a5f4d294c16a/quri_parts_openqasm-0.21.0-py3-none-any.whl", hash = "sha256:85016d6d38f05bf5b165db996d2d9ee02781210fd5d272a177214158598bd1ed", size = 7894 },
 ]
 
 [[package]]
 name = "quri-parts-oqtopus"
-version = "0.1.1"
+version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
