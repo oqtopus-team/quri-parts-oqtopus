@@ -7,9 +7,9 @@ from quri_parts.backend import (
 )
 
 from quri_parts_oqtopus.backend.config import (
-    DateTimeEncoder,
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
@@ -129,7 +129,7 @@ class OqtopusDevice:
             dict: The device information of the device.
 
         """
-        return self._device.device_info.to_dict()
+        return self._device.device_info
 
     @property
     def calibrated_at(self) -> datetime:

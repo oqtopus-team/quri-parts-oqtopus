@@ -155,7 +155,6 @@ class OqtopusSseBackend:
 
         data = response.file
         file_name = response.file_name
-        path_save_dir = Path(save_dir) if save_dir else None
 
         if save_dir is None:
             path_save_dir = Path.cwd()
@@ -168,8 +167,7 @@ class OqtopusSseBackend:
         else:
             path_save_dir = Path(save_dir)
 
-        file_path = PurePath(path_save_dir).joinpath(file_name)
-
+        file_path = path_save_dir / file_name
         # if the file already exists, raise ValueError
         if Path(file_path).exists():
             msg = f"The file already exists: {file_path}"

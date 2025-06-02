@@ -1,6 +1,6 @@
 from quri_parts.circuit import QuantumCircuit
 
-from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSamplingBackend
+from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSamplingBackend, OqtopusDeviceBackend
 
 circuit = QuantumCircuit(2)
 circuit.add_H_gate(0)

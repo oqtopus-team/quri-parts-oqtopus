@@ -95,9 +95,9 @@ from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
 from quri_parts_oqtopus.backend.config import (
-    DateTimeEncoder,
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
