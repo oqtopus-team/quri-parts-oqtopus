@@ -11,18 +11,27 @@ backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
 # Choose an available device
 device_backend = OqtopusDeviceBackend(OqtopusConfig.from_file("oqtopus-dev"))
 devices = device_backend.get_devices()
-available_device = None
+available_devices = []
+# filter available devices
 for dev in devices:
     if dev.status == "available":
-        available_device = dev
-        break
-if available_device is None:
+        available_devices.append(dev)
+if not available_devices:
     raise RuntimeError("No available device found.")
 
-# Submit the job to the available device
+# select the device with the "least" number of pending jobs
+best_device = available_devices[0]
+n_pending_jobs = float('inf')
+for one_available_device in available_devices:
+    if one_available_device.n_pending_jobs < n_pending_jobs:
+        best_device = one_available_device
+        n_pending_jobs = one_available_device.n_pending_jobs
+
+
+# Submit the job to the device which is available and has the least number of pending jobs
 job = backend.sample(
     circuit,
-    device_id=available_device.device_id,
+    device_id=best_device.device_id,
     shots=10000,
 )
 print(job)
