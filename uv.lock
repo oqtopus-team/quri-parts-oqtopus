@@ -1425,30 +1425,6 @@ wheels = [
 ]
 
 [[package]]
-name = "qulacs"
-version = "0.6.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-    { name = "scipy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/0f/261c9b3068584a5372c31aa729178722723156dc86f70b45070614dd38aa/qulacs-0.6.11.tar.gz", hash = "sha256:3dfa030c6d90e78c8dfe840423a53fb1d7e7e4a63bb7180e1b46a4d25d2c72bf", size = 804787, upload-time = "2024-12-10T05:21:11.025Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e7/ea/c56da22ff4d65269ced15a846a56907ec8c0922ea4638f120b5da329158b/qulacs-0.6.11-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:35b007c96fc357b64d7c0c2fb5f6a7337708cca1180658607904a408e62037da", size = 761550, upload-time = "2024-12-10T05:28:36.915Z" },
-    { url = "https://files.pythonhosted.org/packages/79/79/001b59d1ab9a02fe1cb46c681e590872825c559bb75e6599c0e40637e1fa/qulacs-0.6.11-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:56fb790d9ee6f24b39ed691d906983b54b7992f7a011b2c6c436188c5ce626ab", size = 671040, upload-time = "2024-12-10T05:23:25.534Z" },
-    { url = "https://files.pythonhosted.org/packages/1f/95/28d450286d66aa65723719c14f1f8351ca938e2bd2b448c7ef5e1ad03dbe/qulacs-0.6.11-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:117813f4238e4594a72468823bad715361983742ea8d1948a2aaf62965460f20", size = 962672, upload-time = "2024-12-10T05:24:31.132Z" },
-    { url = "https://files.pythonhosted.org/packages/8b/e5/333b4116a1e9fc231cda6aa049b3a6bdd456e89f54231fee05d51f9e3053/qulacs-0.6.11-cp310-cp310-win_amd64.whl", hash = "sha256:b199964dbaf6785233a39d4cde8f0e139bf360c75f8f99b31c0bb37179eacd84", size = 641021, upload-time = "2024-12-10T05:33:26.982Z" },
-    { url = "https://files.pythonhosted.org/packages/34/21/b2f788bd4144cd071b543b065fa75665b94973787341c41a42c74513987b/qulacs-0.6.11-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:50431a7571504f620127e564947ab03d3be32a2b0fcca5c7f9391bab125601a2", size = 762745, upload-time = "2024-12-10T05:28:37.441Z" },
-    { url = "https://files.pythonhosted.org/packages/7e/d8/af23d21a366458971c72f7cc44ef499d9a2891a3b2c81bccf65f180e1f7e/qulacs-0.6.11-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:db64865730f099fd4e880453c8874cb593c42a036007465ce59208240b9f83b3", size = 672417, upload-time = "2024-12-10T05:23:02.375Z" },
-    { url = "https://files.pythonhosted.org/packages/08/c1/30572e846e50c080fa1a7dc04c9588a331d22a9b0feb27c55208f345b53a/qulacs-0.6.11-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2bf675de5f608824a84f107f48472df2d4a4133ae1b0d5c13d8157a47b6efa78", size = 963265, upload-time = "2024-12-10T05:24:36.674Z" },
-    { url = "https://files.pythonhosted.org/packages/43/f8/6687a1c35ded13a0b2ee83a8906319ef7028b25914d24d5a7cd011e489af/qulacs-0.6.11-cp311-cp311-win_amd64.whl", hash = "sha256:98a5b6957807c4e5f6ad12f5bad71a4b90d8211c80c38b074304f58dad7b0988", size = 641893, upload-time = "2024-12-10T05:29:55.166Z" },
-    { url = "https://files.pythonhosted.org/packages/a6/9c/eb9997c008de1f5600c9bebaade68caaac5aaa2f50219b21e4bf8cd7f2c0/qulacs-0.6.11-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:739b1a63ef909caa5f579cba78dc77e3ab00cfe261b3384f81f4591b9aa3458c", size = 771453, upload-time = "2024-12-10T05:28:45.085Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/73/e116cbc0ebee3954efeed2f7c53890caac8ad11040d8d3d8a65d903aa559/qulacs-0.6.11-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:03a1df7d8e5fd3c402ab7214a3e2486e33fb0b1f0b9a0cfcd0c0e568871dff09", size = 673213, upload-time = "2024-12-10T05:23:00.438Z" },
-    { url = "https://files.pythonhosted.org/packages/7f/dc/aedd3682ffc0db772b2818e74115f60dc8cb4435abd1a3b13d0d57ebbb20/qulacs-0.6.11-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6da7a659c73c0a575af16ab7bd9ef1673a24fc5baf8e82b1401a798b82406362", size = 963093, upload-time = "2024-12-10T05:24:53.668Z" },
-    { url = "https://files.pythonhosted.org/packages/fc/33/e32df00c0101694b516526c4aff56bcaa76b98913a2be926b99f682175b6/qulacs-0.6.11-cp312-cp312-win_amd64.whl", hash = "sha256:07e6ff93d875907423aedea41cadaa5c7ee96001d4a79603ecdb725bfedc33c7", size = 643436, upload-time = "2024-12-10T05:28:40.689Z" },
-]
-
-[[package]]
 name = "quri-parts-circuit"
 version = "0.20.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1496,7 +1472,6 @@ version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
-    { name = "qulacs" },
     { name = "quri-parts-circuit" },
     { name = "quri-parts-core" },
     { name = "quri-parts-openqasm" },
@@ -1526,7 +1501,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "certifi" },
-    { name = "qulacs", specifier = ">=0.5.0" },
     { name = "quri-parts-circuit", specifier = ">=0.20.3" },
     { name = "quri-parts-core", specifier = ">=0.20.3" },
     { name = "quri-parts-openqasm", specifier = ">=0.20.3" },

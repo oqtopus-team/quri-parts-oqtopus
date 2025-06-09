@@ -29,7 +29,6 @@ dependencies = [
   "quri-parts-openqasm>=0.20.3",
   "six>=1.17.0",
   "urllib3",
-  "qulacs>=0.5.0",
 ]
 
 [project.urls]
