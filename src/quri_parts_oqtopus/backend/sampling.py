@@ -674,7 +674,7 @@ class OqtopusSamplingBackend:
         try:
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
-                import sse_sampler  # noqa: PLC0415
+                import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
 
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
