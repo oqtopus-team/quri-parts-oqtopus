@@ -12,7 +12,6 @@ from quri_parts_oqtopus.backend import OqtopusSamplingBackend
 T_common = TypeVar("T_common")
 T_individual = TypeVar("T_individual")
 R = TypeVar("R")
-Any = object()
 
 if TYPE_CHECKING:
     from concurrent.futures import Executor
@@ -23,12 +22,12 @@ backend = OqtopusSamplingBackend()
 # MeasurementCounts and SamplingCounts are equivalent
 def _sample(circuit: ImmutableQuantumCircuit, shots: int) -> MeasurementCounts:
     qasm = convert_to_qasm_str(circuit)
-    job = backend.sample_qasm(qasm, n_shots=shots)
+    job = backend.sample_qasm(qasm, shots=shots)
     return job.result().counts
 
 
 def _sample_sequentially(
-    _: Any, circuit_shots_tuples: Iterable[tuple[ImmutableQuantumCircuit, int]]
+    _: object, circuit_shots_tuples: Iterable[tuple[ImmutableQuantumCircuit, int]]
 ) -> Iterable[MeasurementCounts]:
     return list(starmap(_sample, circuit_shots_tuples))
 

@@ -9,7 +9,10 @@ from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.core.operator import Operator
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
-from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.backend.config import (
+    OqtopusConfig,
+)
+from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
@@ -73,24 +76,6 @@ class OqtopusEstimationResult:
 
         """
         return str(self._result)
-
-
-class DateTimeEncoder(json.JSONEncoder):
-    """JSONEncoder supporting `datetime.datetime`."""
-
-    def default(self, obj: Any) -> Any:  # noqa: ANN401
-        """Serialize object.
-
-        Args:
-            obj (Any): The object to be serialized
-
-        Returns:
-            Any: Serialized object.
-
-        """
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
 
 
 class OqtopusEstimationJob:  # noqa: PLR0904

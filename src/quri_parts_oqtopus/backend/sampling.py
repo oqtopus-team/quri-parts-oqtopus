@@ -94,7 +94,10 @@ from quri_parts.backend import (
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
-from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.backend.config import (
+    OqtopusConfig,
+)
+from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
@@ -181,24 +184,6 @@ class OqtopusSamplingResult(SamplingResult):
 
         """
         return str(self._result)
-
-
-class DateTimeEncoder(json.JSONEncoder):
-    """JSONEncoder supporting `datetime.datetime`."""
-
-    def default(self, obj: Any) -> Any:  # noqa: ANN401
-        """Serialize object.
-
-        Args:
-            obj (Any): The object to be serialized
-
-        Returns:
-            Any: Serialized object.
-
-        """
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
 
 
 class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
@@ -689,7 +674,7 @@ class OqtopusSamplingBackend:
         try:
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
-                import sse_sampler  # noqa: PLC0415
+                import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
 
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
