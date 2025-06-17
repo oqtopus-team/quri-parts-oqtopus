@@ -24,6 +24,7 @@ class JobsJobStatus(object):
     """
     allowed enum values
     """
+    REGISTERED = "registered"
     SUBMITTED = "submitted"
     READY = "ready"
     RUNNING = "running"

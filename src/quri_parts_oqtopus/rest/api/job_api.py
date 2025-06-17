@@ -233,7 +233,7 @@ class JobApi(object):
 
         :param async_req bool
         :param str job_id: Job identifier (required)
-        :return: JobsJobDef
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -255,7 +255,7 @@ class JobApi(object):
 
         :param async_req bool
         :param str job_id: Job identifier (required)
-        :return: JobsJobDef
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -309,7 +309,7 @@ class JobApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='JobsJobDef',  # noqa: E501
+            response_type='InlineResponse200',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -412,101 +412,6 @@ class JobApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
-    def get_sselog(self, job_id, **kwargs):  # noqa: E501
-        """Get SSE log file  # noqa: E501
-
-        Get SSE log file of selected job  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.get_sselog(job_id, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param str job_id: Job identifier (required)
-        :return: JobsGetSselogResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('async_req'):
-            return self.get_sselog_with_http_info(job_id, **kwargs)  # noqa: E501
-        else:
-            (data) = self.get_sselog_with_http_info(job_id, **kwargs)  # noqa: E501
-            return data
-
-    def get_sselog_with_http_info(self, job_id, **kwargs):  # noqa: E501
-        """Get SSE log file  # noqa: E501
-
-        Get SSE log file of selected job  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.get_sselog_with_http_info(job_id, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param str job_id: Job identifier (required)
-        :return: JobsGetSselogResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['job_id']  # noqa: E501
-        all_params.append('async_req')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-        all_params.append('_request_timeout')
-
-        params = locals()
-        for key, val in six.iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_sselog" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'job_id' is set
-        if ('job_id' not in params or
-                params['job_id'] is None):
-            raise ValueError("Missing the required parameter `job_id` when calling `get_sselog`")  # noqa: E501
-
-        collection_formats = {}
-
-        path_params = {}
-        if 'job_id' in params:
-            path_params['job_id'] = params['job_id']  # noqa: E501
-
-        query_params = []
-
-        header_params = {}
-
-        form_params = []
-        local_var_files = {}
-
-        body_params = None
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # Authentication setting
-        auth_settings = ['BearerAuth']  # noqa: E501
-
-        return self.api_client.call_api(
-            '/jobs/{job_id}/sselog', 'GET',
-            path_params,
-            query_params,
-            header_params,
-            body=body_params,
-            post_params=form_params,
-            files=local_var_files,
-            response_type='JobsGetSselogResponse',  # noqa: E501
-            auth_settings=auth_settings,
-            async_req=params.get('async_req'),
-            _return_http_data_only=params.get('_return_http_data_only'),
-            _preload_content=params.get('_preload_content', True),
-            _request_timeout=params.get('_request_timeout'),
-            collection_formats=collection_formats)
-
     def list_jobs(self, **kwargs):  # noqa: E501
         """List all quantum jobs  # noqa: E501
 
@@ -524,7 +429,7 @@ class JobApi(object):
         :param int page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
         :param int size: Configure number of jobs per page
         :param str order: Specify jobs order according to creation time (createdAt property)
-        :return: list[JobsGetJobsResponse]
+        :return: list[JobsJobBase]
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -552,7 +457,7 @@ class JobApi(object):
         :param int page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
         :param int size: Configure number of jobs per page
         :param str order: Specify jobs order according to creation time (createdAt property)
-        :return: list[JobsGetJobsResponse]
+        :return: list[JobsJobBase]
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -614,7 +519,7 @@ class JobApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='list[JobsGetJobsResponse]',  # noqa: E501
+            response_type='list[JobsJobBase]',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -622,45 +527,134 @@ class JobApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
-    def submit_job(self, **kwargs):  # noqa: E501
-        """Submit a quantum job  # noqa: E501
+    def register_job_id(self, **kwargs):  # noqa: E501
+        """Register new job  # noqa: E501
 
-        Submit a quantum job  # noqa: E501
+        Register new job and generate a presigned URL to upload job information (`jobs.S3SubmitJobInfo`) to OQTOPUS cloud.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.submit_job(async_req=True)
+        >>> thread = api.register_job_id(async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
-        :param JobsSubmitJobRequest body: Quantum job to be submitted
-        :return: JobsSubmitJobResponse
+        :return: JobsRegisterJobResponse
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('async_req'):
-            return self.submit_job_with_http_info(**kwargs)  # noqa: E501
+            return self.register_job_id_with_http_info(**kwargs)  # noqa: E501
         else:
-            (data) = self.submit_job_with_http_info(**kwargs)  # noqa: E501
+            (data) = self.register_job_id_with_http_info(**kwargs)  # noqa: E501
             return data
 
-    def submit_job_with_http_info(self, **kwargs):  # noqa: E501
-        """Submit a quantum job  # noqa: E501
+    def register_job_id_with_http_info(self, **kwargs):  # noqa: E501
+        """Register new job  # noqa: E501
 
-        Submit a quantum job  # noqa: E501
+        Register new job and generate a presigned URL to upload job information (`jobs.S3SubmitJobInfo`) to OQTOPUS cloud.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.submit_job_with_http_info(async_req=True)
+        >>> thread = api.register_job_id_with_http_info(async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
-        :param JobsSubmitJobRequest body: Quantum job to be submitted
-        :return: JobsSubmitJobResponse
+        :return: JobsRegisterJobResponse
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['body']  # noqa: E501
+        all_params = []  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method register_job_id" % key
+                )
+            params[key] = val
+        del params['kwargs']
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['BearerAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/jobs', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='JobsRegisterJobResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def submit_job(self, job_id, **kwargs):  # noqa: E501
+        """Complete submission of a quantum job  # noqa: E501
+
+        Complete submission of a previously registered quantum job.  job_id must be created via 'POST /jobs' request.  Submit job information (`jobs.S3SubmitJobInfo`) must be formerly uploaded to OQTOPUS cloud using presigned URL received in 'POST /jobs' response.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.submit_job(job_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str job_id: Job identifier (required)
+        :param JobsSubmitJobRequest body: Quantum job to be submitted
+        :return: SuccessSuccessResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.submit_job_with_http_info(job_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.submit_job_with_http_info(job_id, **kwargs)  # noqa: E501
+            return data
+
+    def submit_job_with_http_info(self, job_id, **kwargs):  # noqa: E501
+        """Complete submission of a quantum job  # noqa: E501
+
+        Complete submission of a previously registered quantum job.  job_id must be created via 'POST /jobs' request.  Submit job information (`jobs.S3SubmitJobInfo`) must be formerly uploaded to OQTOPUS cloud using presigned URL received in 'POST /jobs' response.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.submit_job_with_http_info(job_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str job_id: Job identifier (required)
+        :param JobsSubmitJobRequest body: Quantum job to be submitted
+        :return: SuccessSuccessResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['job_id', 'body']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -675,10 +669,16 @@ class JobApi(object):
                 )
             params[key] = val
         del params['kwargs']
+        # verify the required parameter 'job_id' is set
+        if ('job_id' not in params or
+                params['job_id'] is None):
+            raise ValueError("Missing the required parameter `job_id` when calling `submit_job`")  # noqa: E501
 
         collection_formats = {}
 
         path_params = {}
+        if 'job_id' in params:
+            path_params['job_id'] = params['job_id']  # noqa: E501
 
         query_params = []
 
@@ -702,14 +702,14 @@ class JobApi(object):
         auth_settings = ['BearerAuth']  # noqa: E501
 
         return self.api_client.call_api(
-            '/jobs', 'POST',
+            '/jobs/{job_id}/submit', 'POST',
             path_params,
             query_params,
             header_params,
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='JobsSubmitJobResponse',  # noqa: E501
+            response_type='SuccessSuccessResponse',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
