@@ -77,17 +77,12 @@ Examples:
         print(counts)
 
 """
-import io
 import json
 import os
-import requests
 import time
 from collections import Counter
 from datetime import datetime
-from io import BytesIO
-from pathlib import Path
-from typing import Any, Optional
-from zipfile import ZipFile
+from typing import Any
 
 from quri_parts.backend import (
     BackendError,
@@ -95,6 +90,7 @@ from quri_parts.backend import (
     SamplingJob,
     SamplingResult,
 )
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
@@ -711,35 +707,6 @@ class OqtopusSamplingBackend:
     #     return job
 
 
-    @staticmethod
-    def _extract_zip_object(zip_buffer: BytesIO) -> dict:
-        with ZipFile(zip_buffer, 'r') as zip_arch:
-            json_file_path_list = zip_arch.namelist()
-
-            if (len(json_file_path_list) == 1):
-                # one .zip = one json file
-                with zip_arch.open(json_file_path_list[0]) as json_file:
-                    value = json.loads(json_file.read())
-                    return value
-            else:
-                # TODO: raise exception
-                return {}
-
-
-    @staticmethod
-    def _download(url: str) -> dict:
-        with io.BytesIO() as zip_buffer:
-            resp = requests.get(url=url)
-            zip_buffer.write(resp.content)
-            zip_buffer.flush()
-            zip_buffer.seek(0)
-            try:
-                return OqtopusSamplingBackend._extract_zip_object(zip_buffer)
-            except Exception as e:
-                # TODO: improve error handling
-                raise e
-
-
     def retrieve_job(self, job_id: str) -> OqtopusSamplingJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
 
@@ -761,7 +728,7 @@ class OqtopusSamplingBackend:
                 for attr_name in response.job_info.attribute_map.keys():
                     attr_value = getattr(response.job_info, attr_name)
                     if (attr_value):
-                        job_info = job_info | OqtopusSamplingBackend._download(attr_value)
+                        job_info = job_info | OqtopusStorage.download(attr_value)
             else:
                 job_info = None
         except Exception as e:
