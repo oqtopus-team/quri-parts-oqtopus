@@ -17,9 +17,7 @@ from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     JobApi,
-    JobsJobDef,
-    JobsOperatorItem,
-    JobsSubmitJobInfo,
+    JobsJobBase,
     JobsSubmitJobRequest,
 )
 
@@ -90,13 +88,13 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
+    def __init__(self, job: JobsJobBase, job_api: JobApi) -> None:
         super().__init__()
 
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
-        self._job: JobsJobDef = job
+        self._job: JobsJobBase = job
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -285,7 +283,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJobDef | None:
+    ) -> JobsJobBase | None:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -437,155 +435,155 @@ class OqtopusEstimationBackend:
         )
         self._job_api: JobApi = JobApi(api_client=api_client)
 
-    def estimate(  # noqa: PLR0917, PLR0913
-        self,
-        program: NonParametricQuantumCircuit,
-        operator: Operator,
-        device_id: str,
-        shots: int,
-        name: str | None = None,
-        description: str | None = None,
-        transpiler_info: dict | None = None,
-        simulator_info: dict | None = None,
-        mitigation_info: dict | None = None,
-    ) -> OqtopusEstimationJob:
-        """Execute a estimation of a circuit.
+    # def estimate(  # noqa: PLR0917, PLR0913
+    #     self,
+    #     program: NonParametricQuantumCircuit,
+    #     operator: Operator,
+    #     device_id: str,
+    #     shots: int,
+    #     name: str | None = None,
+    #     description: str | None = None,
+    #     transpiler_info: dict | None = None,
+    #     simulator_info: dict | None = None,
+    #     mitigation_info: dict | None = None,
+    # ) -> OqtopusEstimationJob:
+    #     """Execute a estimation of a circuit.
 
-        The circuit is transpiled on OQTOPUS Cloud.
-        The QURI Parts transpiling feature is not supported.
-        The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
+    #     The circuit is transpiled on OQTOPUS Cloud.
+    #     The QURI Parts transpiling feature is not supported.
+    #     The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
 
-        Args:
-            program (NonParametricQuantumCircuit): The circuit to be estimated.
-            operator (Operator): The observable operator applied to the circuit.
-            device_id (str): The device id to be executed.
-            shots (int): Number of repetitions of each circuit, for estimation.
-            name (str | None, optional): The name to be assigned to the job.
-                Defaults to None.
-            description (str | None, optional): The description to be assigned to
-                the job. Defaults to None.
-            transpiler_info (dict | None, optional): The transpiler information.
-                Defaults to None.
-            simulator_info (dict | None, optional): The simulator information.
-                Defaults to None.
-            mitigation_info (dict | None, optional): The mitigation information.
-                Defaults to None.
+    #     Args:
+    #         program (NonParametricQuantumCircuit): The circuit to be estimated.
+    #         operator (Operator): The observable operator applied to the circuit.
+    #         device_id (str): The device id to be executed.
+    #         shots (int): Number of repetitions of each circuit, for estimation.
+    #         name (str | None, optional): The name to be assigned to the job.
+    #             Defaults to None.
+    #         description (str | None, optional): The description to be assigned to
+    #             the job. Defaults to None.
+    #         transpiler_info (dict | None, optional): The transpiler information.
+    #             Defaults to None.
+    #         simulator_info (dict | None, optional): The simulator information.
+    #             Defaults to None.
+    #         mitigation_info (dict | None, optional): The mitigation information.
+    #             Defaults to None.
 
-        Returns:
-            The job to be executed.
+    #     Returns:
+    #         The job to be executed.
 
-        """
-        if isinstance(program, list):
-            qasm = [convert_to_qasm_str(c) for c in program]
-        else:
-            qasm = convert_to_qasm_str(program)
+    #     """
+    #     if isinstance(program, list):
+    #         qasm = [convert_to_qasm_str(c) for c in program]
+    #     else:
+    #         qasm = convert_to_qasm_str(program)
 
-        return self.estimate_qasm(
-            program=qasm,
-            operator=operator,
-            device_id=device_id,
-            shots=shots,
-            name=name,
-            description=description,
-            transpiler_info=transpiler_info,
-            simulator_info=simulator_info,
-            mitigation_info=mitigation_info,
-        )
+    #     return self.estimate_qasm(
+    #         program=qasm,
+    #         operator=operator,
+    #         device_id=device_id,
+    #         shots=shots,
+    #         name=name,
+    #         description=description,
+    #         transpiler_info=transpiler_info,
+    #         simulator_info=simulator_info,
+    #         mitigation_info=mitigation_info,
+    #     )
 
-    def estimate_qasm(  # noqa: PLR0913, PLR0917
-        self,
-        program: str,
-        operator: Operator,
-        device_id: str,
-        shots: int,
-        name: str | None = None,
-        description: str | None = None,
-        transpiler_info: dict | None = None,
-        simulator_info: dict | None = None,
-        mitigation_info: dict | None = None,
-    ) -> OqtopusEstimationJob:
-        """Execute estimation of the program.
+    # def estimate_qasm(  # noqa: PLR0913, PLR0917
+    #     self,
+    #     program: str,
+    #     operator: Operator,
+    #     device_id: str,
+    #     shots: int,
+    #     name: str | None = None,
+    #     description: str | None = None,
+    #     transpiler_info: dict | None = None,
+    #     simulator_info: dict | None = None,
+    #     mitigation_info: dict | None = None,
+    # ) -> OqtopusEstimationJob:
+    #     """Execute estimation of the program.
 
-        The program is transpiled on OQTOPUS Cloud.
-        QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
+    #     The program is transpiled on OQTOPUS Cloud.
+    #     QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
 
-        Args:
-            program (str): The program to be estimated.
-            operator (Operator): The observable operator applied to the circuit.
-            device_id (str): The device id to be executed.
-            shots (int): Number of repetitions of each circuit, for estimation.
-            name (str | None, optional): The name to be assigned to the job.
-                Defaults to None.
-            description (str | None, optional): The description to be assigned to
-                the job. Defaults to None.
-            transpiler_info (dict | None, optional): The transpiler information.
-                Defaults to None.
-            simulator_info (dict | None, optional): The simulator information.
-                Defaults to None.
-            mitigation_info (dict | None, optional): The mitigation information.
-                Defaults to None.
+    #     Args:
+    #         program (str): The program to be estimated.
+    #         operator (Operator): The observable operator applied to the circuit.
+    #         device_id (str): The device id to be executed.
+    #         shots (int): Number of repetitions of each circuit, for estimation.
+    #         name (str | None, optional): The name to be assigned to the job.
+    #             Defaults to None.
+    #         description (str | None, optional): The description to be assigned to
+    #             the job. Defaults to None.
+    #         transpiler_info (dict | None, optional): The transpiler information.
+    #             Defaults to None.
+    #         simulator_info (dict | None, optional): The simulator information.
+    #             Defaults to None.
+    #         mitigation_info (dict | None, optional): The mitigation information.
+    #             Defaults to None.
 
-        Returns:
-            OqtopusEstimationJob: The job to be executed.
+    #     Returns:
+    #         OqtopusEstimationJob: The job to be executed.
 
-        Raises:
-            ValueError: If ``shots`` is not a positive integer.
-            ValueError: Imaginary part of coefficient is not supported.
-            BackendError: If job is wrong or if an authentication error occurred, etc.
+    #     Raises:
+    #         ValueError: If ``shots`` is not a positive integer.
+    #         ValueError: Imaginary part of coefficient is not supported.
+    #         BackendError: If job is wrong or if an authentication error occurred, etc.
 
-        """
-        if not shots >= 1:
-            msg = f"shots should be a positive integer.: {shots}"
-            raise ValueError(msg)
+    #     """
+    #     if not shots >= 1:
+    #         msg = f"shots should be a positive integer.: {shots}"
+    #         raise ValueError(msg)
 
-        job_type = "estimation"
+    #     job_type = "estimation"
 
-        if transpiler_info is None:
-            transpiler_info = {}
-        if simulator_info is None:
-            simulator_info = {}
-        if mitigation_info is None:
-            mitigation_info = {}
+    #     if transpiler_info is None:
+    #         transpiler_info = {}
+    #     if simulator_info is None:
+    #         simulator_info = {}
+    #     if mitigation_info is None:
+    #         mitigation_info = {}
 
-        operator_list = []
-        for pauli, coeff in operator.items():
-            if isinstance(coeff, complex):
-                if coeff.imag != 0.0:
-                    msg = f"Complex numbers are not supported in coefficient: {coeff}"
-                    raise ValueError(msg)
-                operator_list.append(
-                    JobsOperatorItem(
-                        pauli=str(pauli),
-                        coeff=float(coeff.real),
-                    )
-                )
-            else:
-                operator_list.append(
-                    JobsOperatorItem(
-                        pauli=str(pauli),
-                        coeff=float(coeff),
-                    )
-                )
-        job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
-        body = JobsSubmitJobRequest(
-            name=name,
-            description=description,
-            device_id=device_id,
-            job_type=job_type,
-            job_info=job_info,
-            transpiler_info=transpiler_info,
-            simulator_info=simulator_info,
-            mitigation_info=mitigation_info,
-            shots=shots,
-        )
-        try:
-            response_submit_job = self._job_api.submit_job(body=body)
-            response = self._job_api.get_job(response_submit_job.job_id)
-        except Exception as e:
-            msg = "To execute estimation on OQTOPUS Cloud is failed."
-            raise BackendError(msg) from e
+    #     operator_list = []
+    #     for pauli, coeff in operator.items():
+    #         if isinstance(coeff, complex):
+    #             if coeff.imag != 0.0:
+    #                 msg = f"Complex numbers are not supported in coefficient: {coeff}"
+    #                 raise ValueError(msg)
+    #             operator_list.append(
+    #                 JobsOperatorItem(
+    #                     pauli=str(pauli),
+    #                     coeff=float(coeff.real),
+    #                 )
+    #             )
+    #         else:
+    #             operator_list.append(
+    #                 JobsOperatorItem(
+    #                     pauli=str(pauli),
+    #                     coeff=float(coeff),
+    #                 )
+    #             )
+    #     job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
+    #     body = JobsSubmitJobRequest(
+    #         name=name,
+    #         description=description,
+    #         device_id=device_id,
+    #         job_type=job_type,
+    #         job_info=job_info,
+    #         transpiler_info=transpiler_info,
+    #         simulator_info=simulator_info,
+    #         mitigation_info=mitigation_info,
+    #         shots=shots,
+    #     )
+    #     try:
+    #         response_submit_job = self._job_api.submit_job(body=body)
+    #         response = self._job_api.get_job(response_submit_job.job_id)
+    #     except Exception as e:
+    #         msg = "To execute estimation on OQTOPUS Cloud is failed."
+    #         raise BackendError(msg) from e
 
-        return OqtopusEstimationJob(response, self._job_api)
+    #     return OqtopusEstimationJob(response, self._job_api)
 
     def retrieve_job(self, job_id: str) -> OqtopusEstimationJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
