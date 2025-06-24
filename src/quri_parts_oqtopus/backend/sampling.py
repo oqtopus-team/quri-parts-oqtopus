@@ -79,6 +79,7 @@ Examples:
 """
 import json
 import os
+import pprint
 import time
 from collections import Counter
 from datetime import datetime
@@ -104,6 +105,7 @@ from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobBase,
     JobsSubmitJobRequest,
+    JobsRegisterJobResponse,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -205,7 +207,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             raise ValueError(msg)
         self._job: JobsJobBase = job
 
-        self._job_info: dict | None  = job_info
+        self._job_info: dict | None = job_info
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -498,7 +500,9 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             str: A json string representation of the OqtopusSamplingJob.
 
         """
-        return json.dumps(self._job.to_dict(), cls=DateTimeEncoder)
+        job_data_combined = self._job.to_dict()
+        job_data_combined['job_info'] = self._job_info
+        return json.dumps(job_data_combined, cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusSamplingJob.
@@ -507,7 +511,9 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             str: A string representation of the OqtopusSamplingJob.
 
         """
-        return self._job.to_str()
+        job_data_combined = self._job.to_dict()
+        job_data_combined['job_info'] = self._job_info
+        return pprint.pformat(job_data_combined)
 
 
 class OqtopusSamplingBackend:
@@ -559,153 +565,154 @@ class OqtopusSamplingBackend:
         )
         self._job_api: JobApi = JobApi(api_client=api_client)
 
-    # def sample(  # noqa: PLR0917, PLR0913
-    #     self,
-    #     program: NonParametricQuantumCircuit | list[NonParametricQuantumCircuit],
-    #     device_id: str,
-    #     shots: int,
-    #     name: str | None = None,
-    #     description: str | None = None,
-    #     transpiler_info: dict | None = None,
-    #     simulator_info: dict | None = None,
-    #     mitigation_info: dict | None = None,
-    # ) -> OqtopusSamplingJob:
-    #     """Execute a sampling measurement of a circuit.
+    def sample(  # noqa: PLR0917, PLR0913
+        self,
+        program: NonParametricQuantumCircuit | list[NonParametricQuantumCircuit],
+        device_id: str,
+        shots: int,
+        name: str | None = None,
+        description: str | None = None,
+        transpiler_info: dict | None = None,
+        simulator_info: dict | None = None,
+        mitigation_info: dict | None = None,
+    ) -> OqtopusSamplingJob:
+        """Execute a sampling measurement of a circuit.
 
-    #     The circuit is transpiled on OQTOPUS Cloud.
-    #     The QURI Parts transpiling feature is not supported.
-    #     The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
+        The circuit is transpiled on OQTOPUS Cloud.
+        The QURI Parts transpiling feature is not supported.
+        The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
 
-    #     Args:
-    #         program (NonParametricQuantumCircuit | list[NonParametricQuantumCircuit]):
-    #             The circuit to be sampled.
-    #         device_id (str): The device id to be executed.
-    #         shots (int): Number of repetitions of each circuit, for sampling.
-    #         name (str | None, optional): The name to be assigned to the job.
-    #             Defaults to None.
-    #         description (str | None, optional): The description to be assigned to
-    #             the job. Defaults to None.
-    #         transpiler_info (dict | None, optional): The transpiler information.
-    #             Defaults to None.
-    #         simulator_info (dict | None, optional): The simulator information.
-    #             Defaults to None.
-    #         mitigation_info (dict | None, optional): The mitigation information.
-    #             Defaults to None.
+        Args:
+            program (NonParametricQuantumCircuit | list[NonParametricQuantumCircuit]):
+                The circuit to be sampled.
+            device_id (str): The device id to be executed.
+            shots (int): Number of repetitions of each circuit, for sampling.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
+            description (str | None, optional): The description to be assigned to
+                the job. Defaults to None.
+            transpiler_info (dict | None, optional): The transpiler information.
+                Defaults to None.
+            simulator_info (dict | None, optional): The simulator information.
+                Defaults to None.
+            mitigation_info (dict | None, optional): The mitigation information.
+                Defaults to None.
 
-    #     Returns:
-    #         The job to be executed.
+        Returns:
+            The job to be executed.
 
-    #     """
-    #     qasm: str | list[str]
-    #     if isinstance(program, list):
-    #         qasm = [_convert_to_qasm_str_with_measure(c) for c in program]
-    #     else:
-    #         qasm = _convert_to_qasm_str_with_measure(program)
+        """
+        qasm: str | list[str]
+        if isinstance(program, list):
+            qasm = [_convert_to_qasm_str_with_measure(c) for c in program]
+        else:
+            qasm = _convert_to_qasm_str_with_measure(program)
 
-    #     return self.sample_qasm(
-    #         program=qasm,
-    #         device_id=device_id,
-    #         shots=shots,
-    #         name=name,
-    #         description=description,
-    #         transpiler_info=transpiler_info,
-    #         simulator_info=simulator_info,
-    #         mitigation_info=mitigation_info,
-    #     )
+        return self.sample_qasm(
+            program=qasm,
+            device_id=device_id,
+            shots=shots,
+            name=name,
+            description=description,
+            transpiler_info=transpiler_info,
+            simulator_info=simulator_info,
+            mitigation_info=mitigation_info,
+        )
 
-    # def sample_qasm(  # noqa: PLR0913, PLR0917
-    #     self,
-    #     program: str | list[str],
-    #     device_id: str,
-    #     shots: int,
-    #     name: str | None = None,
-    #     description: str | None = None,
-    #     transpiler_info: dict | None = None,
-    #     simulator_info: dict | None = None,
-    #     mitigation_info: dict | None = None,
-    #     job_type: str | None = None,
-    # ) -> OqtopusSamplingJob:
-    #     """Execute sampling measurement of the program.
+    def sample_qasm(  # noqa: PLR0913, PLR0917
+        self,
+        program: str | list[str],
+        device_id: str,
+        shots: int,
+        name: str | None = None,
+        description: str | None = None,
+        transpiler_info: dict | None = None,
+        simulator_info: dict | None = None,
+        mitigation_info: dict | None = None,
+        job_type: str | None = None,
+    ) -> OqtopusSamplingJob:
+        """Execute sampling measurement of the program.
 
-    #     The program is transpiled on OQTOPUS Cloud.
-    #     QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
+        The program is transpiled on OQTOPUS Cloud.
+        QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
 
-    #     Args:
-    #         program (str | list[str]): The program to be sampled.
-    #         device_id (str): The device id to be executed.
-    #         shots (int): Number of repetitions of each circuit, for sampling.
-    #         name (str | None, optional): The name to be assigned to the job.
-    #             Defaults to None.
-    #         description (str | None, optional): The description to be assigned to
-    #             the job. Defaults to None.
-    #         transpiler_info (dict | None, optional): The transpiler information.
-    #             Defaults to None.
-    #         simulator_info (dict | None, optional): The simulator information.
-    #             Defaults to None.
-    #         mitigation_info (dict | None, optional): The mitigation information.
-    #             Defaults to None.
-    #         job_type (str | None, optional): The job type. Defaults to None.
+        Args:
+            program (str | list[str]): The program to be sampled.
+            device_id (str): The device id to be executed.
+            shots (int): Number of repetitions of each circuit, for sampling.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
+            description (str | None, optional): The description to be assigned to
+                the job. Defaults to None.
+            transpiler_info (dict | None, optional): The transpiler information.
+                Defaults to None.
+            simulator_info (dict | None, optional): The simulator information.
+                Defaults to None.
+            mitigation_info (dict | None, optional): The mitigation information.
+                Defaults to None.
+            job_type (str | None, optional): The job type. Defaults to None.
 
-    #     Returns:
-    #         OqtopusSamplingJob: The job to be executed.
+        Returns:
+            OqtopusSamplingJob: The job to be executed.
 
-    #     Raises:
-    #         ValueError: If ``shots`` is not a positive integer.
-    #         BackendError: If job is wrong or if an authentication error occurred, etc.
+        Raises:
+            ValueError: If ``shots`` is not a positive integer.
+            BackendError: If job is wrong or if an authentication error occurred, etc.
 
-    #     """
-    #     if not shots >= 1:
-    #         msg = f"shots should be a positive integer.: {shots}"
-    #         raise ValueError(msg)
+        """
+        if not shots >= 1:
+            msg = f"shots should be a positive integer.: {shots}"
+            raise ValueError(msg)
 
-    #     if job_type is None:
-    #         if isinstance(program, list):
-    #             job_type = "multi_manual"
-    #         else:
-    #             job_type = "sampling"
-    #             program = [program]
+        if job_type is None:
+            if isinstance(program, list):
+                job_type = "multi_manual"
+            else:
+                job_type = "sampling"
+                program = [program]
 
-    #     if transpiler_info is None:
-    #         transpiler_info = {}
-    #     if simulator_info is None:
-    #         simulator_info = {}
-    #     if mitigation_info is None:
-    #         mitigation_info = {}
+        if transpiler_info is None:
+            transpiler_info = {}
+        if simulator_info is None:
+            simulator_info = {}
+        if mitigation_info is None:
+            mitigation_info = {}
 
-    #     try:
-    #         if os.getenv("OQTOPUS_ENV") == "sse_container":
-    #             # This section is only for inside SSE container.
-    #             import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
+        try:
+            if os.getenv("OQTOPUS_ENV") == "sse_container":
+                # This section is only for inside SSE container.
+                import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
 
-    #             response = sse_sampler.req_transpile_and_exec(
-    #                 program, shots, transpiler_info
-    #             )
-    #             job = OqtopusSamplingJob(response, self._job_api)
-    #             # Workaround to avoid thread pool closing error when destructor of
-    #             # _job_api. Anyway the job_api cannot be used in SSE container.
-    #             del job._job_api  # noqa: SLF001
-    #         else:
-    #             job_info = JobsSubmitJobInfo(program=program)
-    #             body = JobsSubmitJobRequest(
-    #                 name=name,
-    #                 description=description,
-    #                 device_id=device_id,
-    #                 job_type=job_type,
-    #                 job_info=job_info,
-    #                 transpiler_info=transpiler_info,
-    #                 simulator_info=simulator_info,
-    #                 mitigation_info=mitigation_info,
-    #                 shots=shots,
-    #             )
-    #             response_submit_job = self._job_api.submit_job(body=body)
-    #             response = self._job_api.get_job(response_submit_job.job_id)
-    #             job = OqtopusSamplingJob(response, self._job_api)
-    #     except Exception as e:
-    #         msg = "To execute sampling on OQTOPUS Cloud is failed."
-    #         raise BackendError(msg) from e
+                response = sse_sampler.req_transpile_and_exec(
+                    program, shots, transpiler_info
+                )
+                # TODO
+                job = OqtopusSamplingJob(response, self._job_api)
+                # Workaround to avoid thread pool closing error when destructor of
+                # _job_api. Anyway the job_api cannot be used in SSE container.
+                del job._job_api  # noqa: SLF001
+            else:
+                register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
 
-    #     return job
+                OqtopusStorage.upload(register_response.presigned_url, {"program": program})
 
+                body = JobsSubmitJobRequest(
+                    name=name,
+                    description=description,
+                    device_id=device_id,
+                    job_type=job_type,
+                    transpiler_info=transpiler_info,
+                    simulator_info=simulator_info,
+                    mitigation_info=mitigation_info,
+                    shots=shots,
+                )
+                self._job_api.submit_job(job_id=register_response.job_id, body=body)
+
+                return self.retrieve_job(job_id=register_response.job_id)
+
+        except Exception as e:
+            msg = "To execute sampling on OQTOPUS Cloud is failed."
+            raise BackendError(msg) from e
 
     def retrieve_job(self, job_id: str) -> OqtopusSamplingJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
