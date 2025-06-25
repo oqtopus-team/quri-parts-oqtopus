@@ -77,6 +77,7 @@ Examples:
         print(counts)
 
 """
+
 import json
 import os
 import pprint
@@ -187,6 +188,7 @@ class OqtopusSamplingResult(SamplingResult):
         """
         return str(self._result)
 
+
 # TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     """A job for a sampling measurement.
@@ -199,6 +201,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         ValueError: If ``job`` or ``job_api`` is None.
 
     """
+
     @staticmethod
     def download_job(job_api: JobApi, job_id: str) -> JobsJobBase:
         return job_api.get_job(job_id)
@@ -206,18 +209,20 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     @staticmethod
     def download_job_info(job: JobsJobBase) -> dict | None:
         # TODO: (improvement) skip files that were already downloaded and extracted
-        if (job.job_info):
+        if job.job_info:
             job_info = {}
             for attr_name in job.job_info.attribute_map.keys():
                 attr_value = getattr(job.job_info, attr_name)
-                if (attr_value):
+                if attr_value:
                     job_info = job_info | OqtopusStorage.download(attr_value)
         else:
             job_info = None
 
         return job_info
 
-    def __init__(self, job: JobsJobBase, job_info: dict | None, job_api: JobApi) -> None:
+    def __init__(
+        self, job: JobsJobBase, job_info: dict | None, job_api: JobApi
+    ) -> None:
         # TODO: need to redefine job types in OAS
         # using `job: JobsJobBase` is a temp solution to bypass issues with swagger-codegen
         # originally `JobsJobBase` is used for `GET /jobs` requests with fields filtering -> all properties are optional
@@ -525,7 +530,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         job_data_combined = self._job.to_dict()
-        job_data_combined['job_info'] = self._job_info
+        job_data_combined["job_info"] = self._job_info
         return json.dumps(job_data_combined, cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
@@ -536,7 +541,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         job_data_combined = self._job.to_dict()
-        job_data_combined['job_info'] = self._job_info
+        job_data_combined["job_info"] = self._job_info
         return pprint.pformat(job_data_combined)
 
 
@@ -716,12 +721,15 @@ class OqtopusSamplingBackend:
                 # _job_api. Anyway the job_api cannot be used in SSE container.
                 del job._job_api  # noqa: SLF001
             else:
-                register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
+                register_response: JobsRegisterJobResponse = (
+                    self._job_api.register_job_id()
+                )
 
                 job_info_to_upload = JobsS3SubmitJobInfo(program=program).to_dict()
-                job_info_to_upload.pop('operator')
-                OqtopusStorage.upload(register_response.presigned_url,
-                                      job_info_to_upload)
+                job_info_to_upload.pop("operator")
+                OqtopusStorage.upload(
+                    register_response.presigned_url, job_info_to_upload
+                )
 
                 body = JobsSubmitJobRequest(
                     name=name,
@@ -756,14 +764,15 @@ class OqtopusSamplingBackend:
 
         """
         try:
-            job_base: JobsJobBase = OqtopusSamplingJob.download_job(self._job_api, job_id)
+            job_base: JobsJobBase = OqtopusSamplingJob.download_job(
+                self._job_api, job_id
+            )
             job_info: dict | None = OqtopusSamplingJob.download_job_info(job_base)
             return OqtopusSamplingJob(job_base, job_info, self._job_api)
 
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
 
 
 def _convert_to_qasm_str_with_measure(program: NonParametricQuantumCircuit) -> str:
