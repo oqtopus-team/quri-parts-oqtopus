@@ -1,5 +1,6 @@
 import json
 import os
+import pprint
 import time
 from datetime import datetime
 from typing import Any
@@ -12,15 +13,17 @@ from quri_parts.openqasm.circuit import convert_to_qasm_str
 from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     JobApi,
-    JobsJobDef,
-    JobsOperatorItem,
-    JobsSubmitJobInfo,
+    JobsJobBase,
+    JobsS3SubmitJobInfo,
+    JobsS3OperatorItem,
     JobsSubmitJobRequest,
+    JobsRegisterJobResponse,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -78,6 +81,7 @@ class OqtopusEstimationResult:
         return str(self._result)
 
 
+# TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusEstimationJob:  # noqa: PLR0904
     """A job for a estimation.
 
@@ -90,13 +94,40 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
+    @staticmethod
+    def download_job(job_api: JobApi, job_id: str) -> JobsJobBase:
+        return job_api.get_job(job_id)
+
+    @staticmethod
+    def download_job_info(job: JobsJobBase) -> dict | None:
+        # TODO: (improvement) skip files that were already downloaded and extracted
+        if job.job_info:
+            job_info = {}
+            for attr_name in job.job_info.attribute_map.keys():
+                attr_value = getattr(job.job_info, attr_name)
+                if attr_value:
+                    job_info = job_info | OqtopusStorage.download(attr_value)
+        else:
+            job_info = None
+
+        return job_info
+
+    def __init__(
+        self, job: JobsJobBase, job_info: dict | None, job_api: JobApi
+    ) -> None:
+        # TODO: need to redefine job types in OAS
+        # using `job: JobsJobBase` is a temp solution to bypass issues with swagger-codegen
+        # originally `JobsJobBase` is used for `GET /jobs` requests with fields filtering -> all properties are optional
+        # we need a well defined types for job defining which properties are mandatory/optional that are correctly handled by swagger-codegen
+
         super().__init__()
 
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
-        self._job: JobsJobDef = job
+        self._job: JobsJobBase = job
+
+        self._job_info: dict | None = job_info
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -174,14 +205,14 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         return self._job.shots
 
     @property
-    def job_info(self) -> dict:
+    def job_info(self) -> dict | None:
         """The detail information of the job.
 
         Returns:
             dict: The detail information of the job.
 
         """
-        return self._job.job_info.to_dict()
+        return self._job_info
 
     @property
     def transpiler_info(self) -> dict:
@@ -278,14 +309,15 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
         """
         try:
-            self._job = self._job_api.get_job(self._job.job_id)
+            self._job = OqtopusEstimationJob.download_job(self._job_api, self.job_id)
+            self._job_info = OqtopusEstimationJob.download_job_info(self._job)
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJobDef | None:
+    ) -> JobsJobBase | None:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -376,7 +408,9 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             str: A json string representation of the OqtopusEstimationJob.
 
         """
-        return json.dumps(self._job.to_dict(), cls=DateTimeEncoder)
+        job_data_combined = self._job.to_dict()
+        job_data_combined["job_info"] = self._job_info
+        return json.dumps(job_data_combined, cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusEstimationJob.
@@ -385,7 +419,9 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             str: A string representation of the OqtopusEstimationJob.
 
         """
-        return self._job.to_str()
+        job_data_combined = self._job.to_dict()
+        job_data_combined["job_info"] = self._job_info
+        return pprint.pformat(job_data_combined)
 
 
 class OqtopusEstimationBackend:
@@ -554,38 +590,43 @@ class OqtopusEstimationBackend:
                     msg = f"Complex numbers are not supported in coefficient: {coeff}"
                     raise ValueError(msg)
                 operator_list.append(
-                    JobsOperatorItem(
+                    JobsS3OperatorItem(
                         pauli=str(pauli),
                         coeff=float(coeff.real),
-                    )
+                    ).to_dict()
                 )
             else:
                 operator_list.append(
-                    JobsOperatorItem(
+                    JobsS3OperatorItem(
                         pauli=str(pauli),
                         coeff=float(coeff),
-                    )
+                    ).to_dict()
                 )
-        job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
-        body = JobsSubmitJobRequest(
-            name=name,
-            description=description,
-            device_id=device_id,
-            job_type=job_type,
-            job_info=job_info,
-            transpiler_info=transpiler_info,
-            simulator_info=simulator_info,
-            mitigation_info=mitigation_info,
-            shots=shots,
-        )
         try:
-            response_submit_job = self._job_api.submit_job(body=body)
-            response = self._job_api.get_job(response_submit_job.job_id)
+            register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
+
+            job_info_to_upload = JobsS3SubmitJobInfo(
+                program=program, operator=operator_list
+            ).to_dict()
+            OqtopusStorage.upload(register_response.presigned_url, job_info_to_upload)
+
+            body = JobsSubmitJobRequest(
+                name=name,
+                description=description,
+                device_id=device_id,
+                job_type=job_type,
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
+                shots=shots,
+            )
+            self._job_api.submit_job(job_id=register_response.job_id, body=body)
+
+            return self.retrieve_job(job_id=register_response.job_id)
+
         except Exception as e:
             msg = "To execute estimation on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
-        return OqtopusEstimationJob(response, self._job_api)
 
     def retrieve_job(self, job_id: str) -> OqtopusEstimationJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
@@ -602,9 +643,12 @@ class OqtopusEstimationBackend:
 
         """
         try:
-            response = self._job_api.get_job(job_id)
+            job_base: JobsJobBase = OqtopusEstimationJob.download_job(
+                self._job_api, job_id
+            )
+            job_info: dict | None = OqtopusEstimationJob.download_job_info(job_base)
+            return OqtopusEstimationJob(job_base, job_info, self._job_api)
+
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
-        return OqtopusEstimationJob(response, self._job_api)
