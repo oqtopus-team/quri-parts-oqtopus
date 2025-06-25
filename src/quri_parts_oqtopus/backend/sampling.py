@@ -198,6 +198,23 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         ValueError: If ``job`` or ``job_api`` is None.
 
     """
+    @staticmethod
+    def download_job(job_api: JobApi, job_id: str) -> JobsJobBase:
+        return job_api.get_job(job_id)
+
+    @staticmethod
+    def download_job_info(job: JobsJobBase) -> dict | None:
+        # TODO: (improvement) skip files that were already downloaded and extracted
+        if (job.job_info):
+            job_info = {}
+            for attr_name in job.job_info.attribute_map.keys():
+                attr_value = getattr(job.job_info, attr_name)
+                if (attr_value):
+                    job_info = job_info | OqtopusStorage.download(attr_value)
+        else:
+            job_info = None
+
+        return job_info
 
     def __init__(self, job: JobsJobBase, job_info: dict | None, job_api: JobApi) -> None:
         super().__init__()
@@ -729,20 +746,14 @@ class OqtopusSamplingBackend:
 
         """
         try:
-            response = self._job_api.get_job(job_id)
-            if (response.job_info):
-                job_info = {}
-                for attr_name in response.job_info.attribute_map.keys():
-                    attr_value = getattr(response.job_info, attr_name)
-                    if (attr_value):
-                        job_info = job_info | OqtopusStorage.download(attr_value)
-            else:
-                job_info = None
+            job_base: JobsJobBase = OqtopusSamplingJob.download_job(self._job_api, job_id)
+            job_info: dict | None = OqtopusSamplingJob.download_job_info(job_base)
+            return OqtopusSamplingJob(job_base, job_info, self._job_api)
+
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return OqtopusSamplingJob(response, job_info, self._job_api)
 
 
 def _convert_to_qasm_str_with_measure(program: NonParametricQuantumCircuit) -> str:
