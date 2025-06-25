@@ -104,6 +104,7 @@ from quri_parts_oqtopus.rest import (
     Configuration,
     JobApi,
     JobsJobBase,
+    JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
     JobsRegisterJobResponse,
 )
@@ -186,7 +187,7 @@ class OqtopusSamplingResult(SamplingResult):
         """
         return str(self._result)
 
-
+# TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     """A job for a sampling measurement.
 
@@ -217,6 +218,11 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return job_info
 
     def __init__(self, job: JobsJobBase, job_info: dict | None, job_api: JobApi) -> None:
+        # TODO: need to redefine job types in OAS
+        # using `job: JobsJobBase` is a temp solution to bypass issues with swagger-codegen
+        # originally `JobsJobBase` is used for `GET /jobs` requests with fields filtering -> all properties are optional
+        # we need a well defined types for job defining which properties are mandatory/optional that are correctly handled by swagger-codegen
+
         super().__init__()
 
         if job is None:
@@ -712,7 +718,10 @@ class OqtopusSamplingBackend:
             else:
                 register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
 
-                OqtopusStorage.upload(register_response.presigned_url, {"program": program})
+                job_info_to_upload = JobsS3SubmitJobInfo(program=program).to_dict()
+                job_info_to_upload.pop('operator')
+                OqtopusStorage.upload(register_response.presigned_url,
+                                      job_info_to_upload)
 
                 body = JobsSubmitJobRequest(
                     name=name,

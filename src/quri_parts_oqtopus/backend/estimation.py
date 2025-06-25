@@ -1,5 +1,6 @@
 import json
 import os
+import pprint
 import time
 from datetime import datetime
 from typing import Any
@@ -12,13 +13,17 @@ from quri_parts.openqasm.circuit import convert_to_qasm_str
 from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     JobApi,
     JobsJobBase,
+    JobsS3SubmitJobInfo,
+    JobsS3OperatorItem,
     JobsSubmitJobRequest,
+    JobsRegisterJobResponse,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -76,6 +81,7 @@ class OqtopusEstimationResult:
         return str(self._result)
 
 
+# TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusEstimationJob:  # noqa: PLR0904
     """A job for a estimation.
 
@@ -88,13 +94,38 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
     """
 
-    def __init__(self, job: JobsJobBase, job_api: JobApi) -> None:
+    @staticmethod
+    def download_job(job_api: JobApi, job_id: str) -> JobsJobBase:
+        return job_api.get_job(job_id)
+
+    @staticmethod
+    def download_job_info(job: JobsJobBase) -> dict | None:
+        # TODO: (improvement) skip files that were already downloaded and extracted
+        if (job.job_info):
+            job_info = {}
+            for attr_name in job.job_info.attribute_map.keys():
+                attr_value = getattr(job.job_info, attr_name)
+                if (attr_value):
+                    job_info = job_info | OqtopusStorage.download(attr_value)
+        else:
+            job_info = None
+
+        return job_info
+
+    def __init__(self, job: JobsJobBase, job_info: dict | None, job_api: JobApi) -> None:
+        # TODO: need to redefine job types in OAS
+        # using `job: JobsJobBase` is a temp solution to bypass issues with swagger-codegen
+        # originally `JobsJobBase` is used for `GET /jobs` requests with fields filtering -> all properties are optional
+        # we need a well defined types for job defining which properties are mandatory/optional that are correctly handled by swagger-codegen
+
         super().__init__()
 
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
         self._job: JobsJobBase = job
+
+        self._job_info: dict | None = job_info
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -172,14 +203,14 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         return self._job.shots
 
     @property
-    def job_info(self) -> dict:
+    def job_info(self) -> dict | None:
         """The detail information of the job.
 
         Returns:
             dict: The detail information of the job.
 
         """
-        return self._job.job_info.to_dict()
+        return self._job_info
 
     @property
     def transpiler_info(self) -> dict:
@@ -276,7 +307,8 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
         """
         try:
-            self._job = self._job_api.get_job(self._job.job_id)
+            self._job = OqtopusEstimationJob.download_job(self._job_api, self.job_id)
+            self._job_info = OqtopusEstimationJob.download_job_info(self._job)
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
@@ -374,7 +406,9 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             str: A json string representation of the OqtopusEstimationJob.
 
         """
-        return json.dumps(self._job.to_dict(), cls=DateTimeEncoder)
+        job_data_combined = self._job.to_dict()
+        job_data_combined['job_info'] = self._job_info
+        return json.dumps(job_data_combined, cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusEstimationJob.
@@ -383,7 +417,9 @@ class OqtopusEstimationJob:  # noqa: PLR0904
             str: A string representation of the OqtopusEstimationJob.
 
         """
-        return self._job.to_str()
+        job_data_combined = self._job.to_dict()
+        job_data_combined['job_info'] = self._job_info
+        return pprint.pformat(job_data_combined)
 
 
 class OqtopusEstimationBackend:
@@ -435,155 +471,158 @@ class OqtopusEstimationBackend:
         )
         self._job_api: JobApi = JobApi(api_client=api_client)
 
-    # def estimate(  # noqa: PLR0917, PLR0913
-    #     self,
-    #     program: NonParametricQuantumCircuit,
-    #     operator: Operator,
-    #     device_id: str,
-    #     shots: int,
-    #     name: str | None = None,
-    #     description: str | None = None,
-    #     transpiler_info: dict | None = None,
-    #     simulator_info: dict | None = None,
-    #     mitigation_info: dict | None = None,
-    # ) -> OqtopusEstimationJob:
-    #     """Execute a estimation of a circuit.
+    def estimate(  # noqa: PLR0917, PLR0913
+        self,
+        program: NonParametricQuantumCircuit,
+        operator: Operator,
+        device_id: str,
+        shots: int,
+        name: str | None = None,
+        description: str | None = None,
+        transpiler_info: dict | None = None,
+        simulator_info: dict | None = None,
+        mitigation_info: dict | None = None,
+    ) -> OqtopusEstimationJob:
+        """Execute a estimation of a circuit.
 
-    #     The circuit is transpiled on OQTOPUS Cloud.
-    #     The QURI Parts transpiling feature is not supported.
-    #     The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
+        The circuit is transpiled on OQTOPUS Cloud.
+        The QURI Parts transpiling feature is not supported.
+        The circuit is converted to OpenQASM 3.0 format and sent to OQTOPUS Cloud.
 
-    #     Args:
-    #         program (NonParametricQuantumCircuit): The circuit to be estimated.
-    #         operator (Operator): The observable operator applied to the circuit.
-    #         device_id (str): The device id to be executed.
-    #         shots (int): Number of repetitions of each circuit, for estimation.
-    #         name (str | None, optional): The name to be assigned to the job.
-    #             Defaults to None.
-    #         description (str | None, optional): The description to be assigned to
-    #             the job. Defaults to None.
-    #         transpiler_info (dict | None, optional): The transpiler information.
-    #             Defaults to None.
-    #         simulator_info (dict | None, optional): The simulator information.
-    #             Defaults to None.
-    #         mitigation_info (dict | None, optional): The mitigation information.
-    #             Defaults to None.
+        Args:
+            program (NonParametricQuantumCircuit): The circuit to be estimated.
+            operator (Operator): The observable operator applied to the circuit.
+            device_id (str): The device id to be executed.
+            shots (int): Number of repetitions of each circuit, for estimation.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
+            description (str | None, optional): The description to be assigned to
+                the job. Defaults to None.
+            transpiler_info (dict | None, optional): The transpiler information.
+                Defaults to None.
+            simulator_info (dict | None, optional): The simulator information.
+                Defaults to None.
+            mitigation_info (dict | None, optional): The mitigation information.
+                Defaults to None.
 
-    #     Returns:
-    #         The job to be executed.
+        Returns:
+            The job to be executed.
 
-    #     """
-    #     if isinstance(program, list):
-    #         qasm = [convert_to_qasm_str(c) for c in program]
-    #     else:
-    #         qasm = convert_to_qasm_str(program)
+        """
+        if isinstance(program, list):
+            qasm = [convert_to_qasm_str(c) for c in program]
+        else:
+            qasm = convert_to_qasm_str(program)
 
-    #     return self.estimate_qasm(
-    #         program=qasm,
-    #         operator=operator,
-    #         device_id=device_id,
-    #         shots=shots,
-    #         name=name,
-    #         description=description,
-    #         transpiler_info=transpiler_info,
-    #         simulator_info=simulator_info,
-    #         mitigation_info=mitigation_info,
-    #     )
+        return self.estimate_qasm(
+            program=qasm,
+            operator=operator,
+            device_id=device_id,
+            shots=shots,
+            name=name,
+            description=description,
+            transpiler_info=transpiler_info,
+            simulator_info=simulator_info,
+            mitigation_info=mitigation_info,
+        )
 
-    # def estimate_qasm(  # noqa: PLR0913, PLR0917
-    #     self,
-    #     program: str,
-    #     operator: Operator,
-    #     device_id: str,
-    #     shots: int,
-    #     name: str | None = None,
-    #     description: str | None = None,
-    #     transpiler_info: dict | None = None,
-    #     simulator_info: dict | None = None,
-    #     mitigation_info: dict | None = None,
-    # ) -> OqtopusEstimationJob:
-    #     """Execute estimation of the program.
+    def estimate_qasm(  # noqa: PLR0913, PLR0917
+        self,
+        program: str,
+        operator: Operator,
+        device_id: str,
+        shots: int,
+        name: str | None = None,
+        description: str | None = None,
+        transpiler_info: dict | None = None,
+        simulator_info: dict | None = None,
+        mitigation_info: dict | None = None,
+    ) -> OqtopusEstimationJob:
+        """Execute estimation of the program.
 
-    #     The program is transpiled on OQTOPUS Cloud.
-    #     QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
+        The program is transpiled on OQTOPUS Cloud.
+        QURI Parts OQTOPUS does not support QURI Parts transpiling feature.
 
-    #     Args:
-    #         program (str): The program to be estimated.
-    #         operator (Operator): The observable operator applied to the circuit.
-    #         device_id (str): The device id to be executed.
-    #         shots (int): Number of repetitions of each circuit, for estimation.
-    #         name (str | None, optional): The name to be assigned to the job.
-    #             Defaults to None.
-    #         description (str | None, optional): The description to be assigned to
-    #             the job. Defaults to None.
-    #         transpiler_info (dict | None, optional): The transpiler information.
-    #             Defaults to None.
-    #         simulator_info (dict | None, optional): The simulator information.
-    #             Defaults to None.
-    #         mitigation_info (dict | None, optional): The mitigation information.
-    #             Defaults to None.
+        Args:
+            program (str): The program to be estimated.
+            operator (Operator): The observable operator applied to the circuit.
+            device_id (str): The device id to be executed.
+            shots (int): Number of repetitions of each circuit, for estimation.
+            name (str | None, optional): The name to be assigned to the job.
+                Defaults to None.
+            description (str | None, optional): The description to be assigned to
+                the job. Defaults to None.
+            transpiler_info (dict | None, optional): The transpiler information.
+                Defaults to None.
+            simulator_info (dict | None, optional): The simulator information.
+                Defaults to None.
+            mitigation_info (dict | None, optional): The mitigation information.
+                Defaults to None.
 
-    #     Returns:
-    #         OqtopusEstimationJob: The job to be executed.
+        Returns:
+            OqtopusEstimationJob: The job to be executed.
 
-    #     Raises:
-    #         ValueError: If ``shots`` is not a positive integer.
-    #         ValueError: Imaginary part of coefficient is not supported.
-    #         BackendError: If job is wrong or if an authentication error occurred, etc.
+        Raises:
+            ValueError: If ``shots`` is not a positive integer.
+            ValueError: Imaginary part of coefficient is not supported.
+            BackendError: If job is wrong or if an authentication error occurred, etc.
 
-    #     """
-    #     if not shots >= 1:
-    #         msg = f"shots should be a positive integer.: {shots}"
-    #         raise ValueError(msg)
+        """
+        if not shots >= 1:
+            msg = f"shots should be a positive integer.: {shots}"
+            raise ValueError(msg)
 
-    #     job_type = "estimation"
+        job_type = "estimation"
 
-    #     if transpiler_info is None:
-    #         transpiler_info = {}
-    #     if simulator_info is None:
-    #         simulator_info = {}
-    #     if mitigation_info is None:
-    #         mitigation_info = {}
+        if transpiler_info is None:
+            transpiler_info = {}
+        if simulator_info is None:
+            simulator_info = {}
+        if mitigation_info is None:
+            mitigation_info = {}
 
-    #     operator_list = []
-    #     for pauli, coeff in operator.items():
-    #         if isinstance(coeff, complex):
-    #             if coeff.imag != 0.0:
-    #                 msg = f"Complex numbers are not supported in coefficient: {coeff}"
-    #                 raise ValueError(msg)
-    #             operator_list.append(
-    #                 JobsOperatorItem(
-    #                     pauli=str(pauli),
-    #                     coeff=float(coeff.real),
-    #                 )
-    #             )
-    #         else:
-    #             operator_list.append(
-    #                 JobsOperatorItem(
-    #                     pauli=str(pauli),
-    #                     coeff=float(coeff),
-    #                 )
-    #             )
-    #     job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
-    #     body = JobsSubmitJobRequest(
-    #         name=name,
-    #         description=description,
-    #         device_id=device_id,
-    #         job_type=job_type,
-    #         job_info=job_info,
-    #         transpiler_info=transpiler_info,
-    #         simulator_info=simulator_info,
-    #         mitigation_info=mitigation_info,
-    #         shots=shots,
-    #     )
-    #     try:
-    #         response_submit_job = self._job_api.submit_job(body=body)
-    #         response = self._job_api.get_job(response_submit_job.job_id)
-    #     except Exception as e:
-    #         msg = "To execute estimation on OQTOPUS Cloud is failed."
-    #         raise BackendError(msg) from e
+        operator_list = []
+        for pauli, coeff in operator.items():
+            if isinstance(coeff, complex):
+                if coeff.imag != 0.0:
+                    msg = f"Complex numbers are not supported in coefficient: {coeff}"
+                    raise ValueError(msg)
+                operator_list.append(
+                    JobsS3OperatorItem(
+                        pauli=str(pauli),
+                        coeff=float(coeff.real),
+                    ).to_dict()
+                )
+            else:
+                operator_list.append(
+                    JobsS3OperatorItem(
+                        pauli=str(pauli),
+                        coeff=float(coeff),
+                    ).to_dict()
+                )
+        try:
+            register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
 
-    #     return OqtopusEstimationJob(response, self._job_api)
+            job_info_to_upload = JobsS3SubmitJobInfo(program=program, operator=operator_list).to_dict()
+            OqtopusStorage.upload(register_response.presigned_url, job_info_to_upload)
+
+            body = JobsSubmitJobRequest(
+                name=name,
+                description=description,
+                device_id=device_id,
+                job_type=job_type,
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
+                shots=shots,
+            )
+            self._job_api.submit_job(job_id=register_response.job_id, body=body)
+
+            return self.retrieve_job(job_id=register_response.job_id)
+
+        except Exception as e:
+            msg = "To execute estimation on OQTOPUS Cloud is failed."
+            raise BackendError(msg) from e
 
     def retrieve_job(self, job_id: str) -> OqtopusEstimationJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
@@ -600,9 +639,10 @@ class OqtopusEstimationBackend:
 
         """
         try:
-            response = self._job_api.get_job(job_id)
+            job_base: JobsJobBase = OqtopusEstimationJob.download_job(self._job_api, job_id)
+            job_info: dict | None = OqtopusEstimationJob.download_job_info(job_base)
+            return OqtopusEstimationJob(job_base, job_info, self._job_api)
+
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
-        return OqtopusEstimationJob(response, self._job_api)
