@@ -402,7 +402,8 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         try:
-            self._job = self._job_api.get_job(self._job.job_id)
+            self._job = OqtopusSamplingJob.download_job(self._job_api, self.job_id)
+            self._job_info = OqtopusSamplingJob.download_job_info(self._job)
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
