@@ -14,5 +14,5 @@ job = backend.sample(
     shots=10000,
 )
 print(job)
-counts = job.result().counts
-print(counts)
+# counts = job.result().counts
+# print(counts)

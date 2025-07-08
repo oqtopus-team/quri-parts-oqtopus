@@ -29,7 +29,7 @@ if job.job_info:
             print(
                 f"virtual_physical_mapping={transpile_result['virtual_physical_mapping']}"
             )
-    print(f"message={job.job_info['message']}")
+    print(f"message={job.job_info.get('message')}")
 print("### transpiler_info")
 print(job.transpiler_info)  # dict
 print("### simulator_info")
@@ -41,23 +41,23 @@ print(job.ready_at)
 print(job.running_at)
 print(job.ended_at)
 
-# print result
-if job.status != "succeeded":
-    exit(0)
+# # print result
+# if job.status != "succeeded":
+#     exit(0)
 
-result = job.result()
-print(f"### result({job.job_type})")
-print(result)
+# result = job.result()
+# print(f"### result({job.job_type})")
+# print(result)
 
-if job.job_type == "sampling":
-    print(result.counts)
+# if job.job_type == "sampling":
+#     print(result.counts)
 
-if job.job_type == "estimation":
-    print(result.estimation["exp_value"])
-    print(result.estimation["stds"])
-    print(result.transpile_result)
+# if job.job_type == "estimation":
+#     print(result.estimation["exp_value"])
+#     print(result.estimation["stds"])
+#     print(result.transpile_result)
 
-if job.job_type == "multi_manual":
-    print(result.counts)
-    print(result.divided_counts)
-    print(result.divided_counts[0])
+# if job.job_type == "multi_manual":
+#     print(result.counts)
+#     print(result.divided_counts)
+#     print(result.divided_counts[0])
