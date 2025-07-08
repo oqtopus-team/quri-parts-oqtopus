@@ -1,6 +1,6 @@
 [project]
 name = "quri-parts-oqtopus"
-version = "1.0.2"
+version = "1.0.3"
 description = "QURI Parts OQTOPUS is a library for executing programs on quantum computers via the OQTOPUS Cloud interface."
 readme = "README.md"
 license = "Apache-2.0"
