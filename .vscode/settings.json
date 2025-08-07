@@ -13,9 +13,6 @@
   "ruff.path": [
     "${workspaceFolder}/.venv/bin/ruff"
   ],
-  "ruff.lint.args": [
-    "--config=${workspaceFolder}/pyproject.toml",
-  ],
   "mypy-type-checker.path": [
     "${workspaceFolder}/.venv/bin/mypy"
   ],
