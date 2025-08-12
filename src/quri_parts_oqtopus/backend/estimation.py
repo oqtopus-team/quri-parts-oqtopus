@@ -3,7 +3,7 @@ import os
 import pprint
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from quri_parts.backend import BackendError
 from quri_parts.circuit import NonParametricQuantumCircuit
@@ -19,11 +19,11 @@ from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     JobApi,
-    JobsJobBase,
+    JobsJob,
+    JobsRegisterJobResponse,
     JobsS3SubmitJobInfo,
     JobsS3OperatorItem,
     JobsSubmitJobRequest,
-    JobsRegisterJobResponse,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -95,29 +95,24 @@ class OqtopusEstimationJob:  # noqa: PLR0904
     """
 
     @staticmethod
-    def download_job(job_api: JobApi, job_id: str) -> JobsJobBase:
-        return job_api.get_job(job_id)
+    def _download_job(job_api: JobApi, job_id: str) -> JobsJob:
+        return cast(JobsJob, job_api.get_job(job_id))
 
     @staticmethod
-    def download_job_info(job: JobsJobBase) -> dict | None:
+    def _download_job_info(job: JobsJob) -> dict:
         # TODO: (improvement) skip files that were already downloaded and extracted
-        if job.job_info:
-            job_info = {}
-            for attr_name in job.job_info.attribute_map.keys():
-                attr_value = getattr(job.job_info, attr_name)
-                if attr_value:
-                    job_info = job_info | OqtopusStorage.download(attr_value)
-        else:
-            job_info = None
+        job_info: dict = {}
+        for attr_name in job.job_info.attribute_map.keys():
+            attr_value = getattr(job.job_info, attr_name)
+            if attr_value:
+                job_info = job_info | OqtopusStorage.download(attr_value)
 
         return job_info
 
-    def __init__(
-        self, job: JobsJobBase, job_info: dict | None, job_api: JobApi
-    ) -> None:
+    def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
         # TODO: need to redefine job types in OAS
-        # using `job: JobsJobBase` is a temp solution to bypass issues with swagger-codegen
-        # originally `JobsJobBase` is used for `GET /jobs` requests with fields filtering -> all properties are optional
+        # using `job: JobsJob` is a temp solution to bypass issues with swagger-codegen
+        # originally `JobsJob` is used for `GET /jobs` requests with fields filtering -> all properties are optional
         # we need a well defined types for job defining which properties are mandatory/optional that are correctly handled by swagger-codegen
 
         super().__init__()
@@ -125,9 +120,15 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
-        self._job: JobsJobBase = job
+        if job.status == "registered":
+            msg = "'job' status should not be registered"
+            raise ValueError(msg)
+        self._job: JobsJob = job
 
-        self._job_info: dict | None = job_info
+        if job_info is None:
+            msg = "'job_info' should not be None"
+            raise ValueError(msg)
+        self._job_info: dict = job_info
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -205,7 +206,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         return self._job.shots
 
     @property
-    def job_info(self) -> dict | None:
+    def job_info(self) -> dict:
         """The detail information of the job.
 
         Returns:
@@ -309,15 +310,15 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
         """
         try:
-            self._job = OqtopusEstimationJob.download_job(self._job_api, self.job_id)
-            self._job_info = OqtopusEstimationJob.download_job_info(self._job)
+            self._job = OqtopusEstimationJob._download_job(self._job_api, self.job_id)
+            self._job_info = OqtopusEstimationJob._download_job_info(self._job)
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJobBase | None:
+    ) -> JobsJob | None:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -603,9 +604,10 @@ class OqtopusEstimationBackend:
                     ).to_dict()
                 )
         try:
-            register_response: JobsRegisterJobResponse = self._job_api.register_job_id()
-
-            job_info_to_upload = JobsS3SubmitJobInfo(
+            register_response: JobsRegisterJobResponse = cast(
+                JobsRegisterJobResponse, self._job_api.register_job_id()
+            )
+            job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                 program=program, operator=operator_list
             ).to_dict()
             OqtopusStorage.upload(register_response.presigned_url, job_info_to_upload)
@@ -643,11 +645,12 @@ class OqtopusEstimationBackend:
 
         """
         try:
-            job_base: JobsJobBase = OqtopusEstimationJob.download_job(
-                self._job_api, job_id
-            )
-            job_info: dict | None = OqtopusEstimationJob.download_job_info(job_base)
-            return OqtopusEstimationJob(job_base, job_info, self._job_api)
+            job: JobsJob = OqtopusEstimationJob._download_job(self._job_api, job_id)
+            # registered jobs id's are not available via SDK
+            if job.status == "registered":
+                raise ValueError("job status='registered' not supported")
+            job_info: dict = OqtopusEstimationJob._download_job_info(job)
+            return OqtopusEstimationJob(job, job_info, self._job_api)
 
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
