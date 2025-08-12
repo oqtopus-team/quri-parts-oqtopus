@@ -19,6 +19,8 @@ from quri_parts_oqtopus.rest.models.all_ofjobs_job_info_input import AllOfjobsJo
 from quri_parts_oqtopus.rest.models.all_ofjobs_job_info_result import AllOfjobsJobInfoResult
 from quri_parts_oqtopus.rest.models.all_ofjobs_job_info_sse_log import AllOfjobsJobInfoSseLog
 from quri_parts_oqtopus.rest.models.all_ofjobs_job_info_transpile_result import AllOfjobsJobInfoTranspileResult
+from quri_parts_oqtopus.rest.models.announcements_get_announcement_response import AnnouncementsGetAnnouncementResponse
+from quri_parts_oqtopus.rest.models.announcements_get_announcements_list_response import AnnouncementsGetAnnouncementsListResponse
 from quri_parts_oqtopus.rest.models.api_token_api_token import ApiTokenApiToken
 from quri_parts_oqtopus.rest.models.devices_device_info import DevicesDeviceInfo
 from quri_parts_oqtopus.rest.models.error_bad_request import ErrorBadRequest
@@ -27,7 +29,7 @@ from quri_parts_oqtopus.rest.models.error_internal_server_error import ErrorInte
 from quri_parts_oqtopus.rest.models.error_not_found_error import ErrorNotFoundError
 from quri_parts_oqtopus.rest.models.error_unauthorized_error import ErrorUnauthorizedError
 from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
-from quri_parts_oqtopus.rest.models.jobs_job_base import JobsJobBase
+from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
 from quri_parts_oqtopus.rest.models.jobs_job_id import JobsJobId
 from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
 from quri_parts_oqtopus.rest.models.jobs_job_info_download_presigned_url import JobsJobInfoDownloadPresignedURL
@@ -36,7 +38,6 @@ from quri_parts_oqtopus.rest.models.jobs_job_info_upload_presigned_url_fields im
 from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 from quri_parts_oqtopus.rest.models.jobs_register_job_response import JobsRegisterJobResponse
-from quri_parts_oqtopus.rest.models.jobs_registered_job import JobsRegisteredJob
 from quri_parts_oqtopus.rest.models.jobs_s3_estimation_result import JobsS3EstimationResult
 from quri_parts_oqtopus.rest.models.jobs_s3_job_result import JobsS3JobResult
 from quri_parts_oqtopus.rest.models.jobs_s3_operator_item import JobsS3OperatorItem
@@ -45,5 +46,4 @@ from quri_parts_oqtopus.rest.models.jobs_s3_submit_job_info import JobsS3SubmitJ
 from quri_parts_oqtopus.rest.models.jobs_s3_transpile_result import JobsS3TranspileResult
 from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest
 from quri_parts_oqtopus.rest.models.jobs_submit_job_type import JobsSubmitJobType
-from quri_parts_oqtopus.rest.models.jobs_submitted_job import JobsSubmittedJob
 from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse

@@ -24,7 +24,6 @@ class JobsJobType(object):
     """
     allowed enum values
     """
-    NONE = "none"
     ESTIMATION = "estimation"
     SAMPLING = "sampling"
     MULTI_MANUAL = "multi_manual"

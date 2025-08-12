@@ -233,7 +233,7 @@ class JobApi(object):
 
         :param async_req bool
         :param str job_id: Job identifier (required)
-        :return: JobsJobBase
+        :return: JobsJob
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -255,7 +255,7 @@ class JobApi(object):
 
         :param async_req bool
         :param str job_id: Job identifier (required)
-        :return: JobsJobBase
+        :return: JobsJob
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -309,7 +309,7 @@ class JobApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='JobsJobBase',  # noqa: E501
+            response_type='JobsJob',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -425,11 +425,11 @@ class JobApi(object):
         :param str fields: Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.
         :param datetime start_time: Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.
         :param datetime end_tiime: Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.
-        :param str q: Allows to filter the list of jobs to fetch by job's name and description. If specified only jobs which name or description contains specified search string are returned.
+        :param str q: Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.
         :param int page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
         :param int size: Configure number of jobs per page
         :param str order: Specify jobs order according to creation time (createdAt property)
-        :return: list[JobsJobBase]
+        :return: list[JobsJob]
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -453,11 +453,11 @@ class JobApi(object):
         :param str fields: Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.
         :param datetime start_time: Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.
         :param datetime end_tiime: Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.
-        :param str q: Allows to filter the list of jobs to fetch by job's name and description. If specified only jobs which name or description contains specified search string are returned.
+        :param str q: Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.
         :param int page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
         :param int size: Configure number of jobs per page
         :param str order: Specify jobs order according to creation time (createdAt property)
-        :return: list[JobsJobBase]
+        :return: list[JobsJob]
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -519,7 +519,7 @@ class JobApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='list[JobsJobBase]',  # noqa: E501
+            response_type='list[JobsJob]',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
