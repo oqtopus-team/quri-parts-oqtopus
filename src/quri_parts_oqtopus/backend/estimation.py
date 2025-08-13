@@ -102,11 +102,16 @@ class OqtopusEstimationJob:  # noqa: PLR0904
     def _download_job_info(job: JobsJob) -> dict:
         # TODO: (improvement) skip files that were already downloaded and extracted
         job_info: dict = {}
-        for attr_name in job.job_info.attribute_map.keys():
-            attr_value = getattr(job.job_info, attr_name)
+        for downloadable_attr in [
+            "input",
+            "combined_program",
+            "result",
+            "transpile_result",
+            "sse_log",
+        ]:
+            attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
                 job_info = job_info | OqtopusStorage.download(attr_value)
-
         return job_info
 
     def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
@@ -381,6 +386,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
         # edit json for OqtopusEstimationResult
         result = self.job_info["result"]["estimation"]
+        print(f"@@@{result}")
 
         return OqtopusEstimationResult(result)
 

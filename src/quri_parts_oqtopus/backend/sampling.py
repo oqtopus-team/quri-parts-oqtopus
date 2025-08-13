@@ -210,16 +210,20 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     def _download_job_info(job: JobsJob) -> dict:
         # TODO: (improvement) skip files that were already downloaded and extracted
         job_info: dict = {}
-        for attr_name in job.job_info.attribute_map.keys():
-            attr_value = getattr(job.job_info, attr_name)
+        for downloadable_attr in [
+            "input",
+            "combined_program",
+            "result",
+            "transpile_result",
+            "sse_log",
+        ]:
+            attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
                 job_info = job_info | OqtopusStorage.download(attr_value)
 
         return job_info
 
-    def __init__(
-        self, job: JobsJob, job_info: dict, job_api: JobApi
-    ) -> None:
+    def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
         super().__init__()
 
         if job is None:
@@ -713,14 +717,16 @@ class OqtopusSamplingBackend:
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
                 )
-                job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(response)
+                job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(
+                    response
+                )
                 job = OqtopusSamplingJob(response, job_info, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
                 del job._job_api  # noqa: SLF001
             else:
-                register_response: JobsRegisterJobResponse = (
-                    cast(JobsRegisterJobResponse, self._job_api.register_job_id())
+                register_response: JobsRegisterJobResponse = cast(
+                    JobsRegisterJobResponse, self._job_api.register_job_id()
                 )
                 job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                     program=program
@@ -763,9 +769,7 @@ class OqtopusSamplingBackend:
 
         """
         try:
-            job: JobsJob = OqtopusSamplingJob._download_job(
-                self._job_api, job_id
-            )
+            job: JobsJob = OqtopusSamplingJob._download_job(self._job_api, job_id)
             # registered jobs id's are not available via SDK
             if job.status == "registered":
                 raise ValueError("job status='registered' not supported")
