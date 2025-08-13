@@ -6,12 +6,13 @@ from pathlib import Path, PurePath
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.backend.job_backend_base import OqtopusJobBackendBase
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
 
 
-class OqtopusSseBackend:
+class OqtopusSseBackend(OqtopusJobBackendBase):
     """A job for a SSE.
 
     Args:
