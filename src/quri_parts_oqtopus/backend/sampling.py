@@ -423,7 +423,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJob | None:
+    ) -> bool:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -434,23 +434,23 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             wait: Time in seconds between queries.
 
         Returns:
-            JobsJobDef | None: If a timeout occurs, it returns None. Otherwise, it
-                returns the Job.
+            bool: If a timeout occurs, it returns False. Otherwise, it
+                returns True.
 
         """
         start_time = time.time()
         self.refresh()
-        while self._job.status not in JOB_FINAL_STATUS:
+        while self.status not in JOB_FINAL_STATUS:
             # check timeout
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
-                return None
+                return False
 
             # sleep and get job
             time.sleep(wait)
             self.refresh()
 
-        return self._job
+        return True
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
@@ -475,11 +475,9 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         if self._job.status not in JOB_FINAL_STATUS:
-            job = self.wait_for_completion(timeout, wait)
-            if job is None:
+            if not self.wait_for_completion(timeout, wait):
                 msg = f"Timeout occurred after {timeout} seconds."
                 raise BackendError(msg)
-            self._job = job
         if self._job.status in {"failed", "cancelled"}:
             msg = f"Job ended with status {self._job.status}."
             raise BackendError(msg)
