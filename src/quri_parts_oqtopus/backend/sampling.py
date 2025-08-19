@@ -219,7 +219,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         ]:
             attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
-                job_info = job_info | OqtopusStorage.download(attr_value)
+                job_info = job_info | OqtopusStorage.download(presigned_url=attr_value)
 
         return job_info
 
@@ -731,7 +731,8 @@ class OqtopusSamplingBackend:
                 ).to_dict()
                 job_info_to_upload.pop("operator")
                 OqtopusStorage.upload(
-                    register_response.presigned_url, job_info_to_upload
+                    presigned_url=register_response.presigned_url,
+                    data=job_info_to_upload,
                 )
 
                 body = JobsSubmitJobRequest(

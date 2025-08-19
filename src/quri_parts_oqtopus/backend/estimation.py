@@ -111,7 +111,7 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         ]:
             attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
-                job_info = job_info | OqtopusStorage.download(attr_value)
+                job_info = job_info | OqtopusStorage.download(presigned_url=attr_value)
         return job_info
 
     def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
@@ -613,7 +613,9 @@ class OqtopusEstimationBackend:
             job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                 program=program, operator=operator_list
             ).to_dict()
-            OqtopusStorage.upload(register_response.presigned_url, job_info_to_upload)
+            OqtopusStorage.upload(
+                presigned_url=register_response.presigned_url, data=job_info_to_upload
+            )
 
             body = JobsSubmitJobRequest(
                 name=name,
