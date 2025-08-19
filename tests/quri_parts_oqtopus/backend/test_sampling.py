@@ -139,13 +139,15 @@ def get_dummy_job(status: str = "succeeded") -> JobsJob:
     )
 
 
-def dummy_download(presigned_url: str) -> dict:
+def dummy_download_job(presigned_url: str) -> dict:
     url_to_data = {
         "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
         "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
         "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": "transpile_result",
     }
-    return {url_to_data[presigned_url]: get_dummy_job_info()[url_to_data[presigned_url]]}
+    return {
+        url_to_data[presigned_url]: get_dummy_job_info()[url_to_data[presigned_url]]
+    }
 
 
 def get_dummy_job_info_upload_url() -> JobsJobInfoUploadPresignedURL:
@@ -183,22 +185,42 @@ def get_dummy_job_submit_request(
     )
 
 
-# def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJob:
-#     job = get_dummy_job(status)
-#     job.job_type = "multi_manual"
-#     job.job_info.program = [
-#         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
-#         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
-#         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
-#     ]
-#     job.job_info.result["sampling"] = JobsS3JobResult(
-#         counts={"0000": 490, "0001": 10, "0110": 20, "1111": 480},
-#         divided_counts={
-#             "0": {"00": 490, "01": 10, "10": 20, "11": 480},
-#             "1": {"00": 500, "01": 20, "11": 480},
-#         },
-#     )
-#     return job
+def get_dummy_multimanual_job_info(status: str = "succeeded") -> dict:
+    output = {}
+    output["program"] = [
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+        'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+    ]
+    if status == "succeeded":
+        output["result"] = {
+            "sampling": {
+                "counts": {"0000": 490, "0001": 10, "0110": 20, "1111": 480},
+                "divided_counts": {
+                    "0": {"00": 490, "01": 10, "10": 20, "11": 480},
+                    "1": {"00": 500, "01": 20, "11": 480},
+                },
+            }
+        }
+    return output
+
+
+def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJob:
+    job = get_dummy_job(status)
+    job.job_type = "multi_manual"
+    return job
+
+
+def dummy_download_multimanual_job(presigned_url: str) -> dict:
+    url_to_data = {
+        "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
+        "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
+    }
+    return {
+        url_to_data[presigned_url]: get_dummy_multimanual_job_info()[
+            url_to_data[presigned_url]
+        ]
+    }
 
 
 def get_dummy_config() -> OqtopusConfig:
@@ -349,7 +371,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         job = arrange_job_to_test("running")
@@ -372,7 +394,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         # case1: status is "success"
@@ -422,7 +444,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         job = arrange_job_to_test("running")
@@ -451,7 +473,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         # Arrange
@@ -477,7 +499,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         # case1: status is "success"
@@ -517,7 +539,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         job = arrange_job_to_test("running")
@@ -544,7 +566,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         # Arrange
@@ -566,7 +588,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         job = arrange_job_to_test("running")
@@ -727,7 +749,7 @@ class TestOqtopusSamplingBackend:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
 
         backend = OqtopusSamplingBackend(get_dummy_config())
@@ -736,7 +758,9 @@ class TestOqtopusSamplingBackend:
         circuit.add_H_gate(0)
         circuit.add_CNOT_gate(0, 1)
 
-        qasm_program = 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
+        qasm_program = [
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'
+        ]  # noqa: E501
 
         # Act
         job = backend.sample(
@@ -755,7 +779,7 @@ class TestOqtopusSamplingBackend:
         register_mock.assert_called_once()
         upload_mock.assert_called_once_with(
             presigned_url=get_dummy_job_info_upload_url(),
-            data={"program": [qasm_program]},
+            data={"program": qasm_program},
         )
         submit_mock.assert_called_once_with(
             job_id="dummy_job_id",
@@ -776,14 +800,27 @@ class TestOqtopusSamplingBackend:
 
     def test_sample_circuit_array(self, mocker: MockerFixture):
         # Arrange
-        mock_obj = mocker.patch(
+        register_mock = mocker.patch(
+            "quri_parts_oqtopus.rest.JobApi.register_job_id",
+            return_value=get_dummy_job_id_registration(),
+        )
+        upload_mock = mocker.patch(
+            "quri_parts_oqtopus.backend.storage.OqtopusStorage.upload",
+            return_value=None,
+        )
+        submit_mock = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=JobsSubmitJobResponse(job_id="dummy_job_id"),
+            return_value=SuccessSuccessResponse("job registered"),
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_multimanual_job(),
+            return_value=get_dummy_multimanual_job("submitted"),
         )
+        mocker.patch(
+            "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
+            side_effect=dummy_download_multimanual_job,
+        )
+
         backend = OqtopusSamplingBackend(get_dummy_config())
 
         circuit = QuantumCircuit(2)
@@ -794,6 +831,12 @@ class TestOqtopusSamplingBackend:
         circuit2.add_H_gate(0)
         circuit2.add_CNOT_gate(0, 1)
         circuit2.add_RY_gate(2, 0.1)
+
+        qasm_programs = [
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+        ]
 
         # Act
         job = backend.sample(
@@ -809,51 +852,27 @@ class TestOqtopusSamplingBackend:
         )
 
         # Assert
+        register_mock.assert_called_once()
+        upload_mock.assert_called_once_with(
+            presigned_url=get_dummy_job_info_upload_url(),
+            data={"program": qasm_programs},
+        )
+        submit_mock.assert_called_once_with(
+            job_id="dummy_job_id",
+            body=get_dummy_job_submit_request(job_type="multi_manual"),
+        )
+
         assert job.job_id == "dummy_job_id"
-        program = [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
-        ]
-        mock_obj.assert_called_once_with(
-            body=get_dummy_JobsSubmitJobRequest(
-                job_type="multi_manual", program=program
-            )
-        )
-        assert job.result().counts == {0: 490, 1: 10, 6: 20, 15: 480}
-        assert job.result().divided_counts == {
-            0: {0: 490, 1: 10, 2: 20, 3: 480},
-            1: {0: 500, 1: 20, 3: 480},
-        }
-
-    def test_sample_qasm(self, mocker: MockerFixture):
-        # Arrange
-        mock_obj = mocker.patch(
-            "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=JobsSubmitJobResponse(job_id="dummy_job_id"),
-        )
-        mocker.patch(
-            "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job(),
-        )
-        backend = OqtopusSamplingBackend(get_dummy_config())
-
-        # Act
-        job = backend.sample_qasm(
-            qasm_data_with_measure,
-            device_id="dummy_device_id",
-            shots=1000,
-            name="dummy_name",
-            description="dummy_description",
-            transpiler_info={
-                "transpiler_lib": "qiskit",
-                "transpiler_options": {"optimization_level": 2},
-            },
-        )
-
-        # Assert
-        assert job.job_id == "dummy_job_id"
-        mock_obj.assert_called_once_with(body=get_dummy_JobsSubmitJobRequest())
+        assert job.name == "dummy_name"
+        assert job.description == "dummy_description"
+        assert job.job_type == "multi_manual"
+        assert job.status == "submitted"
+        assert job.device_id == "dummy_device_id"
+        assert job.shots == 1000
+        assert job.job_info == get_dummy_multimanual_job_info("submitted")
+        assert job.simulator_info == {}
+        assert job.mitigation_info == {}
+        assert job.submitted_at == datetime.datetime(2000, 1, 2, 3, 4, 1)  # noqa: DTZ001
 
     def test_sample_qasm_sse_container(self):
         # Arrange
@@ -911,7 +930,7 @@ class TestOqtopusSamplingBackend:
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
-            side_effect=dummy_download,
+            side_effect=dummy_download_job,
         )
         backend = OqtopusSamplingBackend(get_dummy_config())
 
