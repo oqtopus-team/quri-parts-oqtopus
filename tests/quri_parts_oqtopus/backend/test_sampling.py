@@ -12,6 +12,7 @@ import datetime
 import json
 import sys
 import time
+from typing import Any
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -80,7 +81,7 @@ qasm_array_json = json.dumps({"qasm": [qasm_data, qasm_data2, qasm_data]})
 
 
 def get_dummy_job_info_urls(status: str = "succeeded") -> dict:
-    output = {
+    output: dict[str, Any] = {
         "input": "http://host:port/storage_base/dummy_job_id/input.zip?params",
         "combined_program": None,
         "result": None,
@@ -99,7 +100,7 @@ def get_dummy_job_info_urls(status: str = "succeeded") -> dict:
 
 
 def get_dummy_job_info(status: str = "succeeded") -> dict:
-    output = {}
+    output: dict[str, Any] = {}
     output["program"] = [
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
     ]
