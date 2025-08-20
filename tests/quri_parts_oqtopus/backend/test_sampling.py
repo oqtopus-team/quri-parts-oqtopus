@@ -143,7 +143,7 @@ def dummy_download_job(presigned_url: str) -> dict:
     url_to_data = {
         "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
         "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
-        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": "transpile_result",
+        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": "transpile_result",  # noqa: E501
     }
     return {
         url_to_data[presigned_url]: get_dummy_job_info()[url_to_data[presigned_url]]
@@ -405,7 +405,7 @@ class TestOqtopusSamplingJob:
         result = job.wait_for_completion()
 
         # Assert
-        assert result == True
+        assert result is True
         assert job.status == "succeeded"
         assert job.job_info == get_dummy_job_info("succeeded")
 
@@ -417,7 +417,7 @@ class TestOqtopusSamplingJob:
         result = job.wait_for_completion()
 
         # Assert
-        assert result == True
+        assert result
         assert job.status == "failed"
         assert job.job_info == get_dummy_job_info("failed")
 
@@ -429,7 +429,7 @@ class TestOqtopusSamplingJob:
         result = job.wait_for_completion()
 
         # Assert
-        assert result == True
+        assert result
         assert job.status == "cancelled"
         assert job.job_info == get_dummy_job_info("cancelled")
 
@@ -455,7 +455,7 @@ class TestOqtopusSamplingJob:
         elapsed_time = time.time() - start_time
 
         # Assert
-        assert result == True
+        assert result
         assert job.status == "succeeded"
         assert job.job_info == get_dummy_job_info("succeeded")
         assert elapsed_time >= 3.0
@@ -485,7 +485,7 @@ class TestOqtopusSamplingJob:
         elapsed_time = time.time() - start_time
 
         # Assert
-        assert result == False
+        assert not result
         assert elapsed_time >= 10.0
 
     def test_result(self, mocker: MockerFixture):
@@ -759,8 +759,8 @@ class TestOqtopusSamplingBackend:
         circuit.add_CNOT_gate(0, 1)
 
         qasm_program = [
-            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'
-        ]  # noqa: E501
+            'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
+        ]
 
         # Act
         job = backend.sample(
@@ -879,11 +879,11 @@ class TestOqtopusSamplingBackend:
         class MockSSESampler:
             def req_transpile_and_exec(
                 self, program: list[str], shots: int, transpiler_info: dict
-            ) -> JobsSubmitJobResponse:
+            ) -> SuccessSuccessResponse:
                 self.program = program
                 self.shots = shots
                 self.transpiler_info = transpiler_info
-                return JobsSubmitJobResponse(job_id="dummy_job_id")
+                return SuccessSuccessResponse("job submitted")
 
             def assertion(
                 self, program: list[str], shots: int, transpiler_info: dict

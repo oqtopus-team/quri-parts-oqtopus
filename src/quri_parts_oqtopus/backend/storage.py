@@ -1,9 +1,10 @@
 import io
 import json
-import os
-import requests
 from io import BytesIO
+from pathlib import Path
 from zipfile import ZipFile
+
+import requests
 
 from quri_parts_oqtopus.rest import (
     JobsJobInfoDownloadPresignedURL,
@@ -12,9 +13,7 @@ from quri_parts_oqtopus.rest import (
 
 
 class OqtopusStorage:
-    """
-    Provides methods for accessing oqtopus cloud storage via presign URLs
-    """
+    """Provides methods for accessing oqtopus cloud storage via presign URLs."""
 
     @staticmethod
     def _extract_zip_object(zip_buffer: BytesIO) -> dict:
@@ -24,50 +23,50 @@ class OqtopusStorage:
             if len(json_file_path_list) == 1:
                 # one .zip = one json file
                 with zip_arch.open(json_file_path_list[0]) as json_file:
-                    value = json.loads(json_file.read())
-                    return value
+                    return json.loads(json_file.read())
             else:
-                # TODO: raise exception
                 return {}
 
     @staticmethod
-    def download(presigned_url: JobsJobInfoDownloadPresignedURL) -> dict:
-        """
-        Downloads and extracts json data from an oqtopus cloud storage .zip file
+    def download(
+        presigned_url: JobsJobInfoDownloadPresignedURL, timeout_s: int = 60
+    ) -> dict:
+        """Download and extract JSON data from an oqtopus cloud storage .zip file.
 
         Args:
-            presigned_url (JobsJobInfoDownloadPresignedURL): presigned URL of target .zip file to download
-
-        Raises:
-            e: _description_
+            presigned_url (JobsJobInfoDownloadPresignedURL):
+                presigned URL of target .zip file to download
+            timeout_s: operation timeout in seconds
 
         Returns:
             dict: loaded json data extracted from the .zip
+
         """
         with io.BytesIO() as zip_buffer:
-            resp = requests.get(url=str(presigned_url))
+            resp = requests.get(url=str(presigned_url), timeout=timeout_s)
             zip_buffer.write(resp.content)
             zip_buffer.flush()
             zip_buffer.seek(0)
-            try:
-                return OqtopusStorage._extract_zip_object(zip_buffer)
-            except Exception as e:
-                # TODO: improve error handling
-                raise e
+
+            return OqtopusStorage._extract_zip_object(zip_buffer)
 
     @staticmethod
-    def upload(presigned_url: JobsJobInfoUploadPresignedURL, data: dict) -> None:
-        """Uploads data to oqtopus cloud storage as .zip file
+    def upload(
+        presigned_url: JobsJobInfoUploadPresignedURL, data: dict, timeout_s: int = 60
+    ) -> None:
+        """Upload data to oqtopus cloud storage as .zip file.
 
         Args:
             presigned_url (JobsJobInfoUploadPresignedURL): presigned URL for upload
             data (dict): data to upload
+            timeout_s: operation timeout in seconds
+
         """
         with io.BytesIO() as zip_buffer:
-            zip_buffer.name = os.path.basename(presigned_url.fields.key)
+            zip_buffer.name = Path(presigned_url.fields.key).name
             with ZipFile(file=zip_buffer, mode="w") as zip_arch:
                 zip_arch.writestr(
-                    zinfo_or_arcname=f"{os.path.splitext(zip_buffer.name)[0]}.json",
+                    zinfo_or_arcname=f"{Path(zip_buffer.name).stem}.json",
                     data=json.dumps(data),
                 )
             zip_buffer.seek(0)
@@ -85,11 +84,10 @@ class OqtopusStorage:
                 data=original_fields,
                 files={
                     "file": (
-                        os.path.basename(zip_buffer.name),
+                        Path(zip_buffer.name).name,
                         zip_buffer,
                         "application/zip",
                     )
                 },
+                timeout=timeout_s,
             )
-
-            # TODO handle upload failure
