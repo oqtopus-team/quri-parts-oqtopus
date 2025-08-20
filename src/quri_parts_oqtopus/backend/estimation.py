@@ -21,8 +21,8 @@ from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJob,
     JobsRegisterJobResponse,
-    JobsS3SubmitJobInfo,
     JobsS3OperatorItem,
+    JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
 )
 
@@ -81,7 +81,8 @@ class OqtopusEstimationResult:
         return str(self._result)
 
 
-# TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
+# TODO(https://github.com/oqtopus-team/quri-parts-oqtopus/issues/32): # noqa: FIX002
+# common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusEstimationJob:  # noqa: PLR0904
     """A job for a estimation.
 
@@ -96,11 +97,10 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
     @staticmethod
     def _download_job(job_api: JobApi, job_id: str) -> JobsJob:
-        return cast(JobsJob, job_api.get_job(job_id))
+        return cast("JobsJob", job_api.get_job(job_id))
 
     @staticmethod
     def _download_job_info(job: JobsJob) -> dict:
-        # TODO: (improvement) skip files that were already downloaded and extracted
         job_info: dict = {}
         for downloadable_attr in [
             "input",
@@ -111,15 +111,10 @@ class OqtopusEstimationJob:  # noqa: PLR0904
         ]:
             attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
-                job_info = job_info | OqtopusStorage.download(presigned_url=attr_value)
+                job_info |= OqtopusStorage.download(presigned_url=attr_value)
         return job_info
 
     def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
-        # TODO: need to redefine job types in OAS
-        # using `job: JobsJob` is a temp solution to bypass issues with swagger-codegen
-        # originally `JobsJob` is used for `GET /jobs` requests with fields filtering -> all properties are optional
-        # we need a well defined types for job defining which properties are mandatory/optional that are correctly handled by swagger-codegen
-
         super().__init__()
 
         if job is None:
@@ -374,10 +369,11 @@ class OqtopusEstimationJob:  # noqa: PLR0904
                 or timeout occurs, etc.
 
         """
-        if self._job.status not in JOB_FINAL_STATUS:
-            if not self.wait_for_completion(timeout, wait):
-                msg = f"Timeout occurred after {timeout} seconds."
-                raise BackendError(msg)
+        if self._job.status not in JOB_FINAL_STATUS and not self.wait_for_completion(
+            timeout, wait
+        ):
+            msg = f"Timeout occurred after {timeout} seconds."
+            raise BackendError(msg)
         if self._job.status in {"failed", "cancelled"}:
             msg = f"Job ended with status {self._job.status}."
             raise BackendError(msg)
@@ -608,7 +604,7 @@ class OqtopusEstimationBackend:
                 )
         try:
             register_response: JobsRegisterJobResponse = cast(
-                JobsRegisterJobResponse, self._job_api.register_job_id()
+                "JobsRegisterJobResponse", self._job_api.register_job_id()
             )
             job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                 program=program, operator=operator_list
@@ -645,16 +641,18 @@ class OqtopusEstimationBackend:
             The job with the given ``job_id``.
 
         Raises:
+            ValueError: If job is not fully submitted (job status is "registered")
             BackendError: If job cannot be found or if an authentication error occurred,
                 etc.
 
         """
         try:
-            job: JobsJob = OqtopusEstimationJob._download_job(self._job_api, job_id)
+            job: JobsJob = OqtopusEstimationJob._download_job(self._job_api, job_id)  # noqa: SLF001
             # registered jobs id's are not available via SDK
             if job.status == "registered":
-                raise ValueError("job status='registered' not supported")
-            job_info: dict = OqtopusEstimationJob._download_job_info(job)
+                msg = "job status='registered' not supported"
+                raise ValueError(msg)  # noqa: TRY301
+            job_info: dict = OqtopusEstimationJob._download_job_info(job)  # noqa: SLF001
             return OqtopusEstimationJob(job, job_info, self._job_api)
 
         except Exception as e:

@@ -92,13 +92,13 @@ from quri_parts.backend import (
     SamplingJob,
     SamplingResult,
 )
-from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.openqasm.circuit import convert_to_qasm_str
 
 from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
@@ -189,7 +189,8 @@ class OqtopusSamplingResult(SamplingResult):
         return str(self._result)
 
 
-# TODO: common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
+# TODO(https://github.com/oqtopus-team/quri-parts-oqtopus/issues/32): # noqa: FIX002
+# common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     """A job for a sampling measurement.
 
@@ -204,11 +205,10 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
     @staticmethod
     def _download_job(job_api: JobApi, job_id: str) -> JobsJob:
-        return cast(JobsJob, job_api.get_job(job_id))
+        return cast("JobsJob", job_api.get_job(job_id))
 
     @staticmethod
     def _download_job_info(job: JobsJob) -> dict:
-        # TODO: (improvement) skip files that were already downloaded and extracted
         job_info: dict = {}
         for downloadable_attr in [
             "input",
@@ -219,7 +219,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         ]:
             attr_value = getattr(job.job_info, downloadable_attr)
             if attr_value:
-                job_info = job_info | OqtopusStorage.download(presigned_url=attr_value)
+                job_info |= OqtopusStorage.download(presigned_url=attr_value)
 
         return job_info
 
@@ -474,10 +474,11 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
                 or timeout occurs, etc.
 
         """
-        if self._job.status not in JOB_FINAL_STATUS:
-            if not self.wait_for_completion(timeout, wait):
-                msg = f"Timeout occurred after {timeout} seconds."
-                raise BackendError(msg)
+        if self._job.status not in JOB_FINAL_STATUS and not self.wait_for_completion(
+            timeout, wait
+        ):
+            msg = f"Timeout occurred after {timeout} seconds."
+            raise BackendError(msg)
         if self._job.status in {"failed", "cancelled"}:
             msg = f"Job ended with status {self._job.status}."
             raise BackendError(msg)
@@ -715,7 +716,7 @@ class OqtopusSamplingBackend:
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
                 )
-                job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(
+                job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(  # noqa: SLF001
                     response
                 )
                 job = OqtopusSamplingJob(response, job_info, self._job_api)
@@ -724,7 +725,7 @@ class OqtopusSamplingBackend:
                 del job._job_api  # noqa: SLF001
             else:
                 register_response: JobsRegisterJobResponse = cast(
-                    JobsRegisterJobResponse, self._job_api.register_job_id()
+                    "JobsRegisterJobResponse", self._job_api.register_job_id()
                 )
                 job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                     program=program
@@ -763,16 +764,18 @@ class OqtopusSamplingBackend:
             The job with the given ``job_id``.
 
         Raises:
+            ValueError: If job is not fully submitted (job status is "registered")
             BackendError: If job cannot be found or if an authentication error occurred,
                 etc.
 
         """
         try:
-            job: JobsJob = OqtopusSamplingJob._download_job(self._job_api, job_id)
+            job: JobsJob = OqtopusSamplingJob._download_job(self._job_api, job_id)  # noqa: SLF001
             # registered jobs id's are not available via SDK
             if job.status == "registered":
-                raise ValueError("job status='registered' not supported")
-            job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(job)
+                msg = "job status='registered' not supported"
+                raise ValueError(msg)  # noqa: TRY301
+            job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(job)  # noqa: SLF001
             return OqtopusSamplingJob(job, job_info, self._job_api)
 
         except Exception as e:
