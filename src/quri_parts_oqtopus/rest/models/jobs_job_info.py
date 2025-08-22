@@ -28,77 +28,74 @@ class JobsJobInfo(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'program': 'list[str]',
-        'combined_program': 'str',
-        'operator': 'list[JobsOperatorItem]',
-        'result': 'JobsJobResult',
-        'transpile_result': 'JobsTranspileResult',
+        'input': 'AllOfjobsJobInfoInput',
+        'combined_program': 'AllOfjobsJobInfoCombinedProgram',
+        'result': 'AllOfjobsJobInfoResult',
+        'transpile_result': 'AllOfjobsJobInfoTranspileResult',
+        'sse_log': 'AllOfjobsJobInfoSseLog',
         'message': 'str'
     }
 
     attribute_map = {
-        'program': 'program',
+        'input': 'input',
         'combined_program': 'combined_program',
-        'operator': 'operator',
         'result': 'result',
         'transpile_result': 'transpile_result',
+        'sse_log': 'sse_log',
         'message': 'message'
     }
 
-    def __init__(self, program=None, combined_program=None, operator=None, result=None, transpile_result=None, message=None):  # noqa: E501
+    def __init__(self, input=None, combined_program=None, result=None, transpile_result=None, sse_log=None, message=None):  # noqa: E501
         """JobsJobInfo - a model defined in Swagger"""  # noqa: E501
-        self._program = None
+        self._input = None
         self._combined_program = None
-        self._operator = None
         self._result = None
         self._transpile_result = None
+        self._sse_log = None
         self._message = None
         self.discriminator = None
-        self.program = program
+        self.input = input
         if combined_program is not None:
             self.combined_program = combined_program
-        if operator is not None:
-            self.operator = operator
         if result is not None:
             self.result = result
         if transpile_result is not None:
             self.transpile_result = transpile_result
+        if sse_log is not None:
+            self.sse_log = sse_log
         if message is not None:
             self.message = message
 
     @property
-    def program(self):
-        """Gets the program of this JobsJobInfo.  # noqa: E501
+    def input(self):
+        """Gets the input of this JobsJobInfo.  # noqa: E501
 
-        A list of OPENQASM3 program. For non-multiprogramming jobs, this field is assumed to contain exactly one program. Otherwise, those programs are combined according to the multiprogramming machinery.  # noqa: E501
 
-        :return: The program of this JobsJobInfo.  # noqa: E501
-        :rtype: list[str]
+        :return: The input of this JobsJobInfo.  # noqa: E501
+        :rtype: AllOfjobsJobInfoInput
         """
-        return self._program
+        return self._input
 
-    @program.setter
-    def program(self, program):
-        """Sets the program of this JobsJobInfo.
+    @input.setter
+    def input(self, input):
+        """Sets the input of this JobsJobInfo.
 
-        A list of OPENQASM3 program. For non-multiprogramming jobs, this field is assumed to contain exactly one program. Otherwise, those programs are combined according to the multiprogramming machinery.  # noqa: E501
 
-        :param program: The program of this JobsJobInfo.  # noqa: E501
-        :type: list[str]
+        :param input: The input of this JobsJobInfo.  # noqa: E501
+        :type: AllOfjobsJobInfoInput
         """
-        if program is None:
-            raise ValueError("Invalid value for `program`, must not be `None`")  # noqa: E501
+        if input is None:
+            raise ValueError("Invalid value for `input`, must not be `None`")  # noqa: E501
 
-        self._program = program
+        self._input = input
 
     @property
     def combined_program(self):
         """Gets the combined_program of this JobsJobInfo.  # noqa: E501
 
-        For multiprogramming jobs, this field contains the combined circuit.  # noqa: E501
 
         :return: The combined_program of this JobsJobInfo.  # noqa: E501
-        :rtype: str
+        :rtype: AllOfjobsJobInfoCombinedProgram
         """
         return self._combined_program
 
@@ -106,36 +103,12 @@ class JobsJobInfo(object):
     def combined_program(self, combined_program):
         """Sets the combined_program of this JobsJobInfo.
 
-        For multiprogramming jobs, this field contains the combined circuit.  # noqa: E501
 
         :param combined_program: The combined_program of this JobsJobInfo.  # noqa: E501
-        :type: str
+        :type: AllOfjobsJobInfoCombinedProgram
         """
 
         self._combined_program = combined_program
-
-    @property
-    def operator(self):
-        """Gets the operator of this JobsJobInfo.  # noqa: E501
-
-        *(Only for estimation jobs)* The operator (or observable) for which the expectation value is to be estimated.   # noqa: E501
-
-        :return: The operator of this JobsJobInfo.  # noqa: E501
-        :rtype: list[JobsOperatorItem]
-        """
-        return self._operator
-
-    @operator.setter
-    def operator(self, operator):
-        """Sets the operator of this JobsJobInfo.
-
-        *(Only for estimation jobs)* The operator (or observable) for which the expectation value is to be estimated.   # noqa: E501
-
-        :param operator: The operator of this JobsJobInfo.  # noqa: E501
-        :type: list[JobsOperatorItem]
-        """
-
-        self._operator = operator
 
     @property
     def result(self):
@@ -143,7 +116,7 @@ class JobsJobInfo(object):
 
 
         :return: The result of this JobsJobInfo.  # noqa: E501
-        :rtype: JobsJobResult
+        :rtype: AllOfjobsJobInfoResult
         """
         return self._result
 
@@ -153,7 +126,7 @@ class JobsJobInfo(object):
 
 
         :param result: The result of this JobsJobInfo.  # noqa: E501
-        :type: JobsJobResult
+        :type: AllOfjobsJobInfoResult
         """
 
         self._result = result
@@ -164,7 +137,7 @@ class JobsJobInfo(object):
 
 
         :return: The transpile_result of this JobsJobInfo.  # noqa: E501
-        :rtype: JobsTranspileResult
+        :rtype: AllOfjobsJobInfoTranspileResult
         """
         return self._transpile_result
 
@@ -174,16 +147,36 @@ class JobsJobInfo(object):
 
 
         :param transpile_result: The transpile_result of this JobsJobInfo.  # noqa: E501
-        :type: JobsTranspileResult
+        :type: AllOfjobsJobInfoTranspileResult
         """
 
         self._transpile_result = transpile_result
 
     @property
+    def sse_log(self):
+        """Gets the sse_log of this JobsJobInfo.  # noqa: E501
+
+
+        :return: The sse_log of this JobsJobInfo.  # noqa: E501
+        :rtype: AllOfjobsJobInfoSseLog
+        """
+        return self._sse_log
+
+    @sse_log.setter
+    def sse_log(self, sse_log):
+        """Sets the sse_log of this JobsJobInfo.
+
+
+        :param sse_log: The sse_log of this JobsJobInfo.  # noqa: E501
+        :type: AllOfjobsJobInfoSseLog
+        """
+
+        self._sse_log = sse_log
+
+    @property
     def message(self):
         """Gets the message of this JobsJobInfo.  # noqa: E501
 
-        Describing the reason why there is no result  # noqa: E501
 
         :return: The message of this JobsJobInfo.  # noqa: E501
         :rtype: str
@@ -194,7 +187,6 @@ class JobsJobInfo(object):
     def message(self, message):
         """Sets the message of this JobsJobInfo.
 
-        Describing the reason why there is no result  # noqa: E501
 
         :param message: The message of this JobsJobInfo.  # noqa: E501
         :type: str
