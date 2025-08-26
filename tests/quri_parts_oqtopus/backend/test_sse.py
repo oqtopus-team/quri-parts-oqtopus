@@ -20,6 +20,7 @@ import tempfile
 import zipfile
 from collections.abc import Generator
 from pathlib import Path, PurePath
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
@@ -30,27 +31,18 @@ from quri_parts_oqtopus.backend import (
     OqtopusSseBackend,
 )
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-from quri_parts_oqtopus.rest import (
-    JobApi,
-    JobsJobDef,
-    JobsSubmitJobResponse,
-)
-from quri_parts_oqtopus.rest.models.jobs_get_sselog_response import (
-    JobsGetSselogResponse,
-)
 
-
-def get_dummy_job(job_id: str = "dummy_id") -> OqtopusSamplingJob:
-    job = JobsJobDef(
-        job_id=job_id,
-        shots=1,
-        name="test",
-        device_id="test_device",
-        job_type="sse",
-        status="submitted",
-        job_info="dummy_info",
-    )
-    return OqtopusSamplingJob(job=job, job_api=JobApi())
+# def get_dummy_job(job_id: str = "dummy_id") -> OqtopusSamplingJob:
+#     job = JobsJobDef(
+#         job_id=job_id,
+#         shots=1,
+#         name="test",
+#         device_id="test_device",
+#         job_type="sse",
+#         status="submitted",
+#         job_info="dummy_info",
+#     )
+#     return OqtopusSamplingJob(job=job, job_api=JobApi())
 
 
 config_file_data = """[default]
@@ -139,63 +131,72 @@ def temp_python() -> Generator[Path, None, None]:
 
 
 class TestOqtopusSseBackend:  # noqa: PLR0904
-    def test_init(self) -> None:
+    def test_init(self, mocker: MockerFixture) -> None:
         # Arrange
         config = get_dummy_config()
 
+        mock_sampling_backend_class = mocker.patch(
+            "quri_parts_oqtopus.backend.sse.OqtopusSamplingBackend"
+        )
+
         # Act
-        sse_job = OqtopusSseBackend(config)
+        sse_backend = OqtopusSseBackend(config)
 
         # Assert
-        assert sse_job.config == config
-        assert sse_job.job is None
-        assert sse_job._job_api.api_client.configuration.host == config.url  # noqa: SLF001
+        assert sse_backend.config == config
+        mock_sampling_backend_class.assert_called_once_with(config)
+        assert sse_backend.job is None
 
     def test_init_default(self, mocker: MockerFixture) -> None:
         # Arrange
-        config = OqtopusConfig("dummpy_url_def", "dummy_api_token_def")
-        mock_obj = mocker.patch(
+        config = get_dummy_config()
+
+        mock_config = mocker.patch(
             "quri_parts_oqtopus.backend.OqtopusConfig.from_file",
             return_value=config,
         )
+        mock_sampling_backend_class = mocker.patch(
+            "quri_parts_oqtopus.backend.sse.OqtopusSamplingBackend"
+        )
 
         # Act
-        sse_job = OqtopusSseBackend()
+        sse_backend = OqtopusSseBackend()
 
         # Assert
-        assert sse_job.config == config
-        assert sse_job.job is None
-        assert sse_job._job_api.api_client.configuration.host == config.url  # noqa: SLF001
-        mock_obj.assert_called_once()
+        assert sse_backend.config == config
+        mock_config.assert_called_once()
+        mock_sampling_backend_class.assert_called_once_with(config)
+        assert sse_backend.job is None
 
     def test_run_sse(self, mocker: MockerFixture, temp_python: Path) -> None:
         # Arrange
-        mock_submit_job = mocker.patch(
-            "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=JobsSubmitJobResponse(job_id="dummy_id"),
+        mock_job = MagicMock(spec=OqtopusSamplingJob)
+        mock_sample_qasm = mocker.patch(
+            "quri_parts_oqtopus.backend.sse.OqtopusSamplingBackend.sample_qasm",
+            return_value=mock_job,
         )
-        job = get_dummy_job()
-        mocker.patch(
-            "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=job,
-        )
+
+        sse_backend = OqtopusSseBackend(get_dummy_config())
         read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
         temp_python.write_bytes(read_data)
 
-        sse_job = OqtopusSseBackend(get_dummy_config())
-
         # Act
-        ret_job = sse_job.run_sse(
+        ret_job = sse_backend.run_sse(
             str(temp_python.absolute()), device_id="test_device", name="test"
         )
 
         # Assert
-        assert ret_job.job_id == job.job_id
-        sj_call = mock_submit_job.call_args
-        assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
-        assert sj_call.kwargs["body"].job_type == "sse"
+        # Check that the backend method was called with the correct parameters
+        mock_sample_qasm.assert_called_once_with(
+            program=[base64.b64encode(read_data).decode("utf-8")],
+            shots=1,
+            name="test",
+            device_id="test_device",
+            description=None,
+            job_type="sse",
+        )
+        # Check result
+        assert ret_job == mock_job
 
     def test_run_sse_invalid_arg(self) -> None:
         # Act
@@ -257,28 +258,33 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         self, mocker: MockerFixture, temp_python: Path
     ) -> None:
         # Arrange
-        read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
-        temp_python.write_bytes(read_data)
-        mock_submit_job = mocker.patch(
-            "quri_parts_oqtopus.rest.JobApi.submit_job",
+        mock_sample_qasm = mocker.patch(
+            "quri_parts_oqtopus.backend.sse.OqtopusSamplingBackend.sample_qasm",
             side_effect=Exception("test exception"),
         )
 
-        sse_job = OqtopusSseBackend(get_dummy_config())
+        sse_backend = OqtopusSseBackend(get_dummy_config())
+        read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        temp_python.write_bytes(read_data)
+
         with pytest.raises(
             BackendError, match=r"To perform sse on OQTOPUS Cloud is failed."
         ):
             # Act
-            sse_job.run_sse(
+            sse_backend.run_sse(
                 str(temp_python.absolute()), device_id="test_device", name="test"
             )
 
         # Assert
-        sj_call = mock_submit_job.call_args
-        assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
-        assert sj_call.kwargs["body"].job_type == "sse"
+        # Check that the backend method was called with the correct parameters
+        mock_sample_qasm.assert_called_once_with(
+            program=[base64.b64encode(read_data).decode("utf-8")],
+            shots=1,
+            name="test",
+            device_id="test_device",
+            description=None,
+            job_type="sse",
+        )
 
     def test_download_log(self, mocker: MockerFixture) -> None:
         # Arrange
