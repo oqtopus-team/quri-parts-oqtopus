@@ -136,7 +136,7 @@ class OqtopusSseBackend:
         if "sse_log" not in job.job_info:
             msg = (
                 "To perform sse on OQTOPUS Cloud is failed."
-                " The response does not contain valid file data."
+                " The response does not contain sse_log data."
             )
             raise BackendError(msg)
 
