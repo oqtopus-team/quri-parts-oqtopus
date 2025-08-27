@@ -187,7 +187,7 @@ def get_dummy_job_submit_request(
 
 
 def get_dummy_multimanual_job_info(status: str = "succeeded") -> dict:
-    output = {}
+    output: dict[str, Any] = {}
     output["program"] = [
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
