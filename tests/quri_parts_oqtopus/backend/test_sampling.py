@@ -13,7 +13,7 @@ import json
 import sys
 import time
 from typing import Any
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -875,53 +875,72 @@ class TestOqtopusSamplingBackend:
         assert job.mitigation_info == {}
         assert job.submitted_at == datetime.datetime(2000, 1, 2, 3, 4, 1)  # noqa: DTZ001
 
-    def test_sample_qasm_sse_container(self):
+    def test_sample_qasm_sse_container(self, mocker: MockerFixture):
         # Arrange
-        class MockSSESampler:
-            def req_transpile_and_exec(
-                self, program: list[str], shots: int, transpiler_info: dict
-            ) -> SuccessSuccessResponse:
-                self.program = program
-                self.shots = shots
-                self.transpiler_info = transpiler_info
-                return SuccessSuccessResponse("job submitted")
 
-            def assertion(
-                self, program: list[str], shots: int, transpiler_info: dict
-            ) -> None:
-                assert self.program == program
-                assert self.shots == shots
-                assert self.transpiler_info == transpiler_info
+        # 1. Patch environment
+        mocker.patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"})
 
-        # mock sse_sampler
-        mock_obj = MockSSESampler()
-        sys.modules["sse_sampler"] = mock_obj
+        # 2. Create a mock object for the sse_sampler module
+        mock_sse_sampler_module = MagicMock()
+
+        # 3. Define the behavior of req_transpile_and_exec on the mock module
+        #    We'll use a side_effect to capture arguments for assertion later.
+        captured_program = None
+        captured_shots = None
+        captured_transpiler_info = None
+
+        def mock_req_transpile_and_exec(
+            program: list[str], shots: int, transpiler_info: dict
+        ) -> JobsJob:
+            nonlocal captured_program, captured_shots, captured_transpiler_info
+            captured_program = program
+            captured_shots = shots
+            captured_transpiler_info = transpiler_info
+            return get_dummy_job("job submitted")
+
+        mock_sse_sampler_module.req_transpile_and_exec.side_effect = (
+            mock_req_transpile_and_exec
+        )
+
+        # 4. Patch sys.modules to make our mock module available
+        #    when 'sse_sampler' is imported
+        #    mocker.patch.dict is type-safe and handles cleanup
+        mocker.patch.dict(sys.modules, {"sse_sampler": mock_sse_sampler_module})
+
+        # 5. Patch OqtopusStorage.download
+        mocker.patch(
+            "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
+            side_effect=dummy_download_job,
+        )
+
         backend = OqtopusSamplingBackend(get_dummy_config())
 
         # Act
-        with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
-            job = backend.sample_qasm(
-                qasm_data_with_measure,
-                device_id="dummy_device_id",
-                shots=1000,
-                name="dummy_name",
-                description="dummy_description",
-                transpiler_info={
-                    "transpiler_lib": "qiskit",
-                    "transpiler_options": {"optimization_level": 2},
-                },
-            )
-
-        # Assert
-        assert job.job_id == "dummy_job_id"
-        mock_obj.assertion(
-            program=[qasm_data_with_measure],
+        job = backend.sample_qasm(
+            qasm_data_with_measure,
+            device_id="dummy_device_id",
             shots=1000,
+            name="dummy_name",
+            description="dummy_description",
             transpiler_info={
                 "transpiler_lib": "qiskit",
                 "transpiler_options": {"optimization_level": 2},
             },
         )
+
+        # Assert
+        assert job.job_id == "dummy_job_id"
+
+        # Assertions using the captured arguments
+        assert captured_program == [qasm_data_with_measure]
+        assert captured_shots == 1000
+        assert captured_transpiler_info == {
+            "transpiler_lib": "qiskit",
+            "transpiler_options": {"optimization_level": 2},
+        }
+        # You can also assert that the method was called
+        mock_sse_sampler_module.req_transpile_and_exec.assert_called_once()
 
     def test_retrieve_job(self, mocker: MockerFixture):
         # Arrange
