@@ -708,7 +708,11 @@ class OqtopusSamplingBackend:
         if mitigation_info is None:
             mitigation_info = {}
 
+        job: OqtopusSamplingJob
+
         try:
+            # TODO (goralczyks): verify this implementation  # noqa: TD003, FIX002
+            # with the actual implementation of sse_sampler when it will be completed
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
                 import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
@@ -723,6 +727,7 @@ class OqtopusSamplingBackend:
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
                 del job._job_api  # noqa: SLF001
+
             else:
                 register_response: JobsRegisterJobResponse = cast(
                     "JobsRegisterJobResponse", self._job_api.register_job_id()
@@ -748,7 +753,9 @@ class OqtopusSamplingBackend:
                 )
                 self._job_api.submit_job(job_id=register_response.job_id, body=body)
 
-                return self.retrieve_job(job_id=register_response.job_id)
+                job = self.retrieve_job(job_id=register_response.job_id)
+
+            return job  # noqa: TRY300
 
         except Exception as e:
             msg = "To execute sampling on OQTOPUS Cloud is failed."
