@@ -20,6 +20,7 @@ from quri_parts_oqtopus.rest import (
     Configuration,
     JobApi,
     JobsJob,
+    JobsJobInfoDownloadPresignedURL,
     JobsRegisterJobResponse,
     JobsS3OperatorItem,
     JobsS3SubmitJobInfo,
@@ -96,22 +97,36 @@ class OqtopusEstimationJob:  # noqa: PLR0904
     """
 
     @staticmethod
-    def _download_job(job_api: JobApi, job_id: str) -> JobsJob:
-        return cast("JobsJob", job_api.get_job(job_id))
+    def download_job_info(
+        job_info_ulrs: dict[str, JobsJobInfoDownloadPresignedURL],
+        ignore_items: list[str] | None = None,
+    ) -> dict:
+        """Download and extract job information form storage.
 
-    @staticmethod
-    def _download_job_info(job: JobsJob) -> dict:
-        job_info: dict = {}
-        for downloadable_attr in [
-            "input",
-            "combined_program",
-            "result",
-            "transpile_result",
-            "sse_log",
-        ]:
-            attr_value = getattr(job.job_info, downloadable_attr)
-            if attr_value:
-                job_info |= OqtopusStorage.download(presigned_url=attr_value)
+        Args:
+            job_info_ulrs (dict[str, str]): A map of job info objects to download
+                and their corresponding presigned URLs.
+            ignore_items (list[str], optional): A list of job information objects
+                to ignore during download.
+
+        Returns:
+            dict: job information extracted from downloaded files
+
+        """
+        if ignore_items is None:
+            ignore_items = []
+
+        job_info: dict[str, list[Any]] = {}
+        urls_for_download = [
+            val
+            for (key, val) in job_info_ulrs.items()
+            if key not in {"message", *ignore_items} and val is not None
+        ]
+        for url in urls_for_download:
+            job_info |= OqtopusStorage.download(
+                presigned_url=cast("JobsJobInfoDownloadPresignedURL", url)
+            )
+
         return job_info
 
     def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
@@ -310,8 +325,21 @@ class OqtopusEstimationJob:  # noqa: PLR0904
 
         """
         try:
-            self._job = OqtopusEstimationJob._download_job(self._job_api, self.job_id)
-            self._job_info = OqtopusEstimationJob._download_job_info(self._job)
+            downloaded_job_info = [
+                key
+                for (key, val) in self._job.job_info.to_dict().items()
+                if key != "message" and val is not None
+            ]
+
+            self._job = cast("JobsJob", self._job_api.get_job(self.job_id))
+
+            new_job_info = self.download_job_info(
+                job_info_ulrs=self._job.job_info.to_dict(),
+                ignore_items=downloaded_job_info,
+            )
+
+            self._job_info |= new_job_info
+
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
@@ -647,12 +675,14 @@ class OqtopusEstimationBackend:
 
         """
         try:
-            job: JobsJob = OqtopusEstimationJob._download_job(self._job_api, job_id)  # noqa: SLF001
+            job: JobsJob = cast("JobsJob", self._job_api.get_job(job_id))
             # registered jobs id's are not available via SDK
             if job.status == "registered":
                 msg = "job status='registered' not supported"
                 raise ValueError(msg)  # noqa: TRY301
-            job_info: dict = OqtopusEstimationJob._download_job_info(job)  # noqa: SLF001
+            job_info: dict[str, list[Any]] = OqtopusEstimationJob.download_job_info(
+                job_info_ulrs=job.job_info.to_dict()
+            )
             return OqtopusEstimationJob(job, job_info, self._job_api)
 
         except Exception as e:
