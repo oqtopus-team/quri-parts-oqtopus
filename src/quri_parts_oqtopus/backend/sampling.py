@@ -105,6 +105,7 @@ from quri_parts_oqtopus.rest import (
     Configuration,
     JobApi,
     JobsJob,
+    JobsJobInfoDownloadPresignedURL,
     JobsRegisterJobResponse,
     JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
@@ -202,6 +203,39 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         ValueError: If ``job`` or ``job_api`` is None.
 
     """
+
+    @staticmethod
+    def download_job_info(
+        job_info_ulrs: dict[str, JobsJobInfoDownloadPresignedURL],
+        ignore_items: list[str] | None = None,
+    ) -> dict:
+        """Download and extract job information form storage.
+
+        Args:
+            job_info_ulrs (dict[str, str]): A map of job info objects to download
+                and their corresponding presigned URLs.
+            ignore_items (list[str], optional): A list of job information objects
+                to ignore during download.
+
+        Returns:
+            dict: job information extracted from downloaded files
+
+        """
+        if ignore_items is None:
+            ignore_items = []
+
+        job_info: dict[str, list[Any]] = {}
+        urls_for_download = [
+            val
+            for (key, val) in job_info_ulrs.items()
+            if key not in {"message", *ignore_items} and val is not None
+        ]
+        for url in urls_for_download:
+            job_info |= OqtopusStorage.download(
+                presigned_url=cast("JobsJobInfoDownloadPresignedURL", url)
+            )
+
+        return job_info
 
     def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
         super().__init__()
@@ -403,14 +437,12 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
             self._job = cast("JobsJob", self._job_api.get_job(self.job_id))
 
-            new_urls_for_download = [
-                val
-                for (key, val) in self._job.job_info.to_dict().items()
-                if key not in {"message", *downloaded_job_info} and val is not None
-            ]
+            new_job_info = self.download_job_info(
+                job_info_ulrs=self._job.job_info.to_dict(),
+                ignore_items=downloaded_job_info,
+            )
 
-            for url in new_urls_for_download:
-                self._job_info |= OqtopusStorage.download(presigned_url=url)
+            self._job_info |= new_job_info
 
         except Exception as e:
             msg = "To refresh job is failed."
@@ -715,9 +747,11 @@ class OqtopusSamplingBackend:
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
                 )
-                job_info: dict[str, list[Any]] = OqtopusSamplingJob._download_job_info(  # noqa: SLF001
-                    job_info_urls=response.job_info
+
+                job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+                    job_info_ulrs=response.job_info.to_dict()
                 )
+
                 job = OqtopusSamplingJob(response, job_info, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
@@ -779,14 +813,9 @@ class OqtopusSamplingBackend:
                 msg = "job status='registered' not supported"
                 raise ValueError(msg)  # noqa: TRY301
 
-            job_info: dict[str, list[Any]] = {}
-            url_for_download = [
-                val
-                for (key, val) in job.job_info.to_dict().items()
-                if key != "message" and val is not None
-            ]
-            for url in url_for_download:
-                job_info |= OqtopusStorage.download(presigned_url=url)
+            job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+                job_info_ulrs=job.job_info.to_dict()
+            )
 
             return OqtopusSamplingJob(job, job_info, self._job_api)
 
