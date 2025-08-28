@@ -13,7 +13,7 @@ import json
 import sys
 import time
 from typing import Any
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, call, mock_open, patch
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -370,7 +370,7 @@ class TestOqtopusSamplingJob:
             "quri_parts_oqtopus.rest.JobApi.get_job",
             return_value=get_dummy_job("succeeded"),
         )
-        mocker.patch(
+        mock_download = mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
             side_effect=dummy_download_job,
         )
@@ -378,11 +378,32 @@ class TestOqtopusSamplingJob:
         job = arrange_job_to_test("running")
 
         # Act
+
+        # "running" -> "succeeded"
         job.refresh()
 
         # Assert
         assert job.status == "succeeded"
         assert job.job_info == get_dummy_job_info("succeeded")
+
+        # verify number of downloads - check only new files are downloaded
+        mock_download.call_count = 2
+        assert mock_download.call_args_list[0] == call(
+            presigned_url="http://host:port/storage_base/dummy_job_id/result.zip?params"
+        )
+        assert mock_download.call_args_list[1] == call(
+            presigned_url="http://host:port/storage_base/dummy_job_id/transpile_result.zip?params"
+        )
+
+        # no changes
+        job.refresh()
+
+        # Assert
+        assert job.status == "succeeded"
+        assert job.job_info == get_dummy_job_info("succeeded")
+
+        # verify number of downloads - nothing to download
+        mock_download.call_count = 0
 
     def test_wait_for_completion(self, mocker: MockerFixture):
         mocker.patch(
@@ -948,7 +969,7 @@ class TestOqtopusSamplingBackend:
             "quri_parts_oqtopus.rest.JobApi.get_job",
             return_value=get_dummy_job("succeeded"),
         )
-        mocker.patch(
+        mock_download = mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
             side_effect=dummy_download_job,
         )
@@ -993,6 +1014,9 @@ class TestOqtopusSamplingBackend:
         assert job.ready_at == datetime.datetime(2000, 1, 2, 3, 4, 2)  # noqa: DTZ001
         assert job.running_at == datetime.datetime(2000, 1, 2, 3, 4, 3)  # noqa: DTZ001
         assert job.ended_at == datetime.datetime(2000, 1, 2, 3, 4, 4)  # noqa: DTZ001
+
+        # verify number of downloads
+        mock_download.call_count = 3
 
     def test_retrieve_job__registered_job(self, mocker: MockerFixture):
         # Arrange
