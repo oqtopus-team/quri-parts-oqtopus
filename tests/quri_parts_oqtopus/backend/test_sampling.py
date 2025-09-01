@@ -30,6 +30,7 @@ from quri_parts_oqtopus.rest import (
     JobsJobDef,
     JobsJobInfo,
     JobsJobResult,
+    JobsSamplingResult,
     JobsSubmitJobInfo,
     JobsSubmitJobRequest,
     JobsSubmitJobResponse,
@@ -94,15 +95,30 @@ def get_dummy_job(status: str = "succeeded") -> JobsJobDef:
                 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
             ],
             transpile_result=JobsTranspileResult(
-                stats='{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}',  # noqa: E501
+                stats={
+                    "before": {
+                        "n_qubits": 2,
+                        "n_gates": 4,
+                        "n_gates_1q": 3,
+                        "n_gates_2q": 1,
+                        "depth": 4,
+                    },
+                    "after": {
+                        "n_qubits": 6,
+                        "n_gates": 4,
+                        "n_gates_1q": 3,
+                        "n_gates_2q": 1,
+                        "depth": 4,
+                    },
+                },
                 transpiled_program='OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;',  # noqa: E501
-                virtual_physical_mapping='{"0": 0, "1": 1}',
+                virtual_physical_mapping={"0": 0, "1": 1},
             ),
-            result={
-                "sampling": JobsJobResult(
+            result=JobsJobResult(
+                sampling=JobsSamplingResult(
                     counts={"00": 490, "01": 10, "10": 20, "11": 480},
                 )
-            },
+            ),
         ),
         transpiler_info={
             "transpiler_lib": "qiskit",
@@ -126,12 +142,14 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJobDef:
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
         'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
     ]
-    job.job_info.result["sampling"] = JobsJobResult(
-        counts={"0000": 490, "0001": 10, "0110": 20, "1111": 480},
-        divided_counts={
-            "0": {"00": 490, "01": 10, "10": 20, "11": 480},
-            "1": {"00": 500, "01": 20, "11": 480},
-        },
+    job.job_info.result = JobsJobResult(
+        sampling=JobsSamplingResult(
+            counts={"0000": 490, "0001": 10, "0110": 20, "1111": 480},
+            divided_counts={
+                "0": {"00": 490, "01": 10, "10": 20, "11": 480},
+                "1": {"00": 500, "01": 20, "11": 480},
+            },
+        )
     )
     return job
 
@@ -265,18 +283,30 @@ class TestOqtopusSamplingJob:
         assert job.job_info["program"] == [
             'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
-        assert (
-            job.job_info["transpile_result"]["stats"]
-            == '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}'  # noqa: E501
-        )
+        assert job.job_info["transpile_result"]["stats"] == {
+            "before": {
+                "n_qubits": 2,
+                "n_gates": 4,
+                "n_gates_1q": 3,
+                "n_gates_2q": 1,
+                "depth": 4,
+            },
+            "after": {
+                "n_qubits": 6,
+                "n_gates": 4,
+                "n_gates_1q": 3,
+                "n_gates_2q": 1,
+                "depth": 4,
+            },
+        }
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
             == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;'  # noqa: E501
         )
-        assert (
-            job.job_info["transpile_result"]["virtual_physical_mapping"]
-            == '{"0": 0, "1": 1}'
-        )
+        assert job.job_info["transpile_result"]["virtual_physical_mapping"] == {
+            "0": 0,
+            "1": 1,
+        }
         assert job.result().counts == {0: 490, 1: 10, 2: 20, 3: 480}
         assert job.transpiler_info == {
             "transpiler_lib": "qiskit",
@@ -852,18 +882,30 @@ class TestOqtopusSamplingBackend:
         assert job.job_info["program"] == [
             'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
         ]
-        assert (
-            job.job_info["transpile_result"]["stats"]
-            == '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}'  # noqa: E501
-        )
+        assert job.job_info["transpile_result"]["stats"] == {
+            "before": {
+                "n_qubits": 2,
+                "n_gates": 4,
+                "n_gates_1q": 3,
+                "n_gates_2q": 1,
+                "depth": 4,
+            },
+            "after": {
+                "n_qubits": 6,
+                "n_gates": 4,
+                "n_gates_1q": 3,
+                "n_gates_2q": 1,
+                "depth": 4,
+            },
+        }
         assert (
             job.job_info["transpile_result"]["transpiled_program"]
             == 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;'  # noqa: E501
         )
-        assert (
-            job.job_info["transpile_result"]["virtual_physical_mapping"]
-            == '{"0": 0, "1": 1}'
-        )
+        assert job.job_info["transpile_result"]["virtual_physical_mapping"] == {
+            "0": 0,
+            "1": 1,
+        }
         assert job.result().counts == {0: 490, 1: 10, 2: 20, 3: 480}
         assert job.transpiler_info == {
             "transpiler_lib": "qiskit",

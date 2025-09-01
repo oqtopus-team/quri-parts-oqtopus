@@ -33,6 +33,7 @@ from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobDef,
+    JobsJobInfo,
     JobsSubmitJobResponse,
 )
 from quri_parts_oqtopus.rest.models.jobs_get_sselog_response import (
@@ -48,7 +49,7 @@ def get_dummy_job(job_id: str = "dummy_id") -> OqtopusSamplingJob:
         device_id="test_device",
         job_type="sse",
         status="submitted",
-        job_info="dummy_info",
+        job_info=JobsJobInfo(program=["dummy_program"]),
     )
     return OqtopusSamplingJob(job=job, job_api=JobApi())
 
@@ -562,7 +563,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
     ) -> None:
         # Arrange
         # make zip stream to be downloaded
-        encoded = get_dummy_base64zip()
+        encoded, _ = get_dummy_base64zip()
 
         sse_job = OqtopusSseBackend(get_dummy_config())
         job = get_dummy_job()
