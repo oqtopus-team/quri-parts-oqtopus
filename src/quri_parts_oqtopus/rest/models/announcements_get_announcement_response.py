@@ -18,19 +18,23 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from quri_parts_oqtopus.rest.models.jobs_operator_item import JobsOperatorItem
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class JobsSubmitJobInfo(BaseModel):
+class AnnouncementsGetAnnouncementResponse(BaseModel):
     """
-    All fields in this schema also exist in the `JobInfo` schema and have the same meaning as their counterparts in the `JobInfo` schema.
+    AnnouncementsGetAnnouncementResponse
     """ # noqa: E501
-    program: List[StrictStr] = Field(description="A list of OPENQASM3 program. For non-multiprogramming jobs, this field is assumed to contain exactly one program. Otherwise, those programs are combined according to the multiprogramming machinery.")
-    operator: Optional[List[JobsOperatorItem]] = None
-    __properties: ClassVar[List[str]] = ["program", "operator"]
+    id: StrictInt
+    title: StrictStr
+    content: StrictStr
+    start_time: datetime
+    end_time: datetime
+    publishable: StrictBool
+    __properties: ClassVar[List[str]] = ["id", "title", "content", "start_time", "end_time", "publishable"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -50,7 +54,7 @@ class JobsSubmitJobInfo(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of JobsSubmitJobInfo from a JSON string"""
+        """Create an instance of AnnouncementsGetAnnouncementResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -71,18 +75,11 @@ class JobsSubmitJobInfo(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in operator (list)
-        _items = []
-        if self.operator:
-            for _item_operator in self.operator:
-                if _item_operator:
-                    _items.append(_item_operator.to_dict())
-            _dict['operator'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of JobsSubmitJobInfo from a dict"""
+        """Create an instance of AnnouncementsGetAnnouncementResponse from a dict"""
         if obj is None:
             return None
 
@@ -90,8 +87,12 @@ class JobsSubmitJobInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "program": obj.get("program"),
-            "operator": [JobsOperatorItem.from_dict(_item) for _item in obj["operator"]] if obj.get("operator") is not None else None
+            "id": obj.get("id"),
+            "title": obj.get("title"),
+            "content": obj.get("content"),
+            "start_time": obj.get("start_time"),
+            "end_time": obj.get("end_time"),
+            "publishable": obj.get("publishable")
         })
         return _obj
 
