@@ -103,6 +103,7 @@ from quri_parts_oqtopus.rest import (
     Configuration,
     JobApi,
     JobsJobDef,
+    JobsJobType,
     JobsSubmitJobInfo,
     JobsSubmitJobRequest,
 )
@@ -232,7 +233,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.name
 
     @property
-    def description(self) -> str:
+    def description(self) -> str | None:
         """The description of the job.
 
         Returns:
@@ -292,7 +293,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.job_info.to_dict()
 
     @property
-    def transpiler_info(self) -> dict:
+    def transpiler_info(self) -> dict | None:
         """The transpiler info of the job.
 
         Returns:
@@ -302,7 +303,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.transpiler_info
 
     @property
-    def simulator_info(self) -> dict:
+    def simulator_info(self) -> dict | None:
         """The simulator info of the job.
 
         Returns:
@@ -312,19 +313,17 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.simulator_info
 
     @property
-    def mitigation_info(self) -> dict:
+    def mitigation_info(self) -> dict | None:
         """The mitigation info of the job.
 
         Returns:
             dict: The mitigation info of the job.
 
         """
-        if self._job.mitigation_info:
-            return json.loads(self._job.mitigation_info)
-        return {}
+        return self._job.mitigation_info
 
     @property
-    def execution_time(self) -> float:
+    def execution_time(self) -> float | int | None:
         """The execution time of the job.
 
         Returns:
@@ -334,7 +333,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.execution_time
 
     @property
-    def submitted_at(self) -> datetime:
+    def submitted_at(self) -> datetime | None:
         """The `submitted_at` of the job.
 
         Returns:
@@ -344,7 +343,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.submitted_at
 
     @property
-    def ready_at(self) -> datetime:
+    def ready_at(self) -> datetime | None:
         """The `ready_at` of the job.
 
         Returns:
@@ -354,7 +353,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.ready_at
 
     @property
-    def running_at(self) -> datetime:
+    def running_at(self) -> datetime | None:
         """The `running_at` of the job.
 
         Returns:
@@ -364,7 +363,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.running_at
 
     @property
-    def ended_at(self) -> datetime:
+    def ended_at(self) -> datetime | None:
         """The `ended_at` of the job.
 
         Returns:
@@ -657,12 +656,13 @@ class OqtopusSamplingBackend:
             msg = f"shots should be a positive integer.: {shots}"
             raise ValueError(msg)
 
+        # set job type base on program type
         if job_type is None:
-            if isinstance(program, list):
-                job_type = "multi_manual"
-            else:
-                job_type = "sampling"
-                program = [program]
+            job_type = "multi_manual" if isinstance(program, list) else "sampling"
+
+        # finally always convert program to list to satisfy type checkers
+        if not isinstance(program, list):
+            program = [program]
 
         if transpiler_info is None:
             transpiler_info = {}
@@ -689,14 +689,16 @@ class OqtopusSamplingBackend:
                     name=name,
                     description=description,
                     device_id=device_id,
-                    job_type=job_type,
+                    job_type=JobsJobType(job_type),
                     job_info=job_info,
                     transpiler_info=transpiler_info,
                     simulator_info=simulator_info,
                     mitigation_info=mitigation_info,
                     shots=shots,
                 )
-                response_submit_job = self._job_api.submit_job(body=body)
+                response_submit_job = self._job_api.submit_job(
+                    jobs_submit_job_request=body
+                )
                 response = self._job_api.get_job(response_submit_job.job_id)
                 job = OqtopusSamplingJob(response, self._job_api)
         except Exception as e:

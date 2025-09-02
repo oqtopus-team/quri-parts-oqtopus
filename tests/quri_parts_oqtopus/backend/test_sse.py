@@ -34,6 +34,8 @@ from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobDef,
     JobsJobInfo,
+    JobsJobStatus,
+    JobsJobType,
     JobsSubmitJobResponse,
 )
 from quri_parts_oqtopus.rest.models.jobs_get_sselog_response import (
@@ -47,8 +49,8 @@ def get_dummy_job(job_id: str = "dummy_id") -> OqtopusSamplingJob:
         shots=1,
         name="test",
         device_id="test_device",
-        job_type="sse",
-        status="submitted",
+        job_type=JobsJobType("sse"),
+        status=JobsJobStatus("submitted"),
         job_info=JobsJobInfo(program=["dummy_program"]),
     )
     return OqtopusSamplingJob(job=job, job_api=JobApi())
@@ -193,10 +195,10 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Assert
         assert ret_job.job_id == job.job_id
         sj_call = mock_submit_job.call_args
-        assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
-        assert sj_call.kwargs["body"].job_type == "sse"
+        assert sj_call.kwargs["jobs_submit_job_request"].job_info.program[
+            0
+        ] == base64.b64encode(read_data).decode("utf-8")
+        assert sj_call.kwargs["jobs_submit_job_request"].job_type == "sse"
 
     def test_run_sse_invalid_arg(self) -> None:
         # Act
@@ -276,10 +278,10 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
         # Assert
         sj_call = mock_submit_job.call_args
-        assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
-        assert sj_call.kwargs["body"].job_type == "sse"
+        assert sj_call.kwargs["jobs_submit_job_request"].job_info.program[
+            0
+        ] == base64.b64encode(read_data).decode("utf-8")
+        assert sj_call.kwargs["jobs_submit_job_request"].job_type == "sse"
 
     def test_download_log(self, mocker: MockerFixture) -> None:
         # Arrange
