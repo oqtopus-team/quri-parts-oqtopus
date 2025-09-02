@@ -30,7 +30,7 @@ uv sync
 
 ### Setting Up the Java(JDK) Environment
 
-To use `swagger-codegen-cli` to generate Python code from an OQTOPUS Cloud User API definition, install JDK:
+To use `openapi-generator-cli` to generate Python code from an OQTOPUS Cloud User API definition, install JDK:
 
 ```shell
 sudo apt install -y openjdk-21-jdk

@@ -105,10 +105,10 @@ from quri_parts_oqtopus.rest import (
     Configuration,
     JobApi,
     JobsJob,
-    JobsJobInfoDownloadPresignedURL,
     JobsRegisterJobResponse,
     JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
+    JobsSubmitJobType,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -206,7 +206,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
     @staticmethod
     def download_job_info(
-        job_info_ulrs: dict[str, JobsJobInfoDownloadPresignedURL],
+        job_info_ulrs: dict[str, str],
         ignore_items: list[str] | None = None,
     ) -> dict:
         """Download and extract job information form storage.
@@ -231,9 +231,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             if key not in {"message", *ignore_items} and val is not None
         ]
         for url in urls_for_download:
-            job_info |= OqtopusStorage.download(
-                presigned_url=cast("JobsJobInfoDownloadPresignedURL", url)
-            )
+            job_info |= OqtopusStorage.download(presigned_url=url)
 
         return job_info
 
@@ -507,7 +505,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             msg = f"Timeout occurred after {timeout} seconds."
             raise BackendError(msg)
         if self._job.status in {"failed", "cancelled"}:
-            msg = f"Job ended with status {self._job.status}."
+            msg = f"Job ended with status {self._job.status.value}."
             raise BackendError(msg)
 
         # edit json for OqtopusSamplingResult
@@ -721,12 +719,13 @@ class OqtopusSamplingBackend:
             msg = f"shots should be a positive integer.: {shots}"
             raise ValueError(msg)
 
+        # set job type base on program type
         if job_type is None:
-            if isinstance(program, list):
-                job_type = "multi_manual"
-            else:
-                job_type = "sampling"
-                program = [program]
+            job_type = "multi_manual" if isinstance(program, list) else "sampling"
+
+        # finally always convert program to list to satisfy type checkers
+        if not isinstance(program, list):
+            program = [program]
 
         if transpiler_info is None:
             transpiler_info = {}
@@ -764,7 +763,6 @@ class OqtopusSamplingBackend:
                 job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                     program=program
                 ).to_dict()
-                job_info_to_upload.pop("operator")
                 OqtopusStorage.upload(
                     presigned_url=register_response.presigned_url,
                     data=job_info_to_upload,
@@ -774,13 +772,15 @@ class OqtopusSamplingBackend:
                     name=name,
                     description=description,
                     device_id=device_id,
-                    job_type=job_type,
+                    job_type=JobsSubmitJobType(job_type),
                     transpiler_info=transpiler_info,
                     simulator_info=simulator_info,
                     mitigation_info=mitigation_info,
                     shots=shots,
                 )
-                self._job_api.submit_job(job_id=register_response.job_id, body=body)
+                self._job_api.submit_job(
+                    job_id=register_response.job_id, jobs_submit_job_request=body
+                )
 
                 job = self.retrieve_job(job_id=register_response.job_id)
 

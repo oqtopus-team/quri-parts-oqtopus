@@ -1,7 +1,7 @@
 import json
 from collections.abc import Callable
 from io import BytesIO
-from typing import Any, cast
+from typing import Any
 from unittest.mock import Mock
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -11,7 +11,6 @@ from requests.exceptions import HTTPError
 
 from quri_parts_oqtopus.backend.storage import OqtopusStorage, OqtopusStorageError
 from quri_parts_oqtopus.rest.models import (
-    JobsJobInfoDownloadPresignedURL,
     JobsJobInfoUploadPresignedURL,
     JobsJobInfoUploadPresignedURLFields,
 )
@@ -44,8 +43,8 @@ def create_zip_bytes():
 
 
 @pytest.fixture
-def mock_download_url() -> JobsJobInfoDownloadPresignedURL:
-    return cast("JobsJobInfoDownloadPresignedURL", MOCK_DOWNLOAD_URL)
+def mock_download_url() -> str:
+    return MOCK_DOWNLOAD_URL
 
 
 @pytest.fixture
@@ -68,7 +67,7 @@ class TestStorage:
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
         file_content: dict[str, Any],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests successful download and data extraction"""
 
@@ -90,7 +89,7 @@ class TestStorage:
         self,
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of json errors"""
 
@@ -112,7 +111,7 @@ class TestStorage:
         self,
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of json errors"""
 
@@ -134,7 +133,7 @@ class TestStorage:
     def test_download_malformed_zip(
         self,
         mocker: MockerFixture,
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of zip file errors"""
 
@@ -153,7 +152,7 @@ class TestStorage:
     def test_download_http_error(
         self,
         mocker: MockerFixture,
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests that a bad HTTP status from requests.get is handled."""
 

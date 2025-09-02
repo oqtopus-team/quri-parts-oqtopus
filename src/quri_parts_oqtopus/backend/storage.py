@@ -8,7 +8,6 @@ import requests
 from requests.exceptions import RequestException
 
 from quri_parts_oqtopus.rest import (
-    JobsJobInfoDownloadPresignedURL,
     JobsJobInfoUploadPresignedURL,
 )
 
@@ -54,13 +53,13 @@ class OqtopusStorage:
 
     @staticmethod
     def download(
-        presigned_url: JobsJobInfoDownloadPresignedURL,
+        presigned_url: str,
         timeout_s: int = DEFAULT_TIMEOUT_S,
     ) -> dict[str, Any]:
         """Download and extract JSON data from an oqtopus cloud storage .zip file.
 
         Args:
-            presigned_url (JobsJobInfoDownloadPresignedURL):
+            presigned_url (str):
                 presigned URL of target .zip file to download
             timeout_s: operation timeout in seconds
 
@@ -108,17 +107,9 @@ class OqtopusStorage:
                     )
                 zip_buffer.seek(0)
 
-                # swagger-codegen generates JobsJobInfoUploadPresignedURLFields class
-                # and changes fields names e.g. AWSAccessKeyId -> aws_access_key_id
-                # we get the true field names
-                original_fields = {
-                    presigned_url.fields.attribute_map[k]: v
-                    for (k, v) in presigned_url.fields.to_dict().items()
-                }
-
                 resp = requests.post(
                     url=presigned_url.url,
-                    data=original_fields,
+                    data=presigned_url.fields.to_dict(),
                     files={
                         "file": (
                             Path(zip_buffer.name).name,

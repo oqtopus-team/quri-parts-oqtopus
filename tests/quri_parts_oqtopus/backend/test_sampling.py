@@ -31,8 +31,12 @@ from quri_parts_oqtopus.rest import (
     JobsJob,
     JobsJobInfo,
     JobsJobInfoUploadPresignedURL,
+    JobsJobInfoUploadPresignedURLFields,
+    JobsJobStatus,
+    JobsJobType,
     JobsRegisterJobResponse,
     JobsSubmitJobRequest,
+    JobsSubmitJobType,
     SuccessSuccessResponse,
 )
 
@@ -121,8 +125,8 @@ def get_dummy_job(status: str = "succeeded") -> JobsJob:
         job_id="dummy_job_id",
         name="dummy_name",
         description="dummy_description",
-        job_type="sampling",
-        status=status,
+        job_type=JobsJobType("sampling"),
+        status=JobsJobStatus(status),
         device_id="dummy_device_id",
         shots=1000,
         job_info=JobsJobInfo(**get_dummy_job_info_urls(status)),
@@ -152,14 +156,10 @@ def dummy_download_job(presigned_url: str) -> dict:
 
 
 def get_dummy_job_info_upload_url() -> JobsJobInfoUploadPresignedURL:
-    param_dict = {
-        "url": "http://host:port/storage_base",
-        "fields": {
-            "key": "dummy_job_id/input.zip",
-        },
-    }
-
-    return JobsJobInfoUploadPresignedURL(**param_dict)
+    return JobsJobInfoUploadPresignedURL(
+        url="http://host:port/storage_base",
+        fields=JobsJobInfoUploadPresignedURLFields(key="dummy_job_id/input.zip"),
+    )
 
 
 def get_dummy_job_id_registration() -> JobsRegisterJobResponse:
@@ -169,13 +169,13 @@ def get_dummy_job_id_registration() -> JobsRegisterJobResponse:
 
 
 def get_dummy_job_submit_request(
-    job_type: str | None = "sampling",
+    job_type: str = "sampling",
 ) -> JobsSubmitJobRequest:
     return JobsSubmitJobRequest(
         name="dummy_name",
         description="dummy_description",
         device_id="dummy_device_id",
-        job_type=job_type,
+        job_type=JobsSubmitJobType(job_type),
         transpiler_info={
             "transpiler_lib": "qiskit",
             "transpiler_options": {"optimization_level": 2},
@@ -208,7 +208,7 @@ def get_dummy_multimanual_job_info(status: str = "succeeded") -> dict:
 
 def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJob:
     job = get_dummy_job(status)
-    job.job_type = "multi_manual"
+    job.job_type = JobsJobType("multi_manual")
     return job
 
 
@@ -763,7 +763,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=SuccessSuccessResponse("job registered"),
+            return_value=SuccessSuccessResponse(message="job registered"),
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
@@ -805,7 +805,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock.assert_called_once_with(
             job_id="dummy_job_id",
-            body=get_dummy_job_submit_request(job_type="sampling"),
+            jobs_submit_job_request=get_dummy_job_submit_request(job_type="sampling"),
         )
 
         assert job.job_id == "dummy_job_id"
@@ -832,7 +832,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=SuccessSuccessResponse("job registered"),
+            return_value=SuccessSuccessResponse(message="job registered"),
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
@@ -881,7 +881,9 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock.assert_called_once_with(
             job_id="dummy_job_id",
-            body=get_dummy_job_submit_request(job_type="multi_manual"),
+            jobs_submit_job_request=get_dummy_job_submit_request(
+                job_type="multi_manual"
+            ),
         )
 
         assert job.job_id == "dummy_job_id"
@@ -918,7 +920,7 @@ class TestOqtopusSamplingBackend:
             captured_program = program
             captured_shots = shots
             captured_transpiler_info = transpiler_info
-            return get_dummy_job("job submitted")
+            return get_dummy_job("submitted")
 
         mock_sse_sampler_module.req_transpile_and_exec.side_effect = (
             mock_req_transpile_and_exec
