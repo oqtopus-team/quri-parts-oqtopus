@@ -30,7 +30,7 @@ from typing_extensions import Self
 
 class JobsJob(BaseModel):
     """
-    Represents a quantum job.  Newly registered jobs (status=registered) must provide:    - job_id,    - status (registered)  Fully defined jobs must also provide:   - name   - device_id   - job_type,   - shots   - job_info  Other properties and optional and depend on job type and status.
+    Represents a quantum job.
     """ # noqa: E501
     job_id: Optional[StrictStr] = None
     name: Optional[StrictStr] = None

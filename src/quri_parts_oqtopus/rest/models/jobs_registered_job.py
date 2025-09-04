@@ -18,26 +18,37 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing_extensions import Annotated
+from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
+from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 from typing import Optional, Set
 from typing_extensions import Self
 
-class JobsSubmitJobRequest(BaseModel):
+class JobsRegisteredJob(BaseModel):
     """
-    JobsSubmitJobRequest
+    Represents a newly registered quantum job.
     """ # noqa: E501
+    job_id: StrictStr
     name: Optional[StrictStr] = None
     description: Optional[StrictStr] = None
-    device_id: StrictStr
-    job_type: JobsJobType
+    job_type: Optional[JobsJobType] = None
+    status: JobsJobStatus
+    device_id: Optional[StrictStr] = None
+    shots: Optional[Annotated[int, Field(le=10000000, strict=True, ge=1)]] = None
+    job_info: Optional[JobsJobInfo] = None
     transpiler_info: Optional[Dict[str, Any]] = None
     simulator_info: Optional[Dict[str, Any]] = None
     mitigation_info: Optional[Dict[str, Any]] = None
-    shots: Annotated[int, Field(le=10000000, strict=True, ge=1)]
-    __properties: ClassVar[List[str]] = ["name", "description", "device_id", "job_type", "transpiler_info", "simulator_info", "mitigation_info", "shots"]
+    execution_time: Optional[Union[StrictFloat, StrictInt]] = None
+    submitted_at: Optional[datetime] = None
+    ready_at: Optional[datetime] = None
+    running_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    __properties: ClassVar[List[str]] = ["job_id", "name", "description", "job_type", "status", "device_id", "shots", "job_info", "transpiler_info", "simulator_info", "mitigation_info", "execution_time", "submitted_at", "ready_at", "running_at", "ended_at"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -57,7 +68,7 @@ class JobsSubmitJobRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of JobsSubmitJobRequest from a JSON string"""
+        """Create an instance of JobsRegisteredJob from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -78,11 +89,14 @@ class JobsSubmitJobRequest(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of job_info
+        if self.job_info:
+            _dict['job_info'] = self.job_info.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of JobsSubmitJobRequest from a dict"""
+        """Create an instance of JobsRegisteredJob from a dict"""
         if obj is None:
             return None
 
@@ -90,14 +104,22 @@ class JobsSubmitJobRequest(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "job_id": obj.get("job_id"),
             "name": obj.get("name"),
             "description": obj.get("description"),
-            "device_id": obj.get("device_id"),
             "job_type": obj.get("job_type"),
+            "status": obj.get("status"),
+            "device_id": obj.get("device_id"),
+            "shots": obj.get("shots"),
+            "job_info": JobsJobInfo.from_dict(obj["job_info"]) if obj.get("job_info") is not None else None,
             "transpiler_info": obj.get("transpiler_info"),
             "simulator_info": obj.get("simulator_info"),
             "mitigation_info": obj.get("mitigation_info"),
-            "shots": obj.get("shots")
+            "execution_time": obj.get("execution_time"),
+            "submitted_at": obj.get("submitted_at"),
+            "ready_at": obj.get("ready_at"),
+            "running_at": obj.get("running_at"),
+            "ended_at": obj.get("ended_at")
         })
         return _obj
 

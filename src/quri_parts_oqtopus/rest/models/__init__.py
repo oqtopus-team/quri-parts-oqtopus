@@ -25,6 +25,7 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.error_internal_server_error import ErrorInternalServerError
     from quri_parts_oqtopus.rest.models.error_not_found_error import ErrorNotFoundError
     from quri_parts_oqtopus.rest.models.error_unauthorized_error import ErrorUnauthorizedError
+    from quri_parts_oqtopus.rest.models.get_job200_response import GetJob200Response
     from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
     from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
     from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
@@ -33,6 +34,7 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
     from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
     from quri_parts_oqtopus.rest.models.jobs_register_job_response import JobsRegisterJobResponse
+    from quri_parts_oqtopus.rest.models.jobs_registered_job import JobsRegisteredJob
     from quri_parts_oqtopus.rest.models.jobs_s3_estimation_result import JobsS3EstimationResult
     from quri_parts_oqtopus.rest.models.jobs_s3_job_result import JobsS3JobResult
     from quri_parts_oqtopus.rest.models.jobs_s3_operator_item import JobsS3OperatorItem
@@ -40,7 +42,7 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.jobs_s3_submit_job_info import JobsS3SubmitJobInfo
     from quri_parts_oqtopus.rest.models.jobs_s3_transpile_result import JobsS3TranspileResult
     from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest
-    from quri_parts_oqtopus.rest.models.jobs_submit_job_type import JobsSubmitJobType
+    from quri_parts_oqtopus.rest.models.jobs_submitted_job import JobsSubmittedJob
     from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse
     
 else:
@@ -59,6 +61,7 @@ from quri_parts_oqtopus.rest.models.error_forbidden_error import ErrorForbiddenE
 from quri_parts_oqtopus.rest.models.error_internal_server_error import ErrorInternalServerError
 from quri_parts_oqtopus.rest.models.error_not_found_error import ErrorNotFoundError
 from quri_parts_oqtopus.rest.models.error_unauthorized_error import ErrorUnauthorizedError
+from quri_parts_oqtopus.rest.models.get_job200_response import GetJob200Response
 from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
 from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
 from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
@@ -67,6 +70,7 @@ from quri_parts_oqtopus.rest.models.jobs_job_info_upload_presigned_url_fields im
 from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 from quri_parts_oqtopus.rest.models.jobs_register_job_response import JobsRegisterJobResponse
+from quri_parts_oqtopus.rest.models.jobs_registered_job import JobsRegisteredJob
 from quri_parts_oqtopus.rest.models.jobs_s3_estimation_result import JobsS3EstimationResult
 from quri_parts_oqtopus.rest.models.jobs_s3_job_result import JobsS3JobResult
 from quri_parts_oqtopus.rest.models.jobs_s3_operator_item import JobsS3OperatorItem
@@ -74,7 +78,7 @@ from quri_parts_oqtopus.rest.models.jobs_s3_sampling_result import JobsS3Samplin
 from quri_parts_oqtopus.rest.models.jobs_s3_submit_job_info import JobsS3SubmitJobInfo
 from quri_parts_oqtopus.rest.models.jobs_s3_transpile_result import JobsS3TranspileResult
 from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest
-from quri_parts_oqtopus.rest.models.jobs_submit_job_type import JobsSubmitJobType
+from quri_parts_oqtopus.rest.models.jobs_submitted_job import JobsSubmittedJob
 from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse
 
 """,

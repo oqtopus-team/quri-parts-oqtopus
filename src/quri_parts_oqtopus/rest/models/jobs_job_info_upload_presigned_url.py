@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List
 from quri_parts_oqtopus.rest.models.jobs_job_info_upload_presigned_url_fields import JobsJobInfoUploadPresignedURLFields
 from typing import Optional, Set
 from typing_extensions import Self
@@ -28,8 +28,8 @@ class JobsJobInfoUploadPresignedURL(BaseModel):
     """
     Presigned URL for uploading file to OCTOPUS cloud.
     """ # noqa: E501
-    url: Optional[StrictStr] = None
-    fields: Optional[JobsJobInfoUploadPresignedURLFields] = None
+    url: StrictStr
+    fields: JobsJobInfoUploadPresignedURLFields
     __properties: ClassVar[List[str]] = ["url", "fields"]
 
     model_config = ConfigDict(

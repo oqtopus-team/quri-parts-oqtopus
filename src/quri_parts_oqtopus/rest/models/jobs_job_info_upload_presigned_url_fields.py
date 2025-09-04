@@ -27,7 +27,7 @@ class JobsJobInfoUploadPresignedURLFields(BaseModel):
     """
     JobsJobInfoUploadPresignedURLFields
     """ # noqa: E501
-    key: Optional[StrictStr] = None
+    key: StrictStr
     aws_access_key_id: Optional[StrictStr] = Field(default=None, alias="AWSAccessKeyId")
     x_amz_security_token: Optional[StrictStr] = Field(default=None, alias="x-amz-security-token")
     policy: Optional[StrictStr] = None
