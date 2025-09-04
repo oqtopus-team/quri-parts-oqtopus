@@ -84,7 +84,7 @@ import pprint
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 from quri_parts.backend import (
     BackendError,
@@ -103,12 +103,14 @@ from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
+    GetJob200Response,
     JobApi,
-    JobsJob,
+    JobsJobType,
+    JobsRegisteredJob,
     JobsRegisterJobResponse,
     JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
-    JobsSubmitJobType,
+    JobsSubmittedJob,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -205,6 +207,35 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     """
 
     @staticmethod
+    def get_job(job_api: JobApi, job_id: str) -> JobsSubmittedJob:
+        """Fetch and validate requested job.
+
+        Args:
+            job_api (JobApi): API
+            job_id (str): job_id to fetch
+
+        Raises:
+            ValueError: If received invalid response from API
+            TypeError: If received job is not fully defined (status='registered')
+
+        Returns:
+            JobsSubmittedJob: Fetched job
+
+        """
+        response: GetJob200Response = job_api.get_job(job_id)
+
+        if response.actual_instance is None:
+            msg = "Malformed response form API"
+            raise ValueError(msg)
+
+        # registered jobs id's are not available via SDK
+        if isinstance(response.actual_instance, JobsRegisteredJob):
+            msg = "registered job (status='registered') not supported"
+            raise TypeError(msg)
+
+        return response.actual_instance
+
+    @staticmethod
     def download_job_info(
         job_info_ulrs: dict[str, str],
         ignore_items: list[str] | None = None,
@@ -235,7 +266,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         return job_info
 
-    def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
+    def __init__(self, job: JobsSubmittedJob, job_info: dict, job_api: JobApi) -> None:
         super().__init__()
 
         if job is None:
@@ -244,7 +275,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         if job.status == "registered":
             msg = "'job' status should not be registered"
             raise ValueError(msg)
-        self._job: JobsJob = job
+        self._job: JobsSubmittedJob = job
 
         if job_info is None:
             msg = "'job_info' should not be None"
@@ -277,7 +308,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.name
 
     @property
-    def description(self) -> str:
+    def description(self) -> str | None:
         """The description of the job.
 
         Returns:
@@ -337,7 +368,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job_info
 
     @property
-    def transpiler_info(self) -> dict:
+    def transpiler_info(self) -> dict | None:
         """The transpiler info of the job.
 
         Returns:
@@ -347,7 +378,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.transpiler_info
 
     @property
-    def simulator_info(self) -> dict:
+    def simulator_info(self) -> dict | None:
         """The simulator info of the job.
 
         Returns:
@@ -357,19 +388,17 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.simulator_info
 
     @property
-    def mitigation_info(self) -> dict:
+    def mitigation_info(self) -> dict | None:
         """The mitigation info of the job.
 
         Returns:
             dict: The mitigation info of the job.
 
         """
-        if self._job.mitigation_info:
-            return json.loads(self._job.mitigation_info)
-        return {}
+        return self._job.mitigation_info
 
     @property
-    def execution_time(self) -> float:
+    def execution_time(self) -> float | int | None:
         """The execution time of the job.
 
         Returns:
@@ -389,7 +418,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.submitted_at
 
     @property
-    def ready_at(self) -> datetime:
+    def ready_at(self) -> datetime | None:
         """The `ready_at` of the job.
 
         Returns:
@@ -399,7 +428,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.ready_at
 
     @property
-    def running_at(self) -> datetime:
+    def running_at(self) -> datetime | None:
         """The `running_at` of the job.
 
         Returns:
@@ -409,7 +438,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         return self._job.running_at
 
     @property
-    def ended_at(self) -> datetime:
+    def ended_at(self) -> datetime | None:
         """The `ended_at` of the job.
 
         Returns:
@@ -433,7 +462,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
                 if key != "message" and val is not None
             ]
 
-            self._job = cast("JobsJob", self._job_api.get_job(self.job_id))
+            self._job = self.get_job(job_api=self._job_api, job_id=self.job_id)
 
             new_job_info = self.download_job_info(
                 job_info_ulrs=self._job.job_info.to_dict(),
@@ -542,7 +571,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         try:
-            self._job_api.cancel_job(self._job.job_id)
+            self._job_api.cancel_job(self.job_id)
             self.refresh()
         except Exception as e:
             msg = "To cancel job is failed."
@@ -757,9 +786,10 @@ class OqtopusSamplingBackend:
                 del job._job_api  # noqa: SLF001
 
             else:
-                register_response: JobsRegisterJobResponse = cast(
-                    "JobsRegisterJobResponse", self._job_api.register_job_id()
+                register_response: JobsRegisterJobResponse = (
+                    self._job_api.register_job_id()
                 )
+
                 job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
                     program=program
                 ).to_dict()
@@ -772,7 +802,7 @@ class OqtopusSamplingBackend:
                     name=name,
                     description=description,
                     device_id=device_id,
-                    job_type=JobsSubmitJobType(job_type),
+                    job_type=JobsJobType(job_type),
                     transpiler_info=transpiler_info,
                     simulator_info=simulator_info,
                     mitigation_info=mitigation_info,
@@ -800,18 +830,14 @@ class OqtopusSamplingBackend:
             The job with the given ``job_id``.
 
         Raises:
-            ValueError: If job is not fully submitted (job status is "registered")
             BackendError: If job cannot be found or if an authentication error occurred,
                 etc.
 
         """
         try:
-            job: JobsJob = cast("JobsJob", self._job_api.get_job(job_id))
-
-            # registered jobs id's are not available via SDK
-            if job.status == "registered":
-                msg = "job status='registered' not supported"
-                raise ValueError(msg)  # noqa: TRY301
+            job: JobsSubmittedJob = OqtopusSamplingJob.get_job(
+                job_api=self._job_api, job_id=job_id
+            )
 
             job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
                 job_info_ulrs=job.job_info.to_dict()
