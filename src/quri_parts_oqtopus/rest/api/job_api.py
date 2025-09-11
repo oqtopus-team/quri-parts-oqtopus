@@ -21,7 +21,6 @@ from datetime import datetime
 from pydantic import Field, StrictStr, field_validator
 from typing import List, Optional
 from typing_extensions import Annotated
-from quri_parts_oqtopus.rest.models.get_job200_response import GetJob200Response
 from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
 from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
 from quri_parts_oqtopus.rest.models.jobs_register_job_response import JobsRegisterJobResponse
@@ -602,7 +601,7 @@ class JobApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> GetJob200Response:
+    ) -> JobsJob:
         """Get selected job
 
         Get selected job
@@ -640,7 +639,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetJob200Response",
+            '200': "JobsJob",
             '400': "ErrorBadRequest",
             '401': "ErrorUnauthorizedError",
             '404': "ErrorNotFoundError",
@@ -672,7 +671,7 @@ class JobApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[GetJob200Response]:
+    ) -> ApiResponse[JobsJob]:
         """Get selected job
 
         Get selected job
@@ -710,7 +709,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetJob200Response",
+            '200': "JobsJob",
             '400': "ErrorBadRequest",
             '401': "ErrorUnauthorizedError",
             '404': "ErrorNotFoundError",
@@ -780,7 +779,7 @@ class JobApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GetJob200Response",
+            '200': "JobsJob",
             '400': "ErrorBadRequest",
             '401': "ErrorUnauthorizedError",
             '404': "ErrorNotFoundError",

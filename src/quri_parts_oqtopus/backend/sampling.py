@@ -84,7 +84,7 @@ import pprint
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from quri_parts.backend import (
     BackendError,
@@ -103,10 +103,9 @@ from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
-    GetJob200Response,
     JobApi,
+    JobsJob,
     JobsJobType,
-    JobsRegisteredJob,
     JobsRegisterJobResponse,
     JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
@@ -215,25 +214,20 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             job_id (str): job_id to fetch
 
         Raises:
-            ValueError: If received invalid response from API
-            TypeError: If received job is not fully defined (status='registered')
+            ValueError: If received job is not fully defined (status='registered')
 
         Returns:
             JobsSubmittedJob: Fetched job
 
         """
-        response: GetJob200Response = job_api.get_job(job_id)
-
-        if response.actual_instance is None:
-            msg = "Malformed response form API"
-            raise ValueError(msg)
+        response: JobsJob = job_api.get_job(job_id)
 
         # registered jobs id's are not available via SDK
-        if isinstance(response.actual_instance, JobsRegisteredJob):
+        if response.status == "registered":
             msg = "registered job (status='registered') not supported"
-            raise TypeError(msg)
+            raise ValueError(msg)
 
-        return response.actual_instance
+        return cast("JobsSubmittedJob", response)
 
     @staticmethod
     def download_job_info(

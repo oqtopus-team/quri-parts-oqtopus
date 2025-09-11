@@ -27,7 +27,6 @@ from quri_parts_oqtopus.backend.sampling import (
     OqtopusSamplingResult,
 )
 from quri_parts_oqtopus.rest import (
-    GetJob200Response,
     JobApi,
     JobsJobInfo,
     JobsJobInfoUploadPresignedURL,
@@ -145,10 +144,6 @@ def get_dummy_job(status: str = "succeeded") -> JobsSubmittedJob:
     )
 
 
-def get_dummy_job_response(status: str = "succeeded") -> GetJob200Response:
-    return GetJob200Response(actual_instance=get_dummy_job(status=status))
-
-
 def dummy_download_job(presigned_url: str) -> dict:
     url_to_data = {
         "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
@@ -215,10 +210,6 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsSubmittedJob:
     job = get_dummy_job(status)
     job.job_type = JobsJobType("multi_manual")
     return job
-
-
-def get_dummy_multimanual_job_response(status: str = "succeeded") -> GetJob200Response:
-    return GetJob200Response(actual_instance=get_dummy_multimanual_job(status=status))
 
 
 def dummy_download_multimanual_job(presigned_url: str) -> dict:
@@ -377,7 +368,7 @@ class TestOqtopusSamplingJob:
         # Arrange
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job_response("succeeded"),
+            return_value=get_dummy_job("succeeded"),
         )
         mock_download = mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
@@ -418,9 +409,9 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("succeeded"),
-                get_dummy_job_response("failed"),
-                get_dummy_job_response("cancelled"),
+                get_dummy_job("succeeded"),
+                get_dummy_job("failed"),
+                get_dummy_job("cancelled"),
             ],
         )
         mocker.patch(
@@ -469,8 +460,8 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("running"),
-                get_dummy_job_response("succeeded"),
+                get_dummy_job("running"),
+                get_dummy_job("succeeded"),
             ],
         )
         mocker.patch(
@@ -495,11 +486,11 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
             ],
         )
         mocker.patch(
@@ -523,9 +514,9 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("succeeded"),
-                get_dummy_job_response("failed"),
-                get_dummy_job_response("cancelled"),
+                get_dummy_job("succeeded"),
+                get_dummy_job("failed"),
+                get_dummy_job("cancelled"),
             ],
         )
         mocker.patch(
@@ -564,8 +555,8 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("running"),
-                get_dummy_job_response("succeeded"),
+                get_dummy_job("running"),
+                get_dummy_job("succeeded"),
             ],
         )
         mocker.patch(
@@ -588,11 +579,11 @@ class TestOqtopusSamplingJob:
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
             side_effect=[
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
-                get_dummy_job_response("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
+                get_dummy_job("running"),
             ],
         )
         mocker.patch(
@@ -615,7 +606,7 @@ class TestOqtopusSamplingJob:
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job_response("cancelled"),
+            return_value=get_dummy_job("cancelled"),
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
@@ -776,7 +767,7 @@ class TestOqtopusSamplingBackend:
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job_response("submitted"),
+            return_value=get_dummy_job("submitted"),
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
@@ -845,7 +836,7 @@ class TestOqtopusSamplingBackend:
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_multimanual_job_response("submitted"),
+            return_value=get_dummy_multimanual_job("submitted"),
         )
         mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
@@ -978,7 +969,7 @@ class TestOqtopusSamplingBackend:
         # Arrange
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job_response("succeeded"),
+            return_value=get_dummy_job("succeeded"),
         )
         mock_download = mocker.patch(
             "quri_parts_oqtopus.backend.storage.OqtopusStorage.download",
@@ -1033,10 +1024,8 @@ class TestOqtopusSamplingBackend:
         # Arrange
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=GetJob200Response(
-                actual_instance=JobsRegisteredJob(
-                    job_id="dummy_job_id", status=JobsJobStatus("registered")
-                )
+            return_value=JobsRegisteredJob(
+                job_id="dummy_job_id", status=JobsJobStatus("registered")
             ),
         )
         backend = OqtopusSamplingBackend(get_dummy_config())

@@ -25,7 +25,6 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.error_internal_server_error import ErrorInternalServerError
     from quri_parts_oqtopus.rest.models.error_not_found_error import ErrorNotFoundError
     from quri_parts_oqtopus.rest.models.error_unauthorized_error import ErrorUnauthorizedError
-    from quri_parts_oqtopus.rest.models.get_job200_response import GetJob200Response
     from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
     from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
     from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
@@ -61,7 +60,6 @@ from quri_parts_oqtopus.rest.models.error_forbidden_error import ErrorForbiddenE
 from quri_parts_oqtopus.rest.models.error_internal_server_error import ErrorInternalServerError
 from quri_parts_oqtopus.rest.models.error_not_found_error import ErrorNotFoundError
 from quri_parts_oqtopus.rest.models.error_unauthorized_error import ErrorUnauthorizedError
-from quri_parts_oqtopus.rest.models.get_job200_response import GetJob200Response
 from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
 from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
 from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
