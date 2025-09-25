@@ -235,12 +235,12 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Arrange
         read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
         mocker.patch(
-            "quri_parts_oqtopus.backend.sse.Path.open",
+            "quri_parts_oqtopus.backend.jobs.sse.Path.open",
             new_callable=mocker.mock_open,
             read_data=read_data,
         )
         mocker.patch(
-            "quri_parts_oqtopus.backend.sse.len", return_value=10 * 1024 * 1024 + 1
+            "quri_parts_oqtopus.backend.jobs.sse.len", return_value=10 * 1024 * 1024 + 1
         )
         sse_job = OqtopusSseBackend(get_dummy_config())
 
@@ -441,7 +441,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
     def test_download_log_request_failure(self, mocker: MockerFixture) -> None:
         # Arrange
         mocker.patch(
-            "quri_parts_oqtopus.backend.sse.Path.exists",
+            "quri_parts_oqtopus.backend.jobs.sse.Path.exists",
             side_effect=lambda path: path == "destination/path",
         )
 

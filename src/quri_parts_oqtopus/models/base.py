@@ -9,10 +9,10 @@ class OqtopusModelBase:
 
     @abstractmethod
     def refresh(self) -> None:
-        """Refresh the model data from the OQTOPUS Cloud.
+        """Retrieve the latest information from OQTOPUS Cloud.
 
-        This method should be implemented by subclasses to update the model's data
-        from the cloud.
+        This method should be implemented by subclasses to retrieve the latest
+        information from OQTOPUS Cloud.
 
         Raises:
             BackendError: If there is an error while refreshing the model data.
@@ -24,6 +24,9 @@ class OqtopusModelBase:
     @abstractmethod
     def to_json(self) -> str:
         """Convert the model to a JSON string.
+
+        This method should be implemented by subclasses to convert the model's data
+        to a JSON string.
 
         Returns:
             str: The JSON representation of the model.

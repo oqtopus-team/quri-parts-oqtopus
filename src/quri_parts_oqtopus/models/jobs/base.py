@@ -7,8 +7,10 @@ from quri_parts.backend import (
     BackendError,
 )
 
-from quri_parts_oqtopus.backend.model_base import OqtopusModelBase
-from quri_parts_oqtopus.backend.utils import DateTimeEncoder
+from quri_parts_oqtopus.models.base import OqtopusModelBase
+from quri_parts_oqtopus.models.jobs.results.estimation import OqtopusEstimationResult
+from quri_parts_oqtopus.models.jobs.results.sampling import OqtopusSamplingResult
+from quri_parts_oqtopus.models.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobDef,
@@ -20,7 +22,7 @@ JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
     """A base class for OQTOPUS jobs.
 
-    This class provides common functionality for all job types in the OQTOPUS framework.
+    This class provides common functions for OQTOPUS jobs.
     """
 
     def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
@@ -199,7 +201,9 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
         return self._job.ended_at
 
     @abstractmethod
-    def result(self, timeout: float | None = None, wait: float = 10.0) -> object:
+    def result(
+        self, timeout: float | None = None, wait: float = 10.0
+    ) -> OqtopusSamplingResult | OqtopusEstimationResult:
         """Wait until the job progress to the end and returns the result of the job.
 
         If the status of job is not ``succeeded`` or ``failed``, or ``cancelled``,

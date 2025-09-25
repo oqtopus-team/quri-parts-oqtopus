@@ -6,10 +6,10 @@ from pathlib import Path, PurePath
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-from quri_parts_oqtopus.backend.job_backend_base import OqtopusJobBackendBase
+from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
+from quri_parts_oqtopus.backend.jobs.sampling import OqtopusSamplingBackend
+from quri_parts_oqtopus.models.jobs.sampling import OqtopusSamplingJob
 from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
-
-from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
 
 
 class OqtopusSseBackend(OqtopusJobBackendBase):

@@ -6,8 +6,8 @@ from quri_parts.openqasm.circuit import convert_to_qasm_str
 from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
-from quri_parts_oqtopus.backend.data.estimation import OqtopusEstimationJob
-from quri_parts_oqtopus.backend.job_backend_base import OqtopusJobBackendBase
+from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
+from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
 from quri_parts_oqtopus.rest import (
     JobsOperatorItem,
     JobsSubmitJobInfo,

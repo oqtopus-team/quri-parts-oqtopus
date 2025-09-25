@@ -2,19 +2,19 @@ from quri_parts.backend import (
     BackendError,
 )
 
-from quri_parts_oqtopus.backend.backend_base import OqtopusBackendBase
+from quri_parts_oqtopus.backend.base import OqtopusBackendBase
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-from quri_parts_oqtopus.backend.data.estimation import OqtopusEstimationJob
-from quri_parts_oqtopus.backend.data.sampling import OqtopusSamplingJob
+from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
+from quri_parts_oqtopus.models.jobs.sampling import OqtopusSamplingJob
 from quri_parts_oqtopus.rest import JobApi, JobsJobDef
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 
 
 class OqtopusJobBackendBase(OqtopusBackendBase):
-    """Base class for oqtopus job backend.
+    """Base class for OQTOPUS backend jobs.
 
     This class extends :class:`OqtopusBackendBase` and provides additional functionality
-    specific to job management in the Oqtopus backend.
+    specific to job management in OQTOPUS Cloud.
 
     Args:
         config: A :class:`OqtopusConfig` for circuit execution.
