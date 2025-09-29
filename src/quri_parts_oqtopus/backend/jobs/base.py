@@ -55,11 +55,13 @@ class OqtopusJobBackendBase(OqtopusBackendBase):
             raise BackendError(msg)
 
         # check job_type
-        if response.job_type is JobsJobType.SAMPLING:
+        if response.job_type == JobsJobType.SAMPLING:
             return OqtopusSamplingJob(job=response, job_api=self._job_api)
-        if response.job_type is JobsJobType.ESTIMATION:
+        if response.job_type == JobsJobType.ESTIMATION:
             return OqtopusEstimationJob(job=response, job_api=self._job_api)
-        if response.job_type is JobsJobType.SSE:
+        if response.job_type == JobsJobType.MULTI_MANUAL:
+            return OqtopusSamplingJob(job=response, job_api=self._job_api)
+        if response.job_type == JobsJobType.SSE:
             msg = "SSE job is not supported."
             raise BackendError(msg)
 

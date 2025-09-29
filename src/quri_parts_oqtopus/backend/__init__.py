@@ -2,6 +2,10 @@ from quri_parts_oqtopus.backend.jobs.sampling import (  # noqa: I001
     OqtopusSamplingBackend,
 )
 
+from quri_parts_oqtopus.backend.jobs.base import (
+    OqtopusJobBackendBase,
+)
+
 from quri_parts_oqtopus.models.jobs.sampling import (
     OqtopusSamplingJob,
 )
@@ -35,6 +39,7 @@ __all__ = [
     "OqtopusEstimationBackend",
     "OqtopusEstimationJob",
     "OqtopusEstimationResult",
+    "OqtopusJobBackendBase",
     "OqtopusSamplingBackend",
     "OqtopusSamplingJob",
     "OqtopusSamplingResult",

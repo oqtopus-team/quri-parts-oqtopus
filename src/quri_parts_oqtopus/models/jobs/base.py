@@ -147,7 +147,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
 
         """
         if self._job.mitigation_info:
-            return json.loads(self._job.mitigation_info)
+            return self._job.mitigation_info
         return {}
 
     @property
