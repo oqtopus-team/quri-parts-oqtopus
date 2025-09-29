@@ -13,9 +13,6 @@ from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 class OqtopusJobBackendBase(OqtopusBackendBase):
     """Base class for OQTOPUS backend jobs.
 
-    This class extends :class:`OqtopusBackendBase` and provides additional functionality
-    specific to job management in OQTOPUS Cloud.
-
     Args:
         config: A :class:`OqtopusConfig` for circuit execution.
             If this parameter is ``None`` and both environment variables ``OQTOPUS_URL``
@@ -63,7 +60,7 @@ class OqtopusJobBackendBase(OqtopusBackendBase):
         if response.job_type is JobsJobType.ESTIMATION:
             return OqtopusEstimationJob(job=response, job_api=self._job_api)
         if response.job_type is JobsJobType.SSE:
-            msg = "SSE job is not supported in this backend."
+            msg = "SSE job is not supported."
             raise BackendError(msg)
 
         msg = f"Unknown job_type: {response.job_type}"

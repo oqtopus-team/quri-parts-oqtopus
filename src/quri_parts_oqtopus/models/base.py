@@ -4,7 +4,7 @@ from abc import abstractmethod
 class OqtopusModelBase:
     """A base class for all OQTOPUS models.
 
-    This class provides common functionality for all models in the OQTOPUS framework.
+    This class provides common functionality.
     """
 
     @abstractmethod
