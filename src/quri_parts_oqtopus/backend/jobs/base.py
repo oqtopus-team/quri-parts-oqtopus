@@ -6,6 +6,7 @@ from quri_parts_oqtopus.backend.base import OqtopusBackendBase
 from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
 from quri_parts_oqtopus.models.jobs.sampling import OqtopusSamplingJob
+from quri_parts_oqtopus.models.jobs.sse import OqtopusSseJob
 from quri_parts_oqtopus.rest import JobApi, JobsJobDef
 from quri_parts_oqtopus.rest.models.jobs_job_type import JobsJobType
 
@@ -29,7 +30,9 @@ class OqtopusJobBackendBase(OqtopusBackendBase):
         super().__init__(config)
         self._job_api: JobApi = JobApi(api_client=self._api_client)
 
-    def retrieve_job(self, job_id: str) -> OqtopusSamplingJob | OqtopusEstimationJob:
+    def retrieve_job(
+        self, job_id: str
+    ) -> OqtopusSamplingJob | OqtopusEstimationJob | OqtopusSseJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
 
         Args:
@@ -62,8 +65,7 @@ class OqtopusJobBackendBase(OqtopusBackendBase):
         if response.job_type == JobsJobType.MULTI_MANUAL:
             return OqtopusSamplingJob(job=response, job_api=self._job_api)
         if response.job_type == JobsJobType.SSE:
-            msg = "SSE job is not supported."
-            raise BackendError(msg)
+            return OqtopusSseJob(job=response, job_api=self._job_api)
 
         msg = f"Unknown job_type: {response.job_type}"
         raise BackendError(msg)

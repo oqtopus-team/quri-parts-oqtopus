@@ -9,7 +9,9 @@ from quri_parts_oqtopus.backend.jobs.base import (
 from quri_parts_oqtopus.models.jobs.sampling import (
     OqtopusSamplingJob,
 )
-
+from quri_parts_oqtopus.models.jobs.sse import (
+    OqtopusSseJob,
+)
 from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
 )
@@ -44,4 +46,5 @@ __all__ = [
     "OqtopusSamplingJob",
     "OqtopusSamplingResult",
     "OqtopusSseBackend",
+    "OqtopusSseJob",
 ]
