@@ -7,8 +7,11 @@ from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
-from quri_parts_oqtopus.backend.jobs.sampling import OqtopusSamplingBackend
 from quri_parts_oqtopus.models.jobs.sse import OqtopusSseJob
+from quri_parts_oqtopus.rest import (
+    JobsSubmitJobInfo,
+    JobsSubmitJobRequest,
+)
 
 
 class OqtopusSseBackend(OqtopusJobBackendBase):
@@ -78,17 +81,23 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
             raise ValueError(msg)
 
         try:
-            backend = OqtopusSamplingBackend(self.config)
-            job = backend.sample_qasm(
-                program=[encoded.decode("utf-8")],
-                shots=1,
+            job_info = JobsSubmitJobInfo(program=[encoded.decode("utf-8")])
+            body = JobsSubmitJobRequest(
                 name=name,
-                device_id=device_id,
                 description=description,
+                device_id=device_id,
                 job_type="sse",
+                job_info=job_info,
+                transpiler_info={},
+                simulator_info={},
+                mitigation_info={},
+                shots=1,
             )
+            response_submit_job = self._job_api.submit_job(body=body)
+            response = self._job_api.get_job(response_submit_job.job_id)
+            job = OqtopusSseJob(job=response, job_api=self._job_api)
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return OqtopusSseJob(job=job._job, job_api=job._job_api)  # noqa: SLF001
+        return job

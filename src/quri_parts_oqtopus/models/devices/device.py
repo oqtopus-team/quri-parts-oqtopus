@@ -26,6 +26,8 @@ class OqtopusDevice(OqtopusModelBase):
     """
 
     def __init__(self, device: DevicesDeviceInfo, device_api: DeviceApi) -> None:
+        super().__init__()
+
         if device is None:
             msg = "'device' should not be None"
             raise ValueError(msg)

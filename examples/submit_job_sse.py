@@ -11,7 +11,6 @@ print(job)
 counts = job.result().counts
 print(counts)
 
-backend.download_log(
-    job_id=job.job_id,
+job.download_log(
     save_dir="examples",
 )

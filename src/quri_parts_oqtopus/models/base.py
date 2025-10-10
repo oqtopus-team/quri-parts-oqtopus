@@ -7,6 +7,9 @@ class OqtopusModelBase:
     This class provides common functionality.
     """
 
+    def __init__(self) -> None:
+        pass
+
     @abstractmethod
     def refresh(self) -> None:
         """Retrieve the latest information from OQTOPUS Cloud.
