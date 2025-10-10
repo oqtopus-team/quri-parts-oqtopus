@@ -1,6 +1,6 @@
-from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusSamplingBackend
+from quri_parts_oqtopus.backend import OqtopusConfig, OqtopusJobBackendBase
 
-backend = OqtopusSamplingBackend(OqtopusConfig.from_file("oqtopus-dev"))
+backend = OqtopusJobBackendBase(OqtopusConfig.from_file("oqtopus-dev"))
 
 job_id = "target_job_id"
 job = backend.retrieve_job(job_id)
