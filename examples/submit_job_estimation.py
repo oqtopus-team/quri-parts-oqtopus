@@ -21,6 +21,6 @@ job = backend.estimate(
     shots=10000,
 )
 print(job)
-result = job.result()
-print(result.exp_value)
-print(result.stds)
+# result = job.result()
+# print(result.exp_value)
+# print(result.stds)

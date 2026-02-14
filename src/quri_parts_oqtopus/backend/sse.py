@@ -6,7 +6,6 @@ from pathlib import Path, PurePath
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-from quri_parts_oqtopus.rest import ApiClient, Configuration, JobApi
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
 
@@ -25,18 +24,7 @@ class OqtopusSseBackend:
             self.config = OqtopusConfig.from_file()
         else:
             self.config = config
-
-        # construct JobApi
-        rest_config = Configuration()
-        rest_config.host = self.config.url
-        if self.config.proxy:
-            rest_config.proxy = self.config.proxy
-        api_client = ApiClient(
-            configuration=rest_config,
-            header_name="q-api-token",
-            header_value=self.config.api_token,
-        )
-        self._job_api: JobApi = JobApi(api_client=api_client)
+        self._backend: OqtopusSamplingBackend = OqtopusSamplingBackend(self.config)
         self.job: OqtopusSamplingJob | None = None
 
     def run_sse(
@@ -95,8 +83,7 @@ class OqtopusSseBackend:
             raise ValueError(msg)
 
         try:
-            backend = OqtopusSamplingBackend(self.config)
-            self.job = backend.sample_qasm(
+            self.job = self._backend.sample_qasm(
                 program=[encoded.decode("utf-8")],
                 shots=1,
                 name=name,
@@ -141,20 +128,20 @@ class OqtopusSseBackend:
                 raise ValueError(msg)
 
         try:
-            response = self._job_api.get_sselog(job_id=job_id)
+            job = self._backend.retrieve_job(job_id=job_id)
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        if response is None or not response.file or not response.file_name:
+        if "sse_log" not in job.job_info:
             msg = (
                 "To perform sse on OQTOPUS Cloud is failed."
-                " The response does not contain valid file data."
+                " The response does not contain sse_log data."
             )
             raise BackendError(msg)
 
-        data = response.file
-        file_name = response.file_name
+        data = job.job_info["sse_log"]
+        file_name = f"sse_log_{job_id}.zip"
 
         if save_dir is None:
             path_save_dir = Path.cwd()

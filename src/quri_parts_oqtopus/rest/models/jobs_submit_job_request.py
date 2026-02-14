@@ -31,8 +31,7 @@ class JobsSubmitJobRequest(object):
         'name': 'str',
         'description': 'str',
         'device_id': 'str',
-        'job_type': 'JobsJobType',
-        'job_info': 'JobsSubmitJobInfo',
+        'job_type': 'JobsSubmitJobType',
         'transpiler_info': 'dict(str, object)',
         'simulator_info': 'dict(str, object)',
         'mitigation_info': 'dict(str, object)',
@@ -44,20 +43,18 @@ class JobsSubmitJobRequest(object):
         'description': 'description',
         'device_id': 'device_id',
         'job_type': 'job_type',
-        'job_info': 'job_info',
         'transpiler_info': 'transpiler_info',
         'simulator_info': 'simulator_info',
         'mitigation_info': 'mitigation_info',
         'shots': 'shots'
     }
 
-    def __init__(self, name=None, description=None, device_id=None, job_type=None, job_info=None, transpiler_info=None, simulator_info=None, mitigation_info=None, shots=None):  # noqa: E501
+    def __init__(self, name=None, description=None, device_id=None, job_type=None, transpiler_info=None, simulator_info=None, mitigation_info=None, shots=None):  # noqa: E501
         """JobsSubmitJobRequest - a model defined in Swagger"""  # noqa: E501
         self._name = None
         self._description = None
         self._device_id = None
         self._job_type = None
-        self._job_info = None
         self._transpiler_info = None
         self._simulator_info = None
         self._mitigation_info = None
@@ -69,7 +66,6 @@ class JobsSubmitJobRequest(object):
             self.description = description
         self.device_id = device_id
         self.job_type = job_type
-        self.job_info = job_info
         if transpiler_info is not None:
             self.transpiler_info = transpiler_info
         if simulator_info is not None:
@@ -149,7 +145,7 @@ class JobsSubmitJobRequest(object):
 
 
         :return: The job_type of this JobsSubmitJobRequest.  # noqa: E501
-        :rtype: JobsJobType
+        :rtype: JobsSubmitJobType
         """
         return self._job_type
 
@@ -159,35 +155,12 @@ class JobsSubmitJobRequest(object):
 
 
         :param job_type: The job_type of this JobsSubmitJobRequest.  # noqa: E501
-        :type: JobsJobType
+        :type: JobsSubmitJobType
         """
         if job_type is None:
             raise ValueError("Invalid value for `job_type`, must not be `None`")  # noqa: E501
 
         self._job_type = job_type
-
-    @property
-    def job_info(self):
-        """Gets the job_info of this JobsSubmitJobRequest.  # noqa: E501
-
-
-        :return: The job_info of this JobsSubmitJobRequest.  # noqa: E501
-        :rtype: JobsSubmitJobInfo
-        """
-        return self._job_info
-
-    @job_info.setter
-    def job_info(self, job_info):
-        """Sets the job_info of this JobsSubmitJobRequest.
-
-
-        :param job_info: The job_info of this JobsSubmitJobRequest.  # noqa: E501
-        :type: JobsSubmitJobInfo
-        """
-        if job_info is None:
-            raise ValueError("Invalid value for `job_info`, must not be `None`")  # noqa: E501
-
-        self._job_info = job_info
 
     @property
     def transpiler_info(self):

@@ -80,10 +80,11 @@ Examples:
 
 import json
 import os
+import pprint
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from quri_parts.backend import (
     BackendError,
@@ -97,13 +98,16 @@ from quri_parts.openqasm.circuit import convert_to_qasm_str
 from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
 from quri_parts_oqtopus.backend.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
     ApiClient,
     Configuration,
     JobApi,
-    JobsJobDef,
-    JobsSubmitJobInfo,
+    JobsJob,
+    JobsJobInfoDownloadPresignedURL,
+    JobsRegisterJobResponse,
+    JobsS3SubmitJobInfo,
     JobsSubmitJobRequest,
 )
 
@@ -186,6 +190,8 @@ class OqtopusSamplingResult(SamplingResult):
         return str(self._result)
 
 
+# TODO(https://github.com/oqtopus-team/quri-parts-oqtopus/issues/32): # noqa: FIX002
+# common base class for OqtopusSamplingJob & OqtopusEstimationBackend would be nice
 class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
     """A job for a sampling measurement.
 
@@ -198,13 +204,54 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
+    @staticmethod
+    def download_job_info(
+        job_info_ulrs: dict[str, JobsJobInfoDownloadPresignedURL],
+        ignore_items: list[str] | None = None,
+    ) -> dict:
+        """Download and extract job information form storage.
+
+        Args:
+            job_info_ulrs (dict[str, str]): A map of job info objects to download
+                and their corresponding presigned URLs.
+            ignore_items (list[str], optional): A list of job information objects
+                to ignore during download.
+
+        Returns:
+            dict: job information extracted from downloaded files
+
+        """
+        if ignore_items is None:
+            ignore_items = []
+
+        job_info: dict[str, list[Any]] = {}
+        urls_for_download = [
+            val
+            for (key, val) in job_info_ulrs.items()
+            if key not in {"message", *ignore_items} and val is not None
+        ]
+        for url in urls_for_download:
+            job_info |= OqtopusStorage.download(
+                presigned_url=cast("JobsJobInfoDownloadPresignedURL", url)
+            )
+
+        return job_info
+
+    def __init__(self, job: JobsJob, job_info: dict, job_api: JobApi) -> None:
         super().__init__()
 
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
-        self._job: JobsJobDef = job
+        if job.status == "registered":
+            msg = "'job' status should not be registered"
+            raise ValueError(msg)
+        self._job: JobsJob = job
+
+        if job_info is None:
+            msg = "'job_info' should not be None"
+            raise ValueError(msg)
+        self._job_info: dict = job_info
 
         if job_api is None:
             msg = "'job_api' should not be None"
@@ -289,7 +336,7 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             dict: The detail information of the job.
 
         """
-        return self._job.job_info.to_dict()
+        return self._job_info
 
     @property
     def transpiler_info(self) -> dict:
@@ -382,14 +429,28 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         """
         try:
-            self._job = self._job_api.get_job(self._job.job_id)
+            downloaded_job_info = [
+                key
+                for (key, val) in self._job.job_info.to_dict().items()
+                if key != "message" and val is not None
+            ]
+
+            self._job = cast("JobsJob", self._job_api.get_job(self.job_id))
+
+            new_job_info = self.download_job_info(
+                job_info_ulrs=self._job.job_info.to_dict(),
+                ignore_items=downloaded_job_info,
+            )
+
+            self._job_info |= new_job_info
+
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJobDef | None:
+    ) -> bool:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -400,23 +461,23 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             wait: Time in seconds between queries.
 
         Returns:
-            JobsJobDef | None: If a timeout occurs, it returns None. Otherwise, it
-                returns the Job.
+            bool: If a timeout occurs, it returns False. Otherwise, it
+                returns True.
 
         """
         start_time = time.time()
         self.refresh()
-        while self._job.status not in JOB_FINAL_STATUS:
+        while self.status not in JOB_FINAL_STATUS:
             # check timeout
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
-                return None
+                return False
 
             # sleep and get job
             time.sleep(wait)
             self.refresh()
 
-        return self._job
+        return True
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
@@ -440,12 +501,11 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
                 or timeout occurs, etc.
 
         """
-        if self._job.status not in JOB_FINAL_STATUS:
-            job = self.wait_for_completion(timeout, wait)
-            if job is None:
-                msg = f"Timeout occurred after {timeout} seconds."
-                raise BackendError(msg)
-            self._job = job
+        if self._job.status not in JOB_FINAL_STATUS and not self.wait_for_completion(
+            timeout, wait
+        ):
+            msg = f"Timeout occurred after {timeout} seconds."
+            raise BackendError(msg)
         if self._job.status in {"failed", "cancelled"}:
             msg = f"Job ended with status {self._job.status}."
             raise BackendError(msg)
@@ -497,7 +557,9 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             str: A json string representation of the OqtopusSamplingJob.
 
         """
-        return json.dumps(self._job.to_dict(), cls=DateTimeEncoder)
+        job_data_combined = self._job.to_dict()
+        job_data_combined["job_info"] = self._job_info
+        return json.dumps(job_data_combined, cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusSamplingJob.
@@ -506,7 +568,9 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
             str: A string representation of the OqtopusSamplingJob.
 
         """
-        return self._job.to_str()
+        job_data_combined = self._job.to_dict()
+        job_data_combined["job_info"] = self._job_info
+        return pprint.pformat(job_data_combined)
 
 
 class OqtopusSamplingBackend:
@@ -671,7 +735,11 @@ class OqtopusSamplingBackend:
         if mitigation_info is None:
             mitigation_info = {}
 
+        job: OqtopusSamplingJob
+
         try:
+            # TODO (goralczyks): verify this implementation  # noqa: TD003, FIX002
+            # with the actual implementation of sse_sampler when it will be completed
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
                 import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
@@ -679,31 +747,48 @@ class OqtopusSamplingBackend:
                 response = sse_sampler.req_transpile_and_exec(
                     program, shots, transpiler_info
                 )
-                job = OqtopusSamplingJob(response, self._job_api)
+
+                job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+                    job_info_ulrs=response.job_info.to_dict()
+                )
+
+                job = OqtopusSamplingJob(response, job_info, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
                 del job._job_api  # noqa: SLF001
+
             else:
-                job_info = JobsSubmitJobInfo(program=program)
+                register_response: JobsRegisterJobResponse = cast(
+                    "JobsRegisterJobResponse", self._job_api.register_job_id()
+                )
+                job_info_to_upload: dict[str, list[str]] = JobsS3SubmitJobInfo(
+                    program=program
+                ).to_dict()
+                job_info_to_upload.pop("operator")
+                OqtopusStorage.upload(
+                    presigned_url=register_response.presigned_url,
+                    data=job_info_to_upload,
+                )
+
                 body = JobsSubmitJobRequest(
                     name=name,
                     description=description,
                     device_id=device_id,
                     job_type=job_type,
-                    job_info=job_info,
                     transpiler_info=transpiler_info,
                     simulator_info=simulator_info,
                     mitigation_info=mitigation_info,
                     shots=shots,
                 )
-                response_submit_job = self._job_api.submit_job(body=body)
-                response = self._job_api.get_job(response_submit_job.job_id)
-                job = OqtopusSamplingJob(response, self._job_api)
+                self._job_api.submit_job(job_id=register_response.job_id, body=body)
+
+                job = self.retrieve_job(job_id=register_response.job_id)
+
+            return job  # noqa: TRY300
+
         except Exception as e:
             msg = "To execute sampling on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
-        return job
 
     def retrieve_job(self, job_id: str) -> OqtopusSamplingJob:
         """Retrieve the job with the given id from OQTOPUS Cloud.
@@ -715,17 +800,28 @@ class OqtopusSamplingBackend:
             The job with the given ``job_id``.
 
         Raises:
+            ValueError: If job is not fully submitted (job status is "registered")
             BackendError: If job cannot be found or if an authentication error occurred,
                 etc.
 
         """
         try:
-            response = self._job_api.get_job(job_id)
+            job: JobsJob = cast("JobsJob", self._job_api.get_job(job_id))
+
+            # registered jobs id's are not available via SDK
+            if job.status == "registered":
+                msg = "job status='registered' not supported"
+                raise ValueError(msg)  # noqa: TRY301
+
+            job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+                job_info_ulrs=job.job_info.to_dict()
+            )
+
+            return OqtopusSamplingJob(job, job_info, self._job_api)
+
         except Exception as e:
             msg = "To retrieve_job from OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
-
-        return OqtopusSamplingJob(response, self._job_api)
 
 
 def _convert_to_qasm_str_with_measure(program: NonParametricQuantumCircuit) -> str:
