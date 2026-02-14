@@ -72,7 +72,7 @@ class OqtopusDevice:
         return self._device.status
 
     @property
-    def available_at(self) -> datetime:
+    def available_at(self) -> datetime | None:
         """The `available_at` of this DevicesDeviceInfo.
 
         Returns:
@@ -92,7 +92,7 @@ class OqtopusDevice:
         return self._device.n_pending_jobs
 
     @property
-    def n_qubits(self) -> int:
+    def n_qubits(self) -> int | None:
         """The number of qubits in the device.
 
         Returns:
@@ -122,17 +122,21 @@ class OqtopusDevice:
         return self._device.supported_instructions
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> dict | None:
         """The device information of the device.
 
         Returns:
             dict: The device information of the device.
 
         """
-        return self._device.device_info
+        return (
+            json.loads(self._device.device_info)
+            if self._device.device_info is not None
+            else None
+        )
 
     @property
-    def calibrated_at(self) -> datetime:
+    def calibrated_at(self) -> datetime | None:
         """The `calibrated_at` of this DevicesDeviceInfo.
 
         Returns:
