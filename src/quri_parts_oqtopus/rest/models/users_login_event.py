@@ -19,19 +19,19 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ApiTokenApiToken(BaseModel):
+class UsersLoginEvent(BaseModel):
     """
-    ApiTokenApiToken
+    details of login event
     """ # noqa: E501
-    api_token_id: Optional[StrictStr] = Field(default=None, description="The api token id")
-    api_token_secret: Optional[StrictStr] = Field(default=None, description="The api token secret")
-    api_token_expiration: Optional[datetime] = Field(default=None, description="The expiration date of the api token")
-    __properties: ClassVar[List[str]] = ["api_token_id", "api_token_secret", "api_token_expiration"]
+    event_date: Optional[datetime] = None
+    user_agent: Optional[StrictStr] = None
+    ip: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["event_date", "user_agent", "ip"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -51,7 +51,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a JSON string"""
+        """Create an instance of UsersLoginEvent from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -76,7 +76,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a dict"""
+        """Create an instance of UsersLoginEvent from a dict"""
         if obj is None:
             return None
 
@@ -84,9 +84,9 @@ class ApiTokenApiToken(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "api_token_id": obj.get("api_token_id"),
-            "api_token_secret": obj.get("api_token_secret"),
-            "api_token_expiration": obj.get("api_token_expiration")
+            "event_date": obj.get("event_date"),
+            "user_agent": obj.get("user_agent"),
+            "ip": obj.get("ip")
         })
         return _obj
 

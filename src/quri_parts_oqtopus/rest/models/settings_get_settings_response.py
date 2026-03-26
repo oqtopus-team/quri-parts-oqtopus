@@ -18,20 +18,36 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ApiTokenApiToken(BaseModel):
+class SettingsGetSettingsResponse(BaseModel):
     """
-    ApiTokenApiToken
+    detail of settings response
     """ # noqa: E501
-    api_token_id: Optional[StrictStr] = Field(default=None, description="The api token id")
-    api_token_secret: Optional[StrictStr] = Field(default=None, description="The api token secret")
-    api_token_expiration: Optional[datetime] = Field(default=None, description="The expiration date of the api token")
-    __properties: ClassVar[List[str]] = ["api_token_id", "api_token_secret", "api_token_expiration"]
+    editable_fields: List[StrictStr]
+    allow_deletion: StrictBool
+    visible_fields: List[StrictStr]
+    login_history_enabled: StrictBool
+    __properties: ClassVar[List[str]] = ["editable_fields", "allow_deletion", "visible_fields", "login_history_enabled"]
+
+    @field_validator('editable_fields')
+    def editable_fields_validate_enum(cls, value):
+        """Validates the enum"""
+        for i in value:
+            if i not in set(['name', 'organization']):
+                raise ValueError("each list item must be one of ('name', 'organization')")
+        return value
+
+    @field_validator('visible_fields')
+    def visible_fields_validate_enum(cls, value):
+        """Validates the enum"""
+        for i in value:
+            if i not in set(['id', 'name', 'email', 'organization', 'created_at']):
+                raise ValueError("each list item must be one of ('id', 'name', 'email', 'organization', 'created_at')")
+        return value
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -51,7 +67,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a JSON string"""
+        """Create an instance of SettingsGetSettingsResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -76,7 +92,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a dict"""
+        """Create an instance of SettingsGetSettingsResponse from a dict"""
         if obj is None:
             return None
 
@@ -84,9 +100,10 @@ class ApiTokenApiToken(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "api_token_id": obj.get("api_token_id"),
-            "api_token_secret": obj.get("api_token_secret"),
-            "api_token_expiration": obj.get("api_token_expiration")
+            "editable_fields": obj.get("editable_fields"),
+            "allow_deletion": obj.get("allow_deletion"),
+            "visible_fields": obj.get("visible_fields"),
+            "login_history_enabled": obj.get("login_history_enabled")
         })
         return _obj
 

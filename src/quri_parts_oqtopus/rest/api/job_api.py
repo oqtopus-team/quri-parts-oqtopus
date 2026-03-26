@@ -23,6 +23,7 @@ from typing import List, Optional
 from typing_extensions import Annotated
 from quri_parts_oqtopus.rest.models.jobs_get_job_status_response import JobsGetJobStatusResponse
 from quri_parts_oqtopus.rest.models.jobs_job import JobsJob
+from quri_parts_oqtopus.rest.models.jobs_job_status import JobsJobStatus
 from quri_parts_oqtopus.rest.models.jobs_register_job_response import JobsRegisterJobResponse
 from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest
 from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse
@@ -1129,8 +1130,9 @@ class JobApi:
     def list_jobs(
         self,
         fields: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.")] = None,
-        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.")] = None,
-        end_tiime: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.")] = None,
+        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.")] = None,
+        end_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.")] = None,
+        status: Annotated[Optional[JobsJobStatus], Field(description="Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.")] = None,
         q: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.")] = None,
         page: Annotated[Optional[Annotated[int, Field(le=4294967295, strict=True, ge=1)]], Field(description="Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.")] = None,
         size: Annotated[Optional[Annotated[int, Field(le=65535, strict=True, ge=1)]], Field(description="Configure number of jobs per page")] = None,
@@ -1150,14 +1152,16 @@ class JobApi:
     ) -> List[JobsJob]:
         """List all quantum jobs
 
-        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by job creation time or search text with 'start_time', 'end_time' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
+        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by submission time, status or search text with 'start_time', 'end_time', 'status' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
 
         :param fields: Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.
         :type fields: str
-        :param start_time: Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.
+        :param start_time: Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.
         :type start_time: datetime
-        :param end_tiime: Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.
-        :type end_tiime: datetime
+        :param end_time: Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.
+        :type end_time: datetime
+        :param status: Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.
+        :type status: JobsJobStatus
         :param q: Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.
         :type q: str
         :param page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
@@ -1191,7 +1195,8 @@ class JobApi:
         _param = self._list_jobs_serialize(
             fields=fields,
             start_time=start_time,
-            end_tiime=end_tiime,
+            end_time=end_time,
+            status=status,
             q=q,
             page=page,
             size=size,
@@ -1221,8 +1226,9 @@ class JobApi:
     def list_jobs_with_http_info(
         self,
         fields: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.")] = None,
-        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.")] = None,
-        end_tiime: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.")] = None,
+        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.")] = None,
+        end_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.")] = None,
+        status: Annotated[Optional[JobsJobStatus], Field(description="Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.")] = None,
         q: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.")] = None,
         page: Annotated[Optional[Annotated[int, Field(le=4294967295, strict=True, ge=1)]], Field(description="Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.")] = None,
         size: Annotated[Optional[Annotated[int, Field(le=65535, strict=True, ge=1)]], Field(description="Configure number of jobs per page")] = None,
@@ -1242,14 +1248,16 @@ class JobApi:
     ) -> ApiResponse[List[JobsJob]]:
         """List all quantum jobs
 
-        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by job creation time or search text with 'start_time', 'end_time' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
+        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by submission time, status or search text with 'start_time', 'end_time', 'status' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
 
         :param fields: Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.
         :type fields: str
-        :param start_time: Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.
+        :param start_time: Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.
         :type start_time: datetime
-        :param end_tiime: Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.
-        :type end_tiime: datetime
+        :param end_time: Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.
+        :type end_time: datetime
+        :param status: Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.
+        :type status: JobsJobStatus
         :param q: Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.
         :type q: str
         :param page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
@@ -1283,7 +1291,8 @@ class JobApi:
         _param = self._list_jobs_serialize(
             fields=fields,
             start_time=start_time,
-            end_tiime=end_tiime,
+            end_time=end_time,
+            status=status,
             q=q,
             page=page,
             size=size,
@@ -1313,8 +1322,9 @@ class JobApi:
     def list_jobs_without_preload_content(
         self,
         fields: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.")] = None,
-        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.")] = None,
-        end_tiime: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.")] = None,
+        start_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.")] = None,
+        end_time: Annotated[Optional[datetime], Field(description="Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.")] = None,
+        status: Annotated[Optional[JobsJobStatus], Field(description="Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.")] = None,
         q: Annotated[Optional[Annotated[str, Field(strict=True, max_length=1024)]], Field(description="Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.")] = None,
         page: Annotated[Optional[Annotated[int, Field(le=4294967295, strict=True, ge=1)]], Field(description="Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.")] = None,
         size: Annotated[Optional[Annotated[int, Field(le=65535, strict=True, ge=1)]], Field(description="Configure number of jobs per page")] = None,
@@ -1334,14 +1344,16 @@ class JobApi:
     ) -> RESTResponseType:
         """List all quantum jobs
 
-        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by job creation time or search text with 'start_time', 'end_time' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
+        By default, all available job's properties are returned. Use 'fields' parameter to specify exact list of properties to get for each job.  List of jobs can be filtered by submission time, status or search text with 'start_time', 'end_time', 'status' and 'q' parameters.  Jobs are fetched with the pagination mechanism. This can be configured with 'page' and 'perPage' parameters. Check response's 'Link' header for pagination details.
 
         :param fields: Allows to specify an exact list of job properties to fetch for a single job. Each element of the list must be a valid name of job property.  If parameter is specified and requested job field is not defined for a job null is returned.  If parameter is omitted all available job properties are returned. Undefined job properties (null properties) are not included in the response.
         :type fields: str
-        :param start_time: Allows to filter the list of jobs to fetch by creation time. If specified only jobs with creation time  (createdAt property) >= start_time are returned.
+        :param start_time: Allows to filter the list of jobs to fetch by submission time. If specified only jobs with submission time (submitted_at property) >= start_time are returned.
         :type start_time: datetime
-        :param end_tiime: Allows to filter the list of jobs to fetch by to creation time. If specified only jobs with creation time (createdAt property) <= end_time are returned.
-        :type end_tiime: datetime
+        :param end_time: Allows to filter the list of jobs to fetch by to submission time. If specified only jobs with submission time (submitted_at property) <= end_time are returned.
+        :type end_time: datetime
+        :param status: Allows to filter the list of jobs to fetch by job's status. If specified only jobs which status is equal to provided status are returned.
+        :type status: JobsJobStatus
         :param q: Allows to filter the list of jobs to fetch by job's id, name and description. If specified only jobs which id, name or description contains specified search string are returned.
         :type q: str
         :param page: Set jobs list page number to fetch. If requested page number exceeds number of all pages last page is returned.
@@ -1375,7 +1387,8 @@ class JobApi:
         _param = self._list_jobs_serialize(
             fields=fields,
             start_time=start_time,
-            end_tiime=end_tiime,
+            end_time=end_time,
+            status=status,
             q=q,
             page=page,
             size=size,
@@ -1401,7 +1414,8 @@ class JobApi:
         self,
         fields,
         start_time,
-        end_tiime,
+        end_time,
+        status,
         q,
         page,
         size,
@@ -1445,18 +1459,22 @@ class JobApi:
             else:
                 _query_params.append(('start_time', start_time))
             
-        if end_tiime is not None:
-            if isinstance(end_tiime, datetime):
+        if end_time is not None:
+            if isinstance(end_time, datetime):
                 _query_params.append(
                     (
-                        'end_tiime',
-                        end_tiime.strftime(
+                        'end_time',
+                        end_time.strftime(
                             self.api_client.configuration.datetime_format
                         )
                     )
                 )
             else:
-                _query_params.append(('end_tiime', end_tiime))
+                _query_params.append(('end_time', end_time))
+            
+        if status is not None:
+            
+            _query_params.append(('status', status.value))
             
         if q is not None:
             

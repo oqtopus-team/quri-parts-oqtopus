@@ -20,6 +20,8 @@ __version__ = "1.0.0"
 # Define package exports
 __all__ = [
     "AnnouncementsApi",
+    "SettingsApi",
+    "UsersApi",
     "ApiTokenApi",
     "DeviceApi",
     "JobApi",
@@ -35,6 +37,7 @@ __all__ = [
     "AnnouncementsGetAnnouncementResponse",
     "AnnouncementsGetAnnouncementsListResponse",
     "ApiTokenApiToken",
+    "ApiTokenApiTokenStatus",
     "DevicesDeviceInfo",
     "ErrorBadRequest",
     "ErrorForbiddenError",
@@ -58,12 +61,18 @@ __all__ = [
     "JobsS3TranspileResult",
     "JobsSubmitJobRequest",
     "JobsSubmittedJob",
+    "SettingsGetSettingsResponse",
     "SuccessSuccessResponse",
+    "UsersGetOneUserResponse",
+    "UsersLoginEvent",
+    "UsersUpdateUserRequest",
 ]
 
 if __import__("typing").TYPE_CHECKING:
     # import apis into sdk package
     from quri_parts_oqtopus.rest.api.announcements_api import AnnouncementsApi as AnnouncementsApi
+    from quri_parts_oqtopus.rest.api.settings_api import SettingsApi as SettingsApi
+    from quri_parts_oqtopus.rest.api.users_api import UsersApi as UsersApi
     from quri_parts_oqtopus.rest.api.api_token_api import ApiTokenApi as ApiTokenApi
     from quri_parts_oqtopus.rest.api.device_api import DeviceApi as DeviceApi
     from quri_parts_oqtopus.rest.api.job_api import JobApi as JobApi
@@ -83,6 +92,7 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.announcements_get_announcement_response import AnnouncementsGetAnnouncementResponse as AnnouncementsGetAnnouncementResponse
     from quri_parts_oqtopus.rest.models.announcements_get_announcements_list_response import AnnouncementsGetAnnouncementsListResponse as AnnouncementsGetAnnouncementsListResponse
     from quri_parts_oqtopus.rest.models.api_token_api_token import ApiTokenApiToken as ApiTokenApiToken
+    from quri_parts_oqtopus.rest.models.api_token_api_token_status import ApiTokenApiTokenStatus as ApiTokenApiTokenStatus
     from quri_parts_oqtopus.rest.models.devices_device_info import DevicesDeviceInfo as DevicesDeviceInfo
     from quri_parts_oqtopus.rest.models.error_bad_request import ErrorBadRequest as ErrorBadRequest
     from quri_parts_oqtopus.rest.models.error_forbidden_error import ErrorForbiddenError as ErrorForbiddenError
@@ -106,7 +116,11 @@ if __import__("typing").TYPE_CHECKING:
     from quri_parts_oqtopus.rest.models.jobs_s3_transpile_result import JobsS3TranspileResult as JobsS3TranspileResult
     from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest as JobsSubmitJobRequest
     from quri_parts_oqtopus.rest.models.jobs_submitted_job import JobsSubmittedJob as JobsSubmittedJob
+    from quri_parts_oqtopus.rest.models.settings_get_settings_response import SettingsGetSettingsResponse as SettingsGetSettingsResponse
     from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse as SuccessSuccessResponse
+    from quri_parts_oqtopus.rest.models.users_get_one_user_response import UsersGetOneUserResponse as UsersGetOneUserResponse
+    from quri_parts_oqtopus.rest.models.users_login_event import UsersLoginEvent as UsersLoginEvent
+    from quri_parts_oqtopus.rest.models.users_update_user_request import UsersUpdateUserRequest as UsersUpdateUserRequest
     
 else:
     from lazy_imports import LazyModule, as_package, load
@@ -118,6 +132,8 @@ else:
             ("__all__", __all__),
             """# import apis into sdk package
 from quri_parts_oqtopus.rest.api.announcements_api import AnnouncementsApi as AnnouncementsApi
+from quri_parts_oqtopus.rest.api.settings_api import SettingsApi as SettingsApi
+from quri_parts_oqtopus.rest.api.users_api import UsersApi as UsersApi
 from quri_parts_oqtopus.rest.api.api_token_api import ApiTokenApi as ApiTokenApi
 from quri_parts_oqtopus.rest.api.device_api import DeviceApi as DeviceApi
 from quri_parts_oqtopus.rest.api.job_api import JobApi as JobApi
@@ -137,6 +153,7 @@ from quri_parts_oqtopus.rest.exceptions import ApiException as ApiException
 from quri_parts_oqtopus.rest.models.announcements_get_announcement_response import AnnouncementsGetAnnouncementResponse as AnnouncementsGetAnnouncementResponse
 from quri_parts_oqtopus.rest.models.announcements_get_announcements_list_response import AnnouncementsGetAnnouncementsListResponse as AnnouncementsGetAnnouncementsListResponse
 from quri_parts_oqtopus.rest.models.api_token_api_token import ApiTokenApiToken as ApiTokenApiToken
+from quri_parts_oqtopus.rest.models.api_token_api_token_status import ApiTokenApiTokenStatus as ApiTokenApiTokenStatus
 from quri_parts_oqtopus.rest.models.devices_device_info import DevicesDeviceInfo as DevicesDeviceInfo
 from quri_parts_oqtopus.rest.models.error_bad_request import ErrorBadRequest as ErrorBadRequest
 from quri_parts_oqtopus.rest.models.error_forbidden_error import ErrorForbiddenError as ErrorForbiddenError
@@ -160,7 +177,11 @@ from quri_parts_oqtopus.rest.models.jobs_s3_submit_job_info import JobsS3SubmitJ
 from quri_parts_oqtopus.rest.models.jobs_s3_transpile_result import JobsS3TranspileResult as JobsS3TranspileResult
 from quri_parts_oqtopus.rest.models.jobs_submit_job_request import JobsSubmitJobRequest as JobsSubmitJobRequest
 from quri_parts_oqtopus.rest.models.jobs_submitted_job import JobsSubmittedJob as JobsSubmittedJob
+from quri_parts_oqtopus.rest.models.settings_get_settings_response import SettingsGetSettingsResponse as SettingsGetSettingsResponse
 from quri_parts_oqtopus.rest.models.success_success_response import SuccessSuccessResponse as SuccessSuccessResponse
+from quri_parts_oqtopus.rest.models.users_get_one_user_response import UsersGetOneUserResponse as UsersGetOneUserResponse
+from quri_parts_oqtopus.rest.models.users_login_event import UsersLoginEvent as UsersLoginEvent
+from quri_parts_oqtopus.rest.models.users_update_user_request import UsersUpdateUserRequest as UsersUpdateUserRequest
 
 """,
             name=__name__,

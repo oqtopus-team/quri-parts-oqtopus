@@ -18,20 +18,18 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ApiTokenApiToken(BaseModel):
+class UsersUpdateUserRequest(BaseModel):
     """
-    ApiTokenApiToken
+    user update data
     """ # noqa: E501
-    api_token_id: Optional[StrictStr] = Field(default=None, description="The api token id")
-    api_token_secret: Optional[StrictStr] = Field(default=None, description="The api token secret")
-    api_token_expiration: Optional[datetime] = Field(default=None, description="The expiration date of the api token")
-    __properties: ClassVar[List[str]] = ["api_token_id", "api_token_secret", "api_token_expiration"]
+    name: Optional[StrictStr] = None
+    organization: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["name", "organization"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -51,7 +49,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a JSON string"""
+        """Create an instance of UsersUpdateUserRequest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -76,7 +74,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a dict"""
+        """Create an instance of UsersUpdateUserRequest from a dict"""
         if obj is None:
             return None
 
@@ -84,9 +82,8 @@ class ApiTokenApiToken(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "api_token_id": obj.get("api_token_id"),
-            "api_token_secret": obj.get("api_token_secret"),
-            "api_token_expiration": obj.get("api_token_expiration")
+            "name": obj.get("name"),
+            "organization": obj.get("organization")
         })
         return _obj
 

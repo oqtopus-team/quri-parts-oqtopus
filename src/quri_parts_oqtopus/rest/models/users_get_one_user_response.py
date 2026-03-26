@@ -19,19 +19,23 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from quri_parts_oqtopus.rest.models.users_login_event import UsersLoginEvent
 from typing import Optional, Set
 from typing_extensions import Self
 
-class ApiTokenApiToken(BaseModel):
+class UsersGetOneUserResponse(BaseModel):
     """
-    ApiTokenApiToken
+    detail of user response
     """ # noqa: E501
-    api_token_id: Optional[StrictStr] = Field(default=None, description="The api token id")
-    api_token_secret: Optional[StrictStr] = Field(default=None, description="The api token secret")
-    api_token_expiration: Optional[datetime] = Field(default=None, description="The expiration date of the api token")
-    __properties: ClassVar[List[str]] = ["api_token_id", "api_token_secret", "api_token_expiration"]
+    id: Optional[StrictInt] = None
+    email: Optional[StrictStr] = None
+    name: Optional[StrictStr] = None
+    organization: Optional[StrictStr] = None
+    created_at: Optional[datetime] = None
+    login_events: Optional[List[UsersLoginEvent]] = None
+    __properties: ClassVar[List[str]] = ["id", "email", "name", "organization", "created_at", "login_events"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -51,7 +55,7 @@ class ApiTokenApiToken(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a JSON string"""
+        """Create an instance of UsersGetOneUserResponse from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -72,11 +76,18 @@ class ApiTokenApiToken(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in login_events (list)
+        _items = []
+        if self.login_events:
+            for _item_login_events in self.login_events:
+                if _item_login_events:
+                    _items.append(_item_login_events.to_dict())
+            _dict['login_events'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ApiTokenApiToken from a dict"""
+        """Create an instance of UsersGetOneUserResponse from a dict"""
         if obj is None:
             return None
 
@@ -84,9 +95,12 @@ class ApiTokenApiToken(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "api_token_id": obj.get("api_token_id"),
-            "api_token_secret": obj.get("api_token_secret"),
-            "api_token_expiration": obj.get("api_token_expiration")
+            "id": obj.get("id"),
+            "email": obj.get("email"),
+            "name": obj.get("name"),
+            "organization": obj.get("organization"),
+            "created_at": obj.get("created_at"),
+            "login_events": [UsersLoginEvent.from_dict(_item) for _item in obj["login_events"]] if obj.get("login_events") is not None else None
         })
         return _obj
 
