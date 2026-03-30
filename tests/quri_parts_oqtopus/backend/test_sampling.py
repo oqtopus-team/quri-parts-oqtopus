@@ -220,16 +220,26 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsSubmittedJob:
     return job
 
 
-def dummy_download_multimanual_job(presigned_url: str) -> dict:
-    url_to_data = {
-        "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
-        "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
+def dummy_download_multimanual_job(presigned_url: str) -> dict[str, Any]:
+    url_to_data: dict[str, dict] = {
+        "http://host:port/storage_base/dummy_job_id/input.zip?params": {
+            "program": [
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+            ]
+        },
+        "http://host:port/storage_base/dummy_job_id/result.zip?params": {
+            "sampling": {
+                "counts": {"0000": 490, "0001": 10, "0110": 20, "1111": 480},
+                "divided_counts": {
+                    "0": {"00": 490, "01": 10, "10": 20, "11": 480},
+                    "1": {"00": 500, "01": 20, "11": 480},
+                },
+            }
+        },
     }
-    return {
-        url_to_data[presigned_url]: get_dummy_multimanual_job_info()[
-            url_to_data[presigned_url]
-        ]
-    }
+    return url_to_data[presigned_url]
 
 
 def get_dummy_config() -> OqtopusConfig:
