@@ -144,15 +144,23 @@ def get_dummy_job(status: str = "succeeded") -> JobsSubmittedJob:
     )
 
 
-def dummy_download_job(presigned_url: str) -> dict:
-    url_to_data = {
-        "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
-        "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
-        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": "transpile_result",  # noqa: E501
+def dummy_download_job(presigned_url: str) -> dict[str, Any]:
+    url_to_data: dict[str, dict] = {
+        "http://host:port/storage_base/dummy_job_id/input.zip?params": {
+            "program": [
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
+            ]
+        },
+        "http://host:port/storage_base/dummy_job_id/result.zip?params": {
+            "sampling": {"counts": {"00": 490, "01": 10, "10": 20, "11": 480}}
+        },
+        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": {
+            "transpiled_program": 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;',  # noqa: E501
+            "stats": '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}',  # noqa: E501
+            "virtual_physical_mapping": '{"0": 0, "1": 1}',
+        },
     }
-    return {
-        url_to_data[presigned_url]: get_dummy_job_info()[url_to_data[presigned_url]]
-    }
+    return url_to_data[presigned_url]
 
 
 def get_dummy_job_info_upload_url() -> JobsJobInfoUploadPresignedURL:

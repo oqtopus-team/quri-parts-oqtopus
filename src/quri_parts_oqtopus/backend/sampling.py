@@ -249,14 +249,15 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         if ignore_items is None:
             ignore_items = []
 
-        job_info: dict[str, list[Any]] = {}
-        urls_for_download = [
-            val
-            for (key, val) in job_info_ulrs.items()
-            if key not in {"message", *ignore_items} and val is not None
-        ]
-        for url in urls_for_download:
-            job_info |= OqtopusStorage.download(presigned_url=url)
+        job_info: dict[str, Any] = {}
+
+        for key, url in job_info_ulrs.items():
+            if key not in {"message", *ignore_items} and url is not None:
+                data = OqtopusStorage.download(presigned_url=url)
+                if key == "input":
+                    job_info |= data
+                else:
+                    job_info |= {key: data}
 
         return job_info
 
@@ -452,8 +453,8 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
         try:
             downloaded_job_info = [
                 key
-                for (key, val) in self._job.job_info.to_dict().items()
-                if key != "message" and val is not None
+                for (key, url) in self._job.job_info.to_dict().items()
+                if key != "message" and url is not None
             ]
 
             self._job = self.get_job(job_api=self._job_api, job_id=self.job_id)
@@ -770,7 +771,7 @@ class OqtopusSamplingBackend:
                     program, shots, transpiler_info
                 )
 
-                job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+                job_info: dict[str, Any] = OqtopusSamplingJob.download_job_info(
                     job_info_ulrs=response.job_info.to_dict()
                 )
 
@@ -833,7 +834,7 @@ class OqtopusSamplingBackend:
                 job_api=self._job_api, job_id=job_id
             )
 
-            job_info: dict[str, list[Any]] = OqtopusSamplingJob.download_job_info(
+            job_info: dict[str, Any] = OqtopusSamplingJob.download_job_info(
                 job_info_ulrs=job.job_info.to_dict()
             )
 
