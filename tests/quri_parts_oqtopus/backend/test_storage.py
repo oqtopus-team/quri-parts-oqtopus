@@ -191,6 +191,23 @@ class TestStorage:
         mock_get.assert_called_once()
         mock_get.return_value.raise_for_status.assert_called_once()
 
+    def test_download_bytes_success(
+        self,
+        mocker: MockerFixture,
+        mock_download_url: str,
+    ):
+        """Tests successful raw byte download."""
+
+        mock_get = mocker.patch("quri_parts_oqtopus.backend.storage.requests.get")
+        mock_get.return_value.content = b"zip-bytes"
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = OqtopusStorage.download_bytes(mock_download_url, timeout_s=30)
+
+        assert result == b"zip-bytes"
+        mock_get.assert_called_once_with(url=MOCK_DOWNLOAD_URL, timeout=30)
+        mock_get.return_value.raise_for_status.assert_called_once()
+
     def test_upload_success(
         self,
         mocker: MockerFixture,

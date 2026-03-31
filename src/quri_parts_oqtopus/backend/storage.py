@@ -89,6 +89,32 @@ class OqtopusStorage:
             raise OqtopusStorageError(msg) from e
 
     @staticmethod
+    def download_bytes(
+        presigned_url: str,
+        timeout_s: int = DEFAULT_TIMEOUT_S,
+    ) -> bytes:
+        """Download raw bytes from oqtopus cloud storage.
+
+        Args:
+            presigned_url (str): presigned URL of target object to download
+            timeout_s: operation timeout in seconds
+
+        Returns:
+            bytes: raw response content
+
+        Raises:
+            OqtopusStorageError: If the download fails.
+
+        """
+        try:
+            resp = requests.get(url=str(presigned_url), timeout=timeout_s)
+            resp.raise_for_status()
+            return resp.content
+        except RequestException as e:
+            msg = f"Network error during download: {e}"
+            raise OqtopusStorageError(msg) from e
+
+    @staticmethod
     def upload(
         presigned_url: JobsJobInfoUploadPresignedURL,
         data: dict[str, Any],

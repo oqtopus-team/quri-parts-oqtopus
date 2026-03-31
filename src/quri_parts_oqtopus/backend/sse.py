@@ -6,6 +6,8 @@ from pathlib import Path, PurePath
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.backend.storage import OqtopusStorage
+from quri_parts_oqtopus.rest import JobsJobType, JobsSubmitJobRequest
 
 from .sampling import OqtopusSamplingBackend, OqtopusSamplingJob
 
@@ -72,25 +74,38 @@ class OqtopusSseBackend:
             msg = f"The file is not python file: {file_path}"
             raise ValueError(msg)
 
-        with Path(file_path).open(mode="rb") as f:
-            encoded = base64.b64encode(f.read())
+        with Path(file_path).open(mode="r", encoding="utf-8") as f:
+            program = f.read()
 
         max_file_size = 10 * 1024 * 1024  # 10MB
 
         # if the file size is larger than max_file_size, raise ValueError
-        if len(encoded) >= max_file_size:
-            msg = f"size of the base64 encoded file is larger than {max_file_size}"
+        if len(program.encode("utf-8")) >= max_file_size:
+            msg = f"size of the file is larger than {max_file_size}"
             raise ValueError(msg)
 
         try:
-            self.job = self._backend.sample_qasm(
-                program=[encoded.decode("utf-8")],
-                shots=1,
-                name=name,
-                device_id=device_id,
-                description=description,
-                job_type="sse",
+            register_response = self._backend._job_api.register_job_id()  # noqa: SLF001
+            OqtopusStorage.upload(
+                presigned_url=register_response.presigned_url,
+                data={"sse_program": program},
             )
+
+            body = JobsSubmitJobRequest(
+                name=name,
+                description=description,
+                device_id=device_id,
+                job_type=JobsJobType("sse"),
+                transpiler_info={},
+                simulator_info={},
+                mitigation_info={},
+                shots=1,
+            )
+            self._backend._job_api.submit_job(  # noqa: SLF001
+                job_id=register_response.job_id,
+                jobs_submit_job_request=body,
+            )
+            self.job = self._backend.retrieve_job(job_id=register_response.job_id)
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
@@ -128,19 +143,21 @@ class OqtopusSseBackend:
                 raise ValueError(msg)
 
         try:
-            job = self._backend.retrieve_job(job_id=job_id)
+            job = OqtopusSamplingJob.get_job(self._backend._job_api, job_id)  # noqa: SLF001
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        if "sse_log" not in job.job_info:
+        job_info = job.job_info.to_dict()
+
+        if "sse_log" not in job_info:
             msg = (
                 "To perform sse on OQTOPUS Cloud is failed."
                 " The response does not contain sse_log data."
             )
             raise BackendError(msg)
 
-        data = job.job_info["sse_log"]
+        data = job_info["sse_log"]
         file_name = f"sse_log_{job_id}.zip"
 
         if save_dir is None:
@@ -160,8 +177,11 @@ class OqtopusSseBackend:
             msg = f"The file already exists: {file_path}"
             raise ValueError(msg)
 
-        # decode the base64 encoded data and write it to the file
-        decoded_zip = base64.b64decode(data)
+        if isinstance(data, str) and data.startswith("http"):
+            decoded_zip = OqtopusStorage.download_bytes(data)
+        else:
+            # Backward compatibility for environments that still inline-base64 the zip.
+            decoded_zip = base64.b64decode(data)
         with Path(file_path).open(mode="bw") as t_file:
             t_file.write(decoded_zip)
 
