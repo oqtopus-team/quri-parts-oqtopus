@@ -8,6 +8,6 @@ download-oas:
 
 .PHONY: generate-api
 generate-api:
-	java -jar swagger-codegen-cli-3.0.66.jar generate -l python -i openapi.yaml -o output -c swagger-codegen-config.json && \
+	java -jar openapi-generator-cli-7.15.0.jar generate -g python -i openapi.yaml -o output -c openapi-generator-config.json && \
 	rm -r ../src/quri_parts_oqtopus/rest && \
 	cp -pr output/quri_parts_oqtopus ../src

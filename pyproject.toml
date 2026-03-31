@@ -24,6 +24,8 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
   "certifi",
+  "lazy-imports>=1.0.1",
+  "pydantic>=2.11.7",
   "quri-parts-circuit>=0.20.3",
   "quri-parts-core>=0.20.3",
   "quri-parts-openqasm>=0.20.3",
@@ -55,6 +57,7 @@ dev-dependencies = [
   "pytest-mock>=3.14.0",
   "pytest>=8.3.4",
   "ruff>=0.6.8",
+  "types-requests>=2.32.4.20250809",
   "uv>=0.4.20",
 ]
 
