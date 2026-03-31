@@ -22,7 +22,11 @@ class OqtopusStorage:
     DEFAULT_TIMEOUT_S = 60
 
     @staticmethod
-    def _extract_zip_object(zip_bytes: bytes) -> dict[str, Any]:
+    def _extract_zip_object(
+        zip_bytes: bytes,
+        *,
+        allow_non_dict: bool = False,
+    ) -> dict[str, Any] | str:
         try:
             with ZipFile(BytesIO(zip_bytes), "r") as zip_arch:
                 json_file_path_list = zip_arch.namelist()
@@ -37,6 +41,8 @@ class OqtopusStorage:
                 with zip_arch.open(json_file_path_list[0]) as json_file:
                     data = json.loads(json_file.read())
                     if not isinstance(data, dict):
+                        if allow_non_dict:
+                            return data
                         msg = (
                             "Expected JSON root to be an object (dict)"
                             f" but got {type(data).__name__}."
@@ -55,7 +61,9 @@ class OqtopusStorage:
     def download(
         presigned_url: str,
         timeout_s: int = DEFAULT_TIMEOUT_S,
-    ) -> dict[str, Any]:
+        *,
+        allow_non_dict: bool = False,
+    ) -> dict[str, Any] | str:
         """Download and extract JSON data from an oqtopus cloud storage .zip file.
 
         Args:
@@ -64,7 +72,7 @@ class OqtopusStorage:
             timeout_s: operation timeout in seconds
 
         Returns:
-            dict[str, Any]: loaded json data extracted from the .zip
+            dict[str, Any] | str: loaded json data extracted from the .zip
 
         Raises:
             OqtopusStorageError: If the download, extraction, or JSON parsing fails.
@@ -73,7 +81,9 @@ class OqtopusStorage:
         try:
             resp = requests.get(url=str(presigned_url), timeout=timeout_s)
             resp.raise_for_status()
-            return OqtopusStorage._extract_zip_object(resp.content)
+            return OqtopusStorage._extract_zip_object(
+                resp.content, allow_non_dict=allow_non_dict
+            )
         except RequestException as e:
             msg = f"Network error during download: {e}"
             raise OqtopusStorageError(msg) from e

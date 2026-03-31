@@ -144,7 +144,10 @@ def get_dummy_job(status: str = "succeeded") -> JobsSubmittedJob:
     )
 
 
-def dummy_download_job(presigned_url: str) -> dict[str, Any]:
+def dummy_download_job(
+    presigned_url: str,
+    allow_non_dict: bool = False,
+) -> dict[str, Any] | str:
     url_to_data: dict[str, dict] = {
         "http://host:port/storage_base/dummy_job_id/input.zip?params": {
             "program": [
@@ -160,6 +163,11 @@ def dummy_download_job(presigned_url: str) -> dict[str, Any]:
             "virtual_physical_mapping": '{"0": 0, "1": 1}',
         },
     }
+    if (
+        presigned_url == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        and allow_non_dict
+    ):
+        return 'OPENQASM 3; include "stdgates.inc"; qubit[2] q;'
     return url_to_data[presigned_url]
 
 
@@ -220,7 +228,10 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsSubmittedJob:
     return job
 
 
-def dummy_download_multimanual_job(presigned_url: str) -> dict[str, Any]:
+def dummy_download_multimanual_job(
+    presigned_url: str,
+    allow_non_dict: bool = False,
+) -> dict[str, Any] | str:
     url_to_data: dict[str, dict] = {
         "http://host:port/storage_base/dummy_job_id/input.zip?params": {
             "program": [
@@ -239,6 +250,11 @@ def dummy_download_multimanual_job(presigned_url: str) -> dict[str, Any]:
             }
         },
     }
+    if (
+        presigned_url == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        and allow_non_dict
+    ):
+        return 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n'
     return url_to_data[presigned_url]
 
 
@@ -407,10 +423,12 @@ class TestOqtopusSamplingJob:
         # verify number of downloads - check only new files are downloaded
         mock_download.call_count = 2
         assert mock_download.call_args_list[0] == call(
-            presigned_url="http://host:port/storage_base/dummy_job_id/result.zip?params"
+            presigned_url="http://host:port/storage_base/dummy_job_id/result.zip?params",
+            allow_non_dict=False,
         )
         assert mock_download.call_args_list[1] == call(
-            presigned_url="http://host:port/storage_base/dummy_job_id/transpile_result.zip?params"
+            presigned_url="http://host:port/storage_base/dummy_job_id/transpile_result.zip?params",
+            allow_non_dict=False,
         )
 
         # no changes

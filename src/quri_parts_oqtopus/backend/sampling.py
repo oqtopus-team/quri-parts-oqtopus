@@ -253,7 +253,10 @@ class OqtopusSamplingJob(SamplingJob):  # noqa: PLR0904
 
         for key, url in job_info_ulrs.items():
             if key not in {"message", *ignore_items} and url is not None:
-                data = OqtopusStorage.download(presigned_url=url)
+                data = OqtopusStorage.download(
+                    presigned_url=url,
+                    allow_non_dict=key == "combined_program",
+                )
                 if key == "input":
                     job_info |= data
                 else:

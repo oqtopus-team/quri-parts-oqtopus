@@ -130,6 +130,27 @@ class TestStorage:
         mock_get.assert_called_once()
         mock_get.return_value.raise_for_status.assert_called_once()
 
+    def test_download_allows_string_root_when_enabled(
+        self,
+        mocker: MockerFixture,
+        create_zip_bytes: Callable[[str], bytes],
+        mock_download_url: str,
+    ):
+        """Tests allowing a non-dict JSON root for specific callers."""
+
+        mock_get = mocker.patch("quri_parts_oqtopus.backend.storage.requests.get")
+        mock_get.return_value.content = create_zip_bytes(
+            json.dumps("OPENQASM 3; include \"stdgates.inc\";")
+        )
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = OqtopusStorage.download(mock_download_url, allow_non_dict=True)
+
+        assert result == 'OPENQASM 3; include "stdgates.inc";'
+
+        mock_get.assert_called_once()
+        mock_get.return_value.raise_for_status.assert_called_once()
+
     def test_download_malformed_zip(
         self,
         mocker: MockerFixture,
