@@ -1,7 +1,7 @@
 import json
 from collections.abc import Callable
 from io import BytesIO
-from typing import Any, cast
+from typing import Any
 from unittest.mock import Mock
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -11,7 +11,6 @@ from requests.exceptions import HTTPError
 
 from quri_parts_oqtopus.backend.storage import OqtopusStorage, OqtopusStorageError
 from quri_parts_oqtopus.rest.models import (
-    JobsJobInfoDownloadPresignedURL,
     JobsJobInfoUploadPresignedURL,
     JobsJobInfoUploadPresignedURLFields,
 )
@@ -44,8 +43,8 @@ def create_zip_bytes():
 
 
 @pytest.fixture
-def mock_download_url() -> JobsJobInfoDownloadPresignedURL:
-    return cast("JobsJobInfoDownloadPresignedURL", MOCK_DOWNLOAD_URL)
+def mock_download_url() -> str:
+    return MOCK_DOWNLOAD_URL
 
 
 @pytest.fixture
@@ -68,7 +67,7 @@ class TestStorage:
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
         file_content: dict[str, Any],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests successful download and data extraction"""
 
@@ -90,7 +89,7 @@ class TestStorage:
         self,
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of json errors"""
 
@@ -112,7 +111,7 @@ class TestStorage:
         self,
         mocker: MockerFixture,
         create_zip_bytes: Callable[[str], bytes],
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of json errors"""
 
@@ -131,10 +130,31 @@ class TestStorage:
         mock_get.assert_called_once()
         mock_get.return_value.raise_for_status.assert_called_once()
 
+    def test_download_allows_string_root_when_enabled(
+        self,
+        mocker: MockerFixture,
+        create_zip_bytes: Callable[[str], bytes],
+        mock_download_url: str,
+    ):
+        """Tests allowing a non-dict JSON root for specific callers."""
+
+        mock_get = mocker.patch("quri_parts_oqtopus.backend.storage.requests.get")
+        mock_get.return_value.content = create_zip_bytes(
+            json.dumps('OPENQASM 3; include "stdgates.inc";')
+        )
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = OqtopusStorage.download(mock_download_url, allow_non_dict=True)
+
+        assert result == 'OPENQASM 3; include "stdgates.inc";'
+
+        mock_get.assert_called_once()
+        mock_get.return_value.raise_for_status.assert_called_once()
+
     def test_download_malformed_zip(
         self,
         mocker: MockerFixture,
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests handling of zip file errors"""
 
@@ -153,7 +173,7 @@ class TestStorage:
     def test_download_http_error(
         self,
         mocker: MockerFixture,
-        mock_download_url: JobsJobInfoDownloadPresignedURL,
+        mock_download_url: str,
     ):
         """Tests that a bad HTTP status from requests.get is handled."""
 
@@ -169,6 +189,23 @@ class TestStorage:
             OqtopusStorage.download(mock_download_url)
 
         mock_get.assert_called_once()
+        mock_get.return_value.raise_for_status.assert_called_once()
+
+    def test_download_bytes_success(
+        self,
+        mocker: MockerFixture,
+        mock_download_url: str,
+    ):
+        """Tests successful raw byte download."""
+
+        mock_get = mocker.patch("quri_parts_oqtopus.backend.storage.requests.get")
+        mock_get.return_value.content = b"zip-bytes"
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = OqtopusStorage.download_bytes(mock_download_url, timeout_s=30)
+
+        assert result == b"zip-bytes"
+        mock_get.assert_called_once_with(url=MOCK_DOWNLOAD_URL, timeout=30)
         mock_get.return_value.raise_for_status.assert_called_once()
 
     def test_upload_success(

@@ -28,11 +28,15 @@ from quri_parts_oqtopus.backend.sampling import (
 )
 from quri_parts_oqtopus.rest import (
     JobApi,
-    JobsJob,
     JobsJobInfo,
     JobsJobInfoUploadPresignedURL,
+    JobsJobInfoUploadPresignedURLFields,
+    JobsJobStatus,
+    JobsJobType,
+    JobsRegisteredJob,
     JobsRegisterJobResponse,
     JobsSubmitJobRequest,
+    JobsSubmittedJob,
     SuccessSuccessResponse,
 )
 
@@ -116,13 +120,13 @@ def get_dummy_job_info(status: str = "succeeded") -> dict:
     return output
 
 
-def get_dummy_job(status: str = "succeeded") -> JobsJob:
-    return JobsJob(
+def get_dummy_job(status: str = "succeeded") -> JobsSubmittedJob:
+    return JobsSubmittedJob(
         job_id="dummy_job_id",
         name="dummy_name",
         description="dummy_description",
-        job_type="sampling",
-        status=status,
+        job_type=JobsJobType("sampling"),
+        status=JobsJobStatus(status),
         device_id="dummy_device_id",
         shots=1000,
         job_info=JobsJobInfo(**get_dummy_job_info_urls(status)),
@@ -140,26 +144,40 @@ def get_dummy_job(status: str = "succeeded") -> JobsJob:
     )
 
 
-def dummy_download_job(presigned_url: str) -> dict:
-    url_to_data = {
-        "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
-        "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
-        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": "transpile_result",  # noqa: E501
+def dummy_download_job(
+    presigned_url: str,
+    *,
+    allow_non_dict: bool = False,
+) -> dict[str, Any] | str:
+    url_to_data: dict[str, dict] = {
+        "http://host:port/storage_base/dummy_job_id/input.zip?params": {
+            "program": [
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
+            ]
+        },
+        "http://host:port/storage_base/dummy_job_id/result.zip?params": {
+            "sampling": {"counts": {"00": 490, "01": 10, "10": 20, "11": 480}}
+        },
+        "http://host:port/storage_base/dummy_job_id/transpile_result.zip?params": {
+            "transpiled_program": 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;',  # noqa: E501
+            "stats": '{"before": {"n_qubits": 2, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}, "after": {"n_qubits": 6, "n_gates": 4, "n_gates_1q": 3, "n_gates_2q": 1, "depth": 4}}',  # noqa: E501
+            "virtual_physical_mapping": '{"0": 0, "1": 1}',
+        },
     }
-    return {
-        url_to_data[presigned_url]: get_dummy_job_info()[url_to_data[presigned_url]]
-    }
+    if (
+        presigned_url
+        == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        and allow_non_dict
+    ):
+        return 'OPENQASM 3; include "stdgates.inc"; qubit[2] q;'
+    return url_to_data[presigned_url]
 
 
 def get_dummy_job_info_upload_url() -> JobsJobInfoUploadPresignedURL:
-    param_dict = {
-        "url": "http://host:port/storage_base",
-        "fields": {
-            "key": "dummy_job_id/input.zip",
-        },
-    }
-
-    return JobsJobInfoUploadPresignedURL(**param_dict)
+    return JobsJobInfoUploadPresignedURL(
+        url="http://host:port/storage_base",
+        fields=JobsJobInfoUploadPresignedURLFields(key="dummy_job_id/input.zip"),
+    )
 
 
 def get_dummy_job_id_registration() -> JobsRegisterJobResponse:
@@ -169,13 +187,13 @@ def get_dummy_job_id_registration() -> JobsRegisterJobResponse:
 
 
 def get_dummy_job_submit_request(
-    job_type: str | None = "sampling",
+    job_type: str = "sampling",
 ) -> JobsSubmitJobRequest:
     return JobsSubmitJobRequest(
         name="dummy_name",
         description="dummy_description",
         device_id="dummy_device_id",
-        job_type=job_type,
+        job_type=JobsJobType(job_type),
         transpiler_info={
             "transpiler_lib": "qiskit",
             "transpiler_options": {"optimization_level": 2},
@@ -206,22 +224,42 @@ def get_dummy_multimanual_job_info(status: str = "succeeded") -> dict:
     return output
 
 
-def get_dummy_multimanual_job(status: str = "succeeded") -> JobsJob:
+def get_dummy_multimanual_job(status: str = "succeeded") -> JobsSubmittedJob:
     job = get_dummy_job(status)
-    job.job_type = "multi_manual"
+    job.job_type = JobsJobType("multi_manual")
     return job
 
 
-def dummy_download_multimanual_job(presigned_url: str) -> dict:
-    url_to_data = {
-        "http://host:port/storage_base/dummy_job_id/input.zip?params": "program",
-        "http://host:port/storage_base/dummy_job_id/result.zip?params": "result",
+def dummy_download_multimanual_job(
+    presigned_url: str,
+    *,
+    allow_non_dict: bool = False,
+) -> dict[str, Any] | str:
+    url_to_data: dict[str, dict] = {
+        "http://host:port/storage_base/dummy_job_id/input.zip?params": {
+            "program": [
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n\nh q[0];\ncx q[0], q[1];\nry(0.1) q[2];\nc = measure q;',  # noqa: E501
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;',  # noqa: E501
+            ]
+        },
+        "http://host:port/storage_base/dummy_job_id/result.zip?params": {
+            "sampling": {
+                "counts": {"0000": 490, "0001": 10, "0110": 20, "1111": 480},
+                "divided_counts": {
+                    "0": {"00": 490, "01": 10, "10": 20, "11": 480},
+                    "1": {"00": 500, "01": 20, "11": 480},
+                },
+            }
+        },
     }
-    return {
-        url_to_data[presigned_url]: get_dummy_multimanual_job_info()[
-            url_to_data[presigned_url]
-        ]
-    }
+    if (
+        presigned_url
+        == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        and allow_non_dict
+    ):
+        return 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n'
+    return url_to_data[presigned_url]
 
 
 def get_dummy_config() -> OqtopusConfig:
@@ -389,10 +427,12 @@ class TestOqtopusSamplingJob:
         # verify number of downloads - check only new files are downloaded
         mock_download.call_count = 2
         assert mock_download.call_args_list[0] == call(
-            presigned_url="http://host:port/storage_base/dummy_job_id/result.zip?params"
+            presigned_url="http://host:port/storage_base/dummy_job_id/result.zip?params",
+            allow_non_dict=False,
         )
         assert mock_download.call_args_list[1] == call(
-            presigned_url="http://host:port/storage_base/dummy_job_id/transpile_result.zip?params"
+            presigned_url="http://host:port/storage_base/dummy_job_id/transpile_result.zip?params",
+            allow_non_dict=False,
         )
 
         # no changes
@@ -763,7 +803,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=SuccessSuccessResponse("job registered"),
+            return_value=SuccessSuccessResponse(message="job registered"),
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
@@ -805,7 +845,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock.assert_called_once_with(
             job_id="dummy_job_id",
-            body=get_dummy_job_submit_request(job_type="sampling"),
+            jobs_submit_job_request=get_dummy_job_submit_request(job_type="sampling"),
         )
 
         assert job.job_id == "dummy_job_id"
@@ -832,7 +872,7 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
-            return_value=SuccessSuccessResponse("job registered"),
+            return_value=SuccessSuccessResponse(message="job registered"),
         )
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
@@ -881,7 +921,9 @@ class TestOqtopusSamplingBackend:
         )
         submit_mock.assert_called_once_with(
             job_id="dummy_job_id",
-            body=get_dummy_job_submit_request(job_type="multi_manual"),
+            jobs_submit_job_request=get_dummy_job_submit_request(
+                job_type="multi_manual"
+            ),
         )
 
         assert job.job_id == "dummy_job_id"
@@ -913,12 +955,12 @@ class TestOqtopusSamplingBackend:
 
         def mock_req_transpile_and_exec(
             program: list[str], shots: int, transpiler_info: dict
-        ) -> JobsJob:
+        ) -> JobsSubmittedJob:
             nonlocal captured_program, captured_shots, captured_transpiler_info
             captured_program = program
             captured_shots = shots
             captured_transpiler_info = transpiler_info
-            return get_dummy_job("job submitted")
+            return get_dummy_job("submitted")
 
         mock_sse_sampler_module.req_transpile_and_exec.side_effect = (
             mock_req_transpile_and_exec
@@ -1022,7 +1064,9 @@ class TestOqtopusSamplingBackend:
         # Arrange
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=get_dummy_job("registered"),
+            return_value=JobsRegisteredJob(
+                job_id="dummy_job_id", status=JobsJobStatus("registered")
+            ),
         )
         backend = OqtopusSamplingBackend(get_dummy_config())
 

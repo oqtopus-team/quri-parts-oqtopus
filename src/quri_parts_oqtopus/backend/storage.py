@@ -8,7 +8,6 @@ import requests
 from requests.exceptions import RequestException
 
 from quri_parts_oqtopus.rest import (
-    JobsJobInfoDownloadPresignedURL,
     JobsJobInfoUploadPresignedURL,
 )
 
@@ -23,7 +22,11 @@ class OqtopusStorage:
     DEFAULT_TIMEOUT_S = 60
 
     @staticmethod
-    def _extract_zip_object(zip_bytes: bytes) -> dict[str, Any]:
+    def _extract_zip_object(
+        zip_bytes: bytes,
+        *,
+        allow_non_dict: bool = False,
+    ) -> dict[str, Any] | str:
         try:
             with ZipFile(BytesIO(zip_bytes), "r") as zip_arch:
                 json_file_path_list = zip_arch.namelist()
@@ -38,6 +41,8 @@ class OqtopusStorage:
                 with zip_arch.open(json_file_path_list[0]) as json_file:
                     data = json.loads(json_file.read())
                     if not isinstance(data, dict):
+                        if allow_non_dict:
+                            return data
                         msg = (
                             "Expected JSON root to be an object (dict)"
                             f" but got {type(data).__name__}."
@@ -54,18 +59,22 @@ class OqtopusStorage:
 
     @staticmethod
     def download(
-        presigned_url: JobsJobInfoDownloadPresignedURL,
+        presigned_url: str,
         timeout_s: int = DEFAULT_TIMEOUT_S,
-    ) -> dict[str, Any]:
+        *,
+        allow_non_dict: bool = False,
+    ) -> dict[str, Any] | str:
         """Download and extract JSON data from an oqtopus cloud storage .zip file.
 
         Args:
-            presigned_url (JobsJobInfoDownloadPresignedURL):
+            presigned_url (str):
                 presigned URL of target .zip file to download
             timeout_s: operation timeout in seconds
+            allow_non_dict: whether to allow non-dict JSON roots for callers
+                that expect raw string payloads
 
         Returns:
-            dict[str, Any]: loaded json data extracted from the .zip
+            dict[str, Any] | str: loaded json data extracted from the .zip
 
         Raises:
             OqtopusStorageError: If the download, extraction, or JSON parsing fails.
@@ -74,10 +83,39 @@ class OqtopusStorage:
         try:
             resp = requests.get(url=str(presigned_url), timeout=timeout_s)
             resp.raise_for_status()
-            return OqtopusStorage._extract_zip_object(resp.content)
+            return OqtopusStorage._extract_zip_object(
+                resp.content, allow_non_dict=allow_non_dict
+            )
         except RequestException as e:
             msg = f"Network error during download: {e}"
             raise OqtopusStorageError(msg) from e
+
+    @staticmethod
+    def download_bytes(
+        presigned_url: str,
+        timeout_s: int = DEFAULT_TIMEOUT_S,
+    ) -> bytes:
+        """Download raw bytes from oqtopus cloud storage.
+
+        Args:
+            presigned_url (str): presigned URL of target object to download
+            timeout_s: operation timeout in seconds
+
+        Returns:
+            bytes: raw response content
+
+        Raises:
+            OqtopusStorageError: If the download fails.
+
+        """
+        try:
+            resp = requests.get(url=str(presigned_url), timeout=timeout_s)
+            resp.raise_for_status()
+        except RequestException as e:
+            msg = f"Network error during download: {e}"
+            raise OqtopusStorageError(msg) from e
+        else:
+            return resp.content
 
     @staticmethod
     def upload(
@@ -108,17 +146,9 @@ class OqtopusStorage:
                     )
                 zip_buffer.seek(0)
 
-                # swagger-codegen generates JobsJobInfoUploadPresignedURLFields class
-                # and changes fields names e.g. AWSAccessKeyId -> aws_access_key_id
-                # we get the true field names
-                original_fields = {
-                    presigned_url.fields.attribute_map[k]: v
-                    for (k, v) in presigned_url.fields.to_dict().items()
-                }
-
                 resp = requests.post(
                     url=presigned_url.url,
-                    data=original_fields,
+                    data=presigned_url.fields.to_dict(),
                     files={
                         "file": (
                             Path(zip_buffer.name).name,
