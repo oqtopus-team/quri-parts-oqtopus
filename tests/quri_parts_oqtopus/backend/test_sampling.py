@@ -165,7 +165,8 @@ def dummy_download_job(
         },
     }
     if (
-        presigned_url == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        presigned_url
+        == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
         and allow_non_dict
     ):
         return 'OPENQASM 3; include "stdgates.inc"; qubit[2] q;'
@@ -253,7 +254,8 @@ def dummy_download_multimanual_job(
         },
     }
     if (
-        presigned_url == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
+        presigned_url
+        == "http://host:port/storage_base/dummy_job_id/combined_program.zip?params"
         and allow_non_dict
     ):
         return 'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[3] q;\nbit[3] c;\n'
