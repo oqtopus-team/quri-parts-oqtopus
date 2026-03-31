@@ -146,6 +146,7 @@ def get_dummy_job(status: str = "succeeded") -> JobsSubmittedJob:
 
 def dummy_download_job(
     presigned_url: str,
+    *,
     allow_non_dict: bool = False,
 ) -> dict[str, Any] | str:
     url_to_data: dict[str, dict] = {
@@ -230,6 +231,7 @@ def get_dummy_multimanual_job(status: str = "succeeded") -> JobsSubmittedJob:
 
 def dummy_download_multimanual_job(
     presigned_url: str,
+    *,
     allow_non_dict: bool = False,
 ) -> dict[str, Any] | str:
     url_to_data: dict[str, dict] = {

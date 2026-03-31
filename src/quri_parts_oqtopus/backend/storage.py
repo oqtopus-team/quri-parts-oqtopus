@@ -70,6 +70,8 @@ class OqtopusStorage:
             presigned_url (str):
                 presigned URL of target .zip file to download
             timeout_s: operation timeout in seconds
+            allow_non_dict: whether to allow non-dict JSON roots for callers
+                that expect raw string payloads
 
         Returns:
             dict[str, Any] | str: loaded json data extracted from the .zip
@@ -109,10 +111,11 @@ class OqtopusStorage:
         try:
             resp = requests.get(url=str(presigned_url), timeout=timeout_s)
             resp.raise_for_status()
-            return resp.content
         except RequestException as e:
             msg = f"Network error during download: {e}"
             raise OqtopusStorageError(msg) from e
+        else:
+            return resp.content
 
     @staticmethod
     def upload(
