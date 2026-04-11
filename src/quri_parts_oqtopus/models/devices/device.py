@@ -1,24 +1,19 @@
 import json
-import os
 from datetime import datetime
 
 from quri_parts.backend import (
     BackendError,
 )
 
-from quri_parts_oqtopus.backend.config import (
-    OqtopusConfig,
-)
-from quri_parts_oqtopus.backend.utils import DateTimeEncoder
+from quri_parts_oqtopus.models.base import OqtopusModelBase
+from quri_parts_oqtopus.models.utils import DateTimeEncoder
 from quri_parts_oqtopus.rest import (
-    ApiClient,
-    Configuration,
     DeviceApi,
     DevicesDeviceInfo,
 )
 
 
-class OqtopusDevice:
+class OqtopusDevice(OqtopusModelBase):
     """A device embedded in the oqtopus framework.
 
     Args:
@@ -31,6 +26,8 @@ class OqtopusDevice:
     """
 
     def __init__(self, device: DevicesDeviceInfo, device_api: DeviceApi) -> None:
+        super().__init__()
+
         if device is None:
             msg = "'device' should not be None"
             raise ValueError(msg)
@@ -183,68 +180,3 @@ class OqtopusDevice:
 
         """
         return self._device.to_str()
-
-
-class OqtopusDeviceBackend:
-    """A class representing a device backend for Oqtopus.
-
-    This class is a placeholder and does not implement any functionality.
-    It serves as a base for creating specific device backends in the future.
-    """
-
-    def __init__(
-        self,
-        config: OqtopusConfig | None = None,
-    ) -> None:
-        super().__init__()
-
-        # set config
-        if config is None:
-            # if environment variables are set, use their values
-            url = os.getenv("OQTOPUS_URL")
-            api_token = os.getenv("OQTOPUS_API_TOKEN")
-            proxy = os.getenv("OQTOPUS_PROXY")
-            if url is not None and api_token is not None:
-                config = OqtopusConfig(
-                    url=url,
-                    api_token=api_token,
-                    proxy=proxy,
-                )
-            # load config from file
-            else:
-                config = OqtopusConfig.from_file()
-
-        # construct DeviceApi
-        rest_config = Configuration()
-        rest_config.host = config.url
-        if config.proxy:
-            rest_config.proxy = config.proxy
-        api_client = ApiClient(
-            configuration=rest_config,
-            header_name="q-api-token",
-            header_value=config.api_token,
-        )
-        self._device_api: DeviceApi = DeviceApi(api_client=api_client)
-
-    def get_devices(self) -> list[OqtopusDevice]:
-        """Get all devices registered in Oqtopus Cloud.
-
-        Returns:
-            list[OqtopusDevice]: A list of OqtopusDevice objects.
-
-        """
-        raw_devices = self._device_api.list_devices()
-        return [OqtopusDevice(dev, self._device_api) for dev in raw_devices]
-
-    def get_device(self, device_id: str) -> OqtopusDevice:
-        """Get a device by its ID.
-
-        Args:
-            device_id (str): The ID of the device.
-
-        Returns:
-            OqtopusDevice: An OqtopusDevice object.
-
-        """
-        raw_dev = self._device_api.get_device(device_id)
-        return OqtopusDevice(raw_dev, self._device_api)

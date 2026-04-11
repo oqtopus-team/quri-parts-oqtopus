@@ -1,17 +1,38 @@
-from .sampling import (  # noqa: I001
+from quri_parts_oqtopus.backend.jobs.sampling import (  # noqa: I001
     OqtopusSamplingBackend,
+)
+
+from quri_parts_oqtopus.backend.jobs.base import (
+    OqtopusJobBackendBase,
+)
+
+from quri_parts_oqtopus.models.jobs.sampling import (
     OqtopusSamplingJob,
+)
+from quri_parts_oqtopus.models.jobs.sse import (
+    OqtopusSseJob,
+)
+from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
 )
-from .device import OqtopusDevice, OqtopusDeviceBackend
-from .estimation import (
+
+from .devices.device import OqtopusDeviceBackend
+from quri_parts_oqtopus.backend.jobs.estimation import (
     OqtopusEstimationBackend,
+)
+
+from quri_parts_oqtopus.models.jobs.estimation import (
     OqtopusEstimationJob,
+)
+from quri_parts_oqtopus.models.jobs.results.estimation import (
     OqtopusEstimationResult,
 )
-from .sse import OqtopusSseBackend
+
+from quri_parts_oqtopus.backend.jobs.sse import OqtopusSseBackend
 
 from .config import OqtopusConfig
+
+from quri_parts_oqtopus.models.devices.device import OqtopusDevice
 
 __all__ = [
     "OqtopusConfig",
@@ -20,8 +41,10 @@ __all__ = [
     "OqtopusEstimationBackend",
     "OqtopusEstimationJob",
     "OqtopusEstimationResult",
+    "OqtopusJobBackendBase",
     "OqtopusSamplingBackend",
     "OqtopusSamplingJob",
     "OqtopusSamplingResult",
     "OqtopusSseBackend",
+    "OqtopusSseJob",
 ]
