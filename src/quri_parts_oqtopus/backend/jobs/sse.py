@@ -41,15 +41,15 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
             description (str | None, optional): The description of the job.
                 Defaults to None.
 
+        Returns:
+            OqtopusSseJob: The job to be executed.
+
         Raises:
             ValueError: If ``file_path`` is not set.
             ValueError: If ``file_path`` does not exist.
             ValueError: If ``file_path`` is not a python file.
             ValueError: If file size is larger than max file size
             BackendError: If an error is returned from OQTOPUS Cloud.
-
-        Returns:
-            OqtopusSseJob: The job to be executed.
 
         """
         # if file_path is not set, raise ValueError
@@ -70,8 +70,7 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
             msg = f"The file is not python file: {file_path}"
             raise ValueError(msg)
 
-        with Path(file_path).open(mode="rb") as f:
-            encoded = base64.b64encode(f.read())
+        encoded = base64.b64encode(Path(file_path).read_bytes())
 
         max_file_size = 10 * 1024 * 1024  # 10MB
 

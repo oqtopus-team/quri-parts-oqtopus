@@ -1,3 +1,5 @@
+import math
+
 from quri_parts.backend import BackendError
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.core.operator import Operator
@@ -151,7 +153,7 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
         operator_list = []
         for pauli, coeff in operator.items():
             if isinstance(coeff, complex):
-                if coeff.imag != 0.0:
+                if not math.isclose(coeff.imag, 0.0, abs_tol=1e-9):
                     msg = f"Complex numbers are not supported in coefficient: {coeff}"
                     raise ValueError(msg)
                 operator_list.append(
