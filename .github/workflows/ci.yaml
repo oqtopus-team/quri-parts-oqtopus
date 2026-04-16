@@ -17,6 +17,7 @@ permissions:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -31,6 +32,13 @@ jobs:
 
       - name: Set up Python
         run: uv python install
+
+      - name: Show uv and python info
+        run: |
+          uv --version
+          cat .uv-version
+          uv run python --version
+          cat .python-version
 
       - name: Install dependencies
         run: uv sync --frozen --all-groups
