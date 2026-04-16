@@ -95,8 +95,8 @@ jobs:
 
       - name: Upload coverage to Codecov
         # Only upload for the primary version to avoid collisions/redundancy
-        if: matrix.python-version == '3.13'
-        uses: codecov/codecov-action@v5
+        if: github.actor != 'dependabot[bot]' && matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
