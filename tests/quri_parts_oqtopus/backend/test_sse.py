@@ -95,8 +95,7 @@ def temp_dir() -> Generator[Path, None, None]:
         Path: Path to the temporary directory.
     """
     temp_dir = tempfile.TemporaryDirectory()
-    path = Path(temp_dir.name)
-    yield path
+    yield Path(temp_dir.name)
     temp_dir.cleanup()
 
 

@@ -73,14 +73,14 @@ class OqtopusSseJob(OqtopusJobBase):
             save_dir (str | None, optional): Local directory path for downloads.
                 Defaults to None.
 
+        Returns:
+            str: The file path of the saved SSE log.
+
         Raises:
             BackendError: If an error is returned from OQTOPUS Cloud.
             ValueError: If ``save_dir`` does not exist.
             ValueError: If ``save_dir`` is not a directory.
             ValueError: If the file already exists.
-
-        Returns:
-            str: The file path of the saved SSE log.
 
         """
         try:

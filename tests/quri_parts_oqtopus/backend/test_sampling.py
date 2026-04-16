@@ -286,7 +286,7 @@ class TestOqtopusSamplingJob:
         }
         assert job.simulator_info == {}
         assert job.mitigation_info == {}
-        assert job.execution_time == 5.123
+        assert job.execution_time == pytest.approx(5.123)
         assert job.submitted_at == datetime.datetime(2000, 1, 2, 3, 4, 1)  # noqa: DTZ001
         assert job.ready_at == datetime.datetime(2000, 1, 2, 3, 4, 2)  # noqa: DTZ001
         assert job.running_at == datetime.datetime(2000, 1, 2, 3, 4, 3)  # noqa: DTZ001
@@ -695,7 +695,7 @@ class TestOqtopusSamplingBackend:
         }
         assert job.simulator_info == {}
         assert job.mitigation_info == {}
-        assert job.execution_time == 5.123
+        assert job.execution_time == pytest.approx(5.123)
         assert job.submitted_at == datetime.datetime(2000, 1, 2, 3, 4, 1)  # noqa: DTZ001
         assert job.ready_at == datetime.datetime(2000, 1, 2, 3, 4, 2)  # noqa: DTZ001
         assert job.running_at == datetime.datetime(2000, 1, 2, 3, 4, 3)  # noqa: DTZ001
@@ -873,7 +873,7 @@ class TestOqtopusSamplingBackend:
         }
         assert job.simulator_info == {}
         assert job.mitigation_info == {}
-        assert job.execution_time == 5.123
+        assert job.execution_time == pytest.approx(5.123)
         assert job.submitted_at == datetime.datetime(2000, 1, 2, 3, 4, 1)  # noqa: DTZ001
         assert job.ready_at == datetime.datetime(2000, 1, 2, 3, 4, 2)  # noqa: DTZ001
         assert job.running_at == datetime.datetime(2000, 1, 2, 3, 4, 3)  # noqa: DTZ001

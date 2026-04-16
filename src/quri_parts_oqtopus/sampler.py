@@ -20,9 +20,13 @@ backend = OqtopusSamplingBackend()
 
 
 # MeasurementCounts and SamplingCounts are equivalent
-def _sample(circuit: ImmutableQuantumCircuit, shots: int) -> MeasurementCounts:
+def _sample(
+    circuit: ImmutableQuantumCircuit,
+    device_id: str,
+    shots: int,
+) -> MeasurementCounts:
     qasm = convert_to_qasm_str(circuit)
-    job = backend.sample_qasm(qasm, shots=shots)
+    job = backend.sample_qasm(qasm, device_id=device_id, shots=shots)
     return job.result().counts
 
 

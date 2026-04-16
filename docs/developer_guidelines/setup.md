@@ -3,13 +3,11 @@
 
 ## Prerequisites
 
-Before starting development, you need to install the following tools:
-
-### Development Environment
+Install the following tools before starting development.
 
 | Tool                                        | Version  | Description                        |
 |---------------------------------------------|----------|------------------------------------|
-| [Python](https://www.python.org/downloads/) | >=3.12   | Python programming language        |
+| [Python](https://www.python.org/downloads/) | >=3.10   | Python programming language        |
 | [uv](https://docs.astral.sh/uv/)            | -        | Python package and project manager |
 | [Java](https://openjdk.org/)                | >=21.0.0 | Java programming language          |
 
@@ -20,13 +18,39 @@ git clone https://github.com/oqtopus-team/quri-parts-oqtopus.git
 cd quri-parts-oqtopus
 ```
 
+## Project Structure
+
+The repository is organized as follows:
+
+```text
+python-project-template/
+├─ src/           # Python package source code
+├─ tests/         # Test suite
+├─ docs/          # Documentation sources (MkDocs)
+├─ config/        # Example configuration files (optional)
+├─ .vscode/       # VSCode settings (optional)
+├─ .github/       # GitHub workflows and repository settings
+├─ pyproject.toml # Project configuration and dependencies
+├─ Makefile       # Development commands
+├─ mkdocs.yml     # MkDocs configuration
+├─ uv.lock        # Locked dependency versions
+└─ README.md      # Project overview
+```
+
+## Installing Dependencies
+
 ### Setting Up the Python Environment
 
-To install dependencies:
+Install the project dependencies and set up the local development environment:
 
 ```shell
-uv sync
+make install
 ```
+
+This command performs the following:
+
+- Installs all dependencies via `uv`.
+- Configures the Git commit message template.
 
 ### Setting Up the Java(JDK) Environment
 
@@ -52,47 +76,66 @@ To generate Python code, run the following command in the `spec` directory:
 make generate-api
 ```
 
-## Lint and test (Planned)
+## Linting and Testing
 
-### How to Format Code
+### Format Code
 
-To format the code, run the following command:
-
-```shell
-uv run ruff format
-```
-
-### How to Lint Code
-
-To check the types, run the following command:
+Format the code:
 
 ```shell
-uv run ruff check
+make format
 ```
 
-### How to Check Types
+### Lint Code
 
-To check the types, run the following command:
+Run linting and static type checking:
 
 ```shell
-uv run mypy
+make lint
 ```
 
-### How to Test Code
+### Run Tests
 
-To test the code, run the following command:
+Run the test suite:
 
 ```shell
-uv run pytest
+make test
 ```
 
-## Starting the Documentation Server
+### Verify Code
 
-We are using [MkDocs](https://www.mkdocs.org/) to generate the HTML documentation and [mkdocstrings-python](https://mkdocstrings.github.io/python/) to generate the Python API reference.
-To start the documentation server, run the following command:
+Run all verification steps (formatting, linting, and tests):
 
 ```shell
-uv run mkdocs serve
+make verify
 ```
 
-Then, check the documentation at [http://localhost:8000](http://localhost:8000).
+## Documentation
+
+### Lint Documentation
+
+Run documentation linting:
+
+```shell
+make docs-lint
+```
+
+### Build Documentation
+
+Build the documentation:
+
+```shell
+make docs-build
+```
+
+### Start the Documentation Server
+
+This project uses [MkDocs](https://www.mkdocs.org/) to generate the HTML documentation and
+[mkdocstrings-python](https://mkdocstrings.github.io/python/) to generate the Python API reference.  
+Start the documentation server with:
+
+```shell
+make docs-serve
+```
+
+Open the documentation in your browser at [http://localhost:8000](http://localhost:8000).
