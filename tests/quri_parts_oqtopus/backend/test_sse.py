@@ -26,6 +26,7 @@ from pytest_mock import MockerFixture
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend import (
+    OqtopusSamplingJob,
     OqtopusSseBackend,
     OqtopusSseJob,
 )
@@ -592,3 +593,85 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
             == "To perform sse on OQTOPUS Cloud is failed. The response does not contain valid file data."  # noqa: E501
         )
         mock_obj.assert_called_once_with(job_id=job.job_id)
+
+    def test_download_log_with_backend_class(self, mocker: MockerFixture) -> None:
+        # Arrange
+        # make zip stream to be downloaded
+        encoded, zip_bytes = get_dummy_base64zip()
+
+        backend = OqtopusSseBackend(get_dummy_config())
+        job = get_dummy_job()
+        mock_obj = mocker.patch(
+            "quri_parts_oqtopus.rest.JobApi.get_sselog",
+            return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
+        )
+        backend._job = job  # noqa: SLF001
+
+        # Act
+        path = backend.download_log()
+
+        # Assert
+        assert path == str(PurePath(Path.cwd()).joinpath("dummy.zip"))
+        mock_obj.assert_called_once_with(job_id=job.job_id)
+        assert Path("dummy.zip").exists()
+        assert Path("dummy.zip").read_bytes() == zip_bytes
+
+        # cleanup
+        Path("dummy.zip").unlink()
+
+    def test_download_log_with_backend_class_with_jobid(
+        self, mocker: MockerFixture
+    ) -> None:
+        # Arrange
+        # make zip stream to be downloaded
+        encoded, zip_bytes = get_dummy_base64zip()
+
+        backend = OqtopusSseBackend(get_dummy_config())
+        job = get_dummy_job()
+        mock_obj = mocker.patch(
+            "quri_parts_oqtopus.rest.JobApi.get_sselog",
+            return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
+        )
+        mocker.patch(
+            "quri_parts_oqtopus.backend.jobs.base.OqtopusJobBackendBase.retrieve_job",
+            return_value=job,
+        )
+
+        # Act
+        path = backend.download_log(job_id="dummy_id")
+
+        # Assert
+        assert path == str(PurePath(Path.cwd()).joinpath("dummy.zip"))
+        mock_obj.assert_called_once_with(job_id="dummy_id")
+        assert Path("dummy.zip").exists()
+        assert Path("dummy.zip").read_bytes() == zip_bytes
+
+        # cleanup
+        Path("dummy.zip").unlink()
+
+    def test_download_log_with_backend_class_with_no_jobid(self) -> None:
+        # Arrange
+        backend = OqtopusSseBackend(get_dummy_config())
+
+        # Act and Assert
+        with pytest.raises(
+            ValueError, match=r"job_id is not set and no job has been executed."
+        ):
+            backend.download_log()
+
+    def test_download_log_with_backend_class_with_invalid_jobid(
+        self, mocker: MockerFixture
+    ) -> None:
+        # Arrange
+        backend = OqtopusSseBackend(get_dummy_config())
+        job = OqtopusSamplingJob
+        mocker.patch(
+            "quri_parts_oqtopus.backend.jobs.base.OqtopusJobBackendBase.retrieve_job",
+            return_value=job,
+        )
+
+        # Act and Assert
+        with pytest.raises(
+            TypeError, match=r"The job with id dummy_id is not an SSE job."
+        ):
+            backend.download_log(job_id="dummy_id")
