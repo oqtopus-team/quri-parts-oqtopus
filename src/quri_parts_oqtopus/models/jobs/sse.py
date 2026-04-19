@@ -1,13 +1,24 @@
 import base64
 from pathlib import Path
+from typing import cast
 
 from oqtopus_client import OqtopusClient
-from oqtopus_client.services.job_results import OqtopusJobResult
+from oqtopus_client.services.job_results import (
+    OqtopusEstimationJobResult,
+    OqtopusJobResult,
+    OqtopusMultiManualJobResult,
+    OqtopusSamplingJobResult,
+    OqtopusSseJobResult,
+)
 from quri_parts.backend import (
     BackendError,
 )
 
 from quri_parts_oqtopus.models.jobs.base import OqtopusJobBase
+from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
+from quri_parts_oqtopus.models.jobs.results.estimation import (
+    OqtopusEstimationResult,
+)
 from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
 )
@@ -33,7 +44,7 @@ class OqtopusSseJob(OqtopusJobBase):
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> OqtopusSamplingResult:
+    ) -> OqtopusSamplingResult | OqtopusEstimationResult:
         """Wait until the job progress to the end and returns the result of the job.
 
         If the status of job is not ``succeeded`` or ``failed``, or ``cancelled``,
@@ -46,7 +57,12 @@ class OqtopusSseJob(OqtopusJobBase):
             wait: Time in seconds between queries.
 
         Returns:
-            OqtopusSamplingResult: the result of the sampling job.
+            OqtopusSamplingResult | OqtopusEstimationResult: the result of the job.
+
+        Raises:
+            BackendError: If timeout is reached before the job progress to the end.
+            BackendError: If an error is returned from OQTOPUS Cloud.
+            BackendError: If the job result is not a valid type.
 
         """
         if self.status not in JOB_FINAL_STATUS:
@@ -55,9 +71,20 @@ class OqtopusSseJob(OqtopusJobBase):
                 interval=wait,
                 timeout=timeout,
             )
-        sampling_job = OqtopusSamplingJob(job=self._job, client=self._client)
 
-        return sampling_job.result(timeout=timeout, wait=wait)
+        job_result = cast("OqtopusSseJobResult", self._job).get_job_result()
+        job: OqtopusSamplingJob | OqtopusEstimationJob
+        if isinstance(
+            job_result, (OqtopusSamplingJobResult, OqtopusMultiManualJobResult)
+        ):
+            job = OqtopusSamplingJob(job=job_result, client=self._client)
+        elif isinstance(job_result, OqtopusEstimationJobResult):
+            job = OqtopusEstimationJob(job=job_result, client=self._client)
+        else:
+            msg = "The job result is not a valid type."
+            raise BackendError(msg)
+
+        return job.result(timeout=timeout, wait=wait)
 
     def download_log(
         self,
