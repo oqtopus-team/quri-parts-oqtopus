@@ -24,6 +24,7 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
 
     def __init__(self, config: OqtopusConfig | None = None) -> None:
         super().__init__(config=config)
+        self._job: OqtopusSseJob | None = None
 
     def run_sse(
         self,
@@ -91,7 +92,7 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
                 mitigation_info={},
             )
             submitted = self._client.submit_job(spec)
-            job = OqtopusSseJob(
+            self._job = OqtopusSseJob(
                 job=_submitted_sse_job_result(submitted.job_id, spec),
                 client=self._client,
             )
@@ -99,7 +100,7 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return job
+        return self._job
 
     @deprecated(
         "OqtopusSseBackend().download_log is deprecated. "
@@ -128,16 +129,20 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
 
         """
         if job_id is not None:
-            self.job = self.retrieve_job(job_id=job_id)
-        elif self.job is None:
+            job = self.retrieve_job(job_id=job_id)
+            if not isinstance(job, OqtopusSseJob):
+                msg = f"The job with id {job_id} is not an SSE job."
+                raise TypeError(msg)
+            self._job = job
+        elif self._job is None:
             msg = "job_id is not set and no job has been executed."
             raise ValueError(msg)
 
-        if not isinstance(self.job, OqtopusSseJob):
+        if not isinstance(self._job, OqtopusSseJob):
             msg = f"The job with id {job_id} is not an SSE job."
             raise TypeError(msg)
 
-        return self.job.download_log(save_dir=save_dir)
+        return self._job.download_log(save_dir=save_dir)
 
 
 def _submitted_sse_job_result(job_id: str, spec: OqtopusJobSpec) -> OqtopusJobResult:
