@@ -233,31 +233,30 @@ class OqtopusSamplingBackend(OqtopusJobBackendBase):
         if mitigation_info is None:
             mitigation_info = {}
 
+        job_info = JobsSubmitJobInfo(program=program)
+        body = JobsSubmitJobRequest(
+            name=name,
+            description=description,
+            device_id=device_id,
+            job_type=job_type,
+            job_info=job_info,
+            transpiler_info=transpiler_info,
+            simulator_info=simulator_info,
+            mitigation_info=mitigation_info,
+            shots=shots,
+        )
         try:
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
-                import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
-
-                response = sse_sampler.req_transpile_and_exec(
-                    program, shots, transpiler_info
+                import sse_driver  # type: ignore[import-not-found]  # noqa: PLC0415
+                response = sse_driver.req(
+                    body
                 )
                 job = OqtopusSamplingJob(response, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.
                 del job._job_api  # noqa: SLF001
             else:
-                job_info = JobsSubmitJobInfo(program=program)
-                body = JobsSubmitJobRequest(
-                    name=name,
-                    description=description,
-                    device_id=device_id,
-                    job_type=job_type,
-                    job_info=job_info,
-                    transpiler_info=transpiler_info,
-                    simulator_info=simulator_info,
-                    mitigation_info=mitigation_info,
-                    shots=shots,
-                )
                 response_submit_job = self._job_api.submit_job(body=body)
                 response = self._job_api.get_job(response_submit_job.job_id)
                 job = OqtopusSamplingJob(response, self._job_api)

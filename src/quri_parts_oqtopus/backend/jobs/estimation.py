@@ -1,4 +1,5 @@
 import math
+import os
 
 from quri_parts.backend import BackendError
 from quri_parts.circuit import NonParametricQuantumCircuit
@@ -182,10 +183,22 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
             shots=shots,
         )
         try:
-            response_submit_job = self._job_api.submit_job(body=body)
-            response = self._job_api.get_job(response_submit_job.job_id)
+            if os.getenv("OQTOPUS_ENV") == "sse_container":
+                # This section is only for inside SSE container.
+                import sse_driver  # type: ignore[import-not-found]  # noqa: PLC0415
+                response = sse_driver.req(
+                    body
+                )
+                job = OqtopusEstimationJob(response, self._job_api)
+                # Workaround to avoid thread pool closing error when destructor of
+                # _job_api. Anyway the job_api cannot be used in SSE container.
+                del job._job_api  # noqa: SLF001
+            else:
+                response_submit_job = self._job_api.submit_job(body=body)
+                response = self._job_api.get_job(response_submit_job.job_id)
+                job = OqtopusEstimationJob(response, self._job_api)
         except Exception as e:
             msg = "To execute estimation on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return OqtopusEstimationJob(response, self._job_api)
+        return job

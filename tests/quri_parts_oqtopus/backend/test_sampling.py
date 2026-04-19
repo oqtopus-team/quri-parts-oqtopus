@@ -173,6 +173,28 @@ def get_dummy_config() -> OqtopusConfig:
     return OqtopusConfig("dummpy_url", "dummy_api_token")
 
 
+class MockSSEDriver:
+    def req(
+        self, input_job: JobsSubmitJobRequest
+    ) -> JobsSubmitJobResponse:
+        self.input_job = input_job
+        return JobsSubmitJobResponse(job_id="dummy_job_id")
+
+    def assertion(
+        self,
+        program: list[str],
+        shots: int,
+        transpiler_info: dict,
+        mitigation_info: dict,
+        simulator_info: dict,
+    ) -> None:
+        assert self.input_job.job_info.program == program
+        assert self.input_job.shots == shots
+        assert self.input_job.transpiler_info == transpiler_info
+        assert self.input_job.mitigation_info == mitigation_info
+        assert self.input_job.simulator_info == simulator_info
+
+
 class TestOqtopusSamplingResult:
     def test_init_error(self):
         # case: counts does not exist in result
@@ -754,6 +776,48 @@ class TestOqtopusSamplingBackend:
             1: {0: 500, 1: 20, 3: 480},
         }
 
+    def test_sample_sse_container(self):
+        # Arrange
+        # mock sse_driver
+        mock_obj = MockSSEDriver()
+        sys.modules["sse_driver"] = mock_obj
+        backend = OqtopusSamplingBackend(get_dummy_config())
+
+        circuit = QuantumCircuit(2)
+        circuit.add_H_gate(0)
+        circuit.add_CNOT_gate(0, 1)
+
+        # Act
+        with patch.dict("os.environ", {"OQTOPUS_ENV": "sse_container"}):
+            job = backend.sample(
+                circuit,
+                device_id="dummy_device_id",
+                shots=1000,
+                name="dummy_name",
+                description="dummy_description",
+                transpiler_info={
+                    "transpiler_lib": "qiskit",
+                    "transpiler_options": {"optimization_level": 2},
+                },
+                mitigation_info={"ro_error_mitigation": "pseudo_inverse"},
+                simulator_info={"simulator": "info"},
+            )
+
+        # Assert
+        assert job.job_id == "dummy_job_id"
+        mock_obj.assertion(
+            program=[
+                'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\nbit[2] c;\n\nh q[0];\ncx q[0], q[1];\nc = measure q;'  # noqa: E501
+            ],
+            shots=1000,
+            transpiler_info={
+                "transpiler_lib": "qiskit",
+                "transpiler_options": {"optimization_level": 2},
+            },
+            mitigation_info={"ro_error_mitigation": "pseudo_inverse"},
+            simulator_info={"simulator": "info"},
+        )
+
     def test_sample_qasm(self, mocker: MockerFixture):
         # Arrange
         mock_obj = mocker.patch(
@@ -785,25 +849,9 @@ class TestOqtopusSamplingBackend:
 
     def test_sample_qasm_sse_container(self):
         # Arrange
-        class MockSSESampler:
-            def req_transpile_and_exec(
-                self, program: list[str], shots: int, transpiler_info: dict
-            ) -> JobsSubmitJobResponse:
-                self.program = program
-                self.shots = shots
-                self.transpiler_info = transpiler_info
-                return JobsSubmitJobResponse(job_id="dummy_job_id")
-
-            def assertion(
-                self, program: list[str], shots: int, transpiler_info: dict
-            ) -> None:
-                assert self.program == program
-                assert self.shots == shots
-                assert self.transpiler_info == transpiler_info
-
-        # mock sse_sampler
-        mock_obj = MockSSESampler()
-        sys.modules["sse_sampler"] = mock_obj
+        # mock sse_driver
+        mock_obj = MockSSEDriver()
+        sys.modules["sse_driver"] = mock_obj
         backend = OqtopusSamplingBackend(get_dummy_config())
 
         # Act
@@ -818,6 +866,8 @@ class TestOqtopusSamplingBackend:
                     "transpiler_lib": "qiskit",
                     "transpiler_options": {"optimization_level": 2},
                 },
+                mitigation_info={"ro_error_mitigation": "pseudo_inverse"},
+                simulator_info={"simulator": "info"},
             )
 
         # Assert
@@ -829,6 +879,8 @@ class TestOqtopusSamplingBackend:
                 "transpiler_lib": "qiskit",
                 "transpiler_options": {"optimization_level": 2},
             },
+            mitigation_info={"ro_error_mitigation": "pseudo_inverse"},
+            simulator_info={"simulator": "info"},
         )
 
     def test_retrieve_job(self, mocker: MockerFixture):
