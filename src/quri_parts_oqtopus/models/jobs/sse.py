@@ -6,6 +6,10 @@ from quri_parts.backend import (
 )
 
 from quri_parts_oqtopus.models.jobs.base import OqtopusJobBase
+from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
+from quri_parts_oqtopus.models.jobs.results.estimation import (
+    OqtopusEstimationResult,
+)
 from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
 )
@@ -14,8 +18,6 @@ from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobDef,
 )
-
-JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 
 
 class OqtopusSseJob(OqtopusJobBase):
@@ -35,7 +37,7 @@ class OqtopusSseJob(OqtopusJobBase):
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> OqtopusSamplingResult:
+    ) -> OqtopusSamplingResult | OqtopusEstimationResult:
         """Wait until the job progress to the end and returns the result of the job.
 
         If the status of job is not ``succeeded`` or ``failed``, or ``cancelled``,
@@ -48,20 +50,31 @@ class OqtopusSseJob(OqtopusJobBase):
             wait: Time in seconds between queries.
 
         Returns:
-            OqtopusSamplingResult: the result of the sampling job.
+            OqtopusSamplingResult | OqtopusEstimationResult: the result of the job.
 
         Raises:
             BackendError: If job cannot be found or if an authentication error occurred
                 or timeout occurs, etc.
 
         """
-        try:
-            sampling_job = OqtopusSamplingJob(job=self._job, job_api=self._job_api)
-        except BackendError as e:
-            msg = f"Failed to create OqtopusSamplingJob: {e}"
-            raise BackendError(msg) from e
+        job = self.wait_for_completion(timeout=timeout, wait=wait)
+        if job is None:
+            msg = f"Timeout occurred after {timeout} seconds."
+            raise BackendError(msg)
 
-        return sampling_job.result(timeout=timeout, wait=wait)
+        if job.job_info.result is None:
+            msg = "The job result is not available."
+            raise BackendError(msg)
+
+        if job.job_info.result.get("sampling"):
+            sampling_job = OqtopusSamplingJob(job=job, job_api=self._job_api)
+            return sampling_job.result(timeout=timeout, wait=wait)
+        if job.job_info.result.get("estimation"):
+            estimation_job = OqtopusEstimationJob(job=job, job_api=self._job_api)
+            return estimation_job.result(timeout=timeout, wait=wait)
+
+        msg = "The job result is not a sampling result or an estimation result."
+        raise BackendError(msg)
 
     def download_log(
         self,
@@ -110,7 +123,7 @@ class OqtopusSseJob(OqtopusJobBase):
         else:
             path_save_dir = Path(save_dir)
 
-        file_path = path_save_dir / file_name
+        file_path = path_save_dir / Path(file_name).name
         # if the file already exists, raise ValueError
         if Path(file_path).exists():
             msg = f"The file already exists: {file_path}"
@@ -118,8 +131,7 @@ class OqtopusSseJob(OqtopusJobBase):
 
         # decode the base64 encoded data and write it to the file
         decoded_zip = base64.b64decode(data)
-        with Path(file_path).open(mode="bw") as t_file:
-            t_file.write(decoded_zip)
+        Path(file_path).write_bytes(decoded_zip)
 
         return str(file_path)
 

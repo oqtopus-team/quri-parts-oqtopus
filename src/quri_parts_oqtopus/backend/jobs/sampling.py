@@ -249,9 +249,8 @@ class OqtopusSamplingBackend(OqtopusJobBackendBase):
             if os.getenv("OQTOPUS_ENV") == "sse_container":
                 # This section is only for inside SSE container.
                 import sse_driver  # type: ignore[import-not-found]  # noqa: PLC0415
-                response = sse_driver.req(
-                    body
-                )
+
+                response = sse_driver.submit_job(body)
                 job = OqtopusSamplingJob(response, self._job_api)
                 # Workaround to avoid thread pool closing error when destructor of
                 # _job_api. Anyway the job_api cannot be used in SSE container.

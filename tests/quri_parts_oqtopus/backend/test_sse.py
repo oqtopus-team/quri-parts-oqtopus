@@ -30,6 +30,10 @@ from quri_parts_oqtopus.backend import (
     OqtopusSseJob,
 )
 from quri_parts_oqtopus.backend.config import OqtopusConfig
+from quri_parts_oqtopus.models.jobs.results.estimation import OqtopusEstimationResult
+from quri_parts_oqtopus.models.jobs.results.sampling import (
+    OqtopusSamplingResult,
+)
 from quri_parts_oqtopus.rest import (
     JobApi,
     JobsJobDef,
@@ -38,9 +42,49 @@ from quri_parts_oqtopus.rest import (
 from quri_parts_oqtopus.rest.models.jobs_get_sselog_response import (
     JobsGetSselogResponse,
 )
+from quri_parts_oqtopus.rest.models.jobs_job_info import JobsJobInfo
 
 
-def get_dummy_job(job_id: str = "dummy_id") -> OqtopusSseJob:
+def get_dummy_sampling_jobsjobdef(job_id: str = "dummy_id") -> JobsJobDef:
+    return JobsJobDef(
+        job_id=job_id,
+        shots=1,
+        name="test",
+        device_id="test_device",
+        job_type="sse",
+        status="succeeded",
+        job_info=JobsJobInfo(
+            program=["dummy_program"],
+            result={
+                "sampling": {
+                    "counts": {"00": 500, "11": 500},
+                }
+            },
+        ),
+    )
+
+
+def get_dummy_estimation_jobsjobdef(job_id: str = "dummy_id") -> JobsJobDef:
+    return JobsJobDef(
+        job_id=job_id,
+        shots=1,
+        name="test",
+        device_id="test_device",
+        job_type="sse",
+        status="succeeded",
+        job_info=JobsJobInfo(
+            program=["dummy_program"],
+            result={
+                "estimation": {
+                    "exp_value": 0.5,
+                    "stds": 0.1,
+                }
+            },
+        ),
+    )
+
+
+def get_dummy_sse_job(job_id: str = "dummy_id") -> OqtopusSseJob:
     job = JobsJobDef(
         job_id=job_id,
         shots=1,
@@ -165,16 +209,17 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         assert sse_job._job_api.api_client.configuration.host == config.url  # noqa: SLF001
         mock_obj.assert_called_once()
 
-    def test_run_sse(self, mocker: MockerFixture, temp_python: Path) -> None:
+    def test_run_sse_sampling(self, mocker: MockerFixture, temp_python: Path) -> None:
         # Arrange
         mock_submit_job = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.submit_job",
             return_value=JobsSubmitJobResponse(job_id="dummy_id"),
         )
-        job = get_dummy_job()
+
+        jobs_job_def = get_dummy_sampling_jobsjobdef()
         mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_job",
-            return_value=job,
+            return_value=jobs_job_def,
         )
         read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
         temp_python.write_bytes(read_data)
@@ -187,7 +232,41 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         )
 
         # Assert
-        assert ret_job.job_id == job.job_id
+        assert isinstance(ret_job, OqtopusSseJob)
+        assert isinstance(ret_job.result(), OqtopusSamplingResult)
+        assert ret_job.job_id == jobs_job_def.job_id
+        sj_call = mock_submit_job.call_args
+        assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
+            read_data
+        ).decode("utf-8")
+        assert sj_call.kwargs["body"].job_type == "sse"
+
+    def test_run_sse_estimation(self, mocker: MockerFixture, temp_python: Path) -> None:
+        # Arrange
+        mock_submit_job = mocker.patch(
+            "quri_parts_oqtopus.rest.JobApi.submit_job",
+            return_value=JobsSubmitJobResponse(job_id="dummy_id"),
+        )
+
+        jobs_job_def = get_dummy_estimation_jobsjobdef()
+        mocker.patch(
+            "quri_parts_oqtopus.rest.JobApi.get_job",
+            return_value=jobs_job_def,
+        )
+        read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        temp_python.write_bytes(read_data)
+
+        sse_job = OqtopusSseBackend(get_dummy_config())
+
+        # Act
+        ret_job = sse_job.run_sse(
+            str(temp_python.absolute()), device_id="test_device", name="test"
+        )
+
+        # Assert
+        assert isinstance(ret_job, OqtopusSseJob)
+        assert isinstance(ret_job.result(), OqtopusEstimationResult)
+        assert ret_job.job_id == jobs_job_def.job_id
         sj_call = mock_submit_job.call_args
         assert sj_call.kwargs["body"].job_info.program[0] == base64.b64encode(
             read_data
@@ -282,7 +361,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, zip_bytes = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
@@ -305,7 +384,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, zip_bytes = get_dummy_base64zip()
 
-        job = get_dummy_job(job_id="dummy_id2")
+        job = get_dummy_sse_job(job_id="dummy_id2")
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
@@ -330,7 +409,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, zip_bytes = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
@@ -350,7 +429,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, _ = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
@@ -373,7 +452,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, _ = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=JobsGetSselogResponse(file=encoded, file_name="dummy.zip"),
@@ -397,7 +476,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, _ = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             # the file name is the same as the existing file
@@ -421,7 +500,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
             side_effect=lambda path: path == "destination/path",
         )
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             side_effect=Exception("test exception"),
@@ -438,7 +517,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
     def test_download_log_invalid_response_none(self, mocker: MockerFixture) -> None:
         # Arrange
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
             return_value=None,
@@ -458,7 +537,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         self, mocker: MockerFixture
     ) -> None:
         # Arrange
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # file is None
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
@@ -483,7 +562,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, _ = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # filename is None
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
@@ -505,7 +584,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         self, mocker: MockerFixture
     ) -> None:
         # Arrange
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # file is emtpy
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
@@ -530,7 +609,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # filename is emtpy
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
@@ -550,7 +629,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
     def test_download_log_invalid_response_no_file(self, mocker: MockerFixture) -> None:
         # Arrange
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # contains no file
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
@@ -575,7 +654,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # make zip stream to be downloaded
         encoded, _ = get_dummy_base64zip()
 
-        job = get_dummy_job()
+        job = get_dummy_sse_job()
         # contains no filename
         mock_obj = mocker.patch(
             "quri_parts_oqtopus.rest.JobApi.get_sselog",
