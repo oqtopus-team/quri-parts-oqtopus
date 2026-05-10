@@ -134,7 +134,7 @@ class OqtopusSseJob(OqtopusJobBase):
         else:
             path_save_dir = Path(save_dir)
 
-        file_path = path_save_dir / file_name
+        file_path = path_save_dir / Path(file_name).name
         # if the file already exists, raise ValueError
         if Path(file_path).exists():
             msg = f"The file already exists: {file_path}"
@@ -142,8 +142,7 @@ class OqtopusSseJob(OqtopusJobBase):
 
         # decode the base64 encoded data and write it to the file
         decoded_zip = base64.b64decode(data)
-        with Path(file_path).open(mode="bw") as t_file:
-            t_file.write(decoded_zip)
+        Path(file_path).write_bytes(decoded_zip)
 
         return str(file_path)
 

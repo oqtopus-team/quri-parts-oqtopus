@@ -21,7 +21,7 @@ import zipfile
 from collections.abc import Generator
 from pathlib import Path, PurePath
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 import pytest
 from oqtopus_client import OqtopusClient
@@ -41,12 +41,10 @@ from quri_parts_oqtopus.backend import (
     OqtopusSseJob,
 )
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-
-if TYPE_CHECKING:
-    from quri_parts_oqtopus.models.jobs.results.estimation import (
-        OqtopusEstimationResult,
-    )
-    from quri_parts_oqtopus.models.jobs.results.sampling import OqtopusSamplingResult
+from quri_parts_oqtopus.models.jobs.results.estimation import (
+    OqtopusEstimationResult,
+)
+from quri_parts_oqtopus.models.jobs.results.sampling import OqtopusSamplingResult
 
 
 def get_dummy_job_result(job_id: str = "dummy_id") -> OqtopusSseJobResult:
@@ -174,7 +172,7 @@ def get_dummy_base64zip() -> tuple[str, bytes]:
 
 
 def get_dummy_config() -> OqtopusConfig:
-    return OqtopusConfig("dummpy_url", "dummy_api_token")
+    return OqtopusConfig("dummy_url", "dummy_api_token")
 
 
 def get_dummy_client() -> OqtopusClient:
@@ -260,16 +258,19 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         assert sse_job._client.base_url == config.url  # noqa: SLF001
         mock_obj.assert_called_once()
 
-    def test_run_sse(self, mocker: MockerFixture, temp_python: Path) -> None:
+    def test_run_sse_sampling(self, mocker: MockerFixture, temp_python: Path) -> None:
         # Arrange
         mock_submit_job = mocker.patch(
             "oqtopus_client.OqtopusClient.submit_job",
             return_value=SimpleNamespace(job_id="dummy_id"),
         )
-        job = get_dummy_job_result()
         mocker.patch(
-            "oqtopus_client.OqtopusClient.get_job",
-            return_value=job,
+            "oqtopus_client.OqtopusClient.wait",
+            return_value=_WaitedJobStub(
+                job_id="dummy_id",
+                status="succeeded",
+                job_result=get_sampling_job_result(job_id="dummy_sampling"),
+            ),
         )
         read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
         temp_python.write_bytes(read_data)
@@ -282,7 +283,41 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         )
 
         # Assert
-        assert ret_job.job_id == job.job_id
+        assert isinstance(ret_job, OqtopusSseJob)
+        assert isinstance(ret_job.result(), OqtopusSamplingResult)
+        assert ret_job.job_id == "dummy_id"
+        spec = mock_submit_job.call_args.args[0]
+        assert spec.program == read_data.decode("utf-8")
+        assert spec.job_type.value == "sse"
+
+    def test_run_sse_estimation(self, mocker: MockerFixture, temp_python: Path) -> None:
+        # Arrange
+        mock_submit_job = mocker.patch(
+            "oqtopus_client.OqtopusClient.submit_job",
+            return_value=SimpleNamespace(job_id="dummy_id"),
+        )
+        mocker.patch(
+            "oqtopus_client.OqtopusClient.wait",
+            return_value=_WaitedJobStub(
+                job_id="dummy_id",
+                status="succeeded",
+                job_result=get_estimation_job_result(job_id="dummy_estimation"),
+            ),
+        )
+        read_data = b'OPENQASM 3;\ninclude "stdgates.inc";\nqubit[2] q;\n\nh q[0];\ncx q[0], q[1];'  # noqa: E501
+        temp_python.write_bytes(read_data)
+
+        sse_job = OqtopusSseBackend(get_dummy_config())
+
+        # Act
+        ret_job = sse_job.run_sse(
+            str(temp_python.absolute()), device_id="test_device", name="test"
+        )
+
+        # Assert
+        assert isinstance(ret_job, OqtopusSseJob)
+        assert isinstance(ret_job.result(), OqtopusEstimationResult)
+        assert ret_job.job_id == "dummy_id"
         spec = mock_submit_job.call_args.args[0]
         assert spec.program == read_data.decode("utf-8")
         assert spec.job_type.value == "sse"
