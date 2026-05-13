@@ -3,15 +3,12 @@
 import base64
 from pathlib import Path, PurePath
 
+from oqtopus_client import OqtopusJobSpec
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
 from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
 from quri_parts_oqtopus.models.jobs.sse import OqtopusSseJob
-from quri_parts_oqtopus.rest import (
-    JobsSubmitJobInfo,
-    JobsSubmitJobRequest,
-)
 
 
 class OqtopusSseBackend(OqtopusJobBackendBase):
@@ -80,21 +77,19 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
             raise ValueError(msg)
 
         try:
-            job_info = JobsSubmitJobInfo(program=[encoded.decode("utf-8")])
-            body = JobsSubmitJobRequest(
+            spec = OqtopusJobSpec.sse(
+                program=Path(file_path).read_text(encoding="utf-8"),
+                shots=1,
                 name=name,
                 description=description,
                 device_id=device_id,
-                job_type="sse",
-                job_info=job_info,
                 transpiler_info={},
                 simulator_info={},
                 mitigation_info={},
-                shots=1,
             )
-            response_submit_job = self._job_api.submit_job(body=body)
-            response = self._job_api.get_job(response_submit_job.job_id)
-            job = OqtopusSseJob(job=response, job_api=self._job_api)
+            response_submit_job = self._client.submit_job(spec)
+            response = self._client.get_job(response_submit_job.job_id)
+            job = OqtopusSseJob(job=response, client=self._client)
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e

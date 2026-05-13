@@ -1,16 +1,15 @@
 import json
 from datetime import datetime
+from typing import cast
 
+from oqtopus_client import OqtopusClient
+from oqtopus_client.services.device import OqtopusDevice as ClientDevice
 from quri_parts.backend import (
     BackendError,
 )
 
 from quri_parts_oqtopus.models.base import OqtopusModelBase
 from quri_parts_oqtopus.models.utils import DateTimeEncoder
-from quri_parts_oqtopus.rest import (
-    DeviceApi,
-    DevicesDeviceInfo,
-)
 
 
 class OqtopusDevice(OqtopusModelBase):
@@ -18,25 +17,25 @@ class OqtopusDevice(OqtopusModelBase):
 
     Args:
         device: The device information.
-        device_api: The device API for communication with the backend.
+        client: The client for communication with the backend.
 
     Raises:
-        ValueError: If the device or device_api is None.
+        ValueError: If the device or client is None.
 
     """
 
-    def __init__(self, device: DevicesDeviceInfo, device_api: DeviceApi) -> None:
+    def __init__(self, device: ClientDevice, client: OqtopusClient) -> None:
         super().__init__()
 
         if device is None:
             msg = "'device' should not be None"
             raise ValueError(msg)
-        if device_api is None:
-            msg = "'device_api' should not be None"
+        if client is None:
+            msg = "'client' should not be None"
             raise ValueError(msg)
 
-        self._device: DevicesDeviceInfo = device
-        self._device_api: DeviceApi = device_api
+        self._device = device
+        self._client = client
 
     @property
     def device_id(self) -> str:
@@ -76,7 +75,7 @@ class OqtopusDevice(OqtopusModelBase):
             datetime: The `available_at` of this DevicesDeviceInfo.
 
         """
-        return self._device.available_at
+        return cast("datetime", self._device.available_at)
 
     @property
     def n_pending_jobs(self) -> int:
@@ -96,7 +95,7 @@ class OqtopusDevice(OqtopusModelBase):
             int: The number of qubits in the device.
 
         """
-        return self._device.n_qubits
+        return self._device.n_qubits or 0
 
     @property
     def basis_gates(self) -> list[str]:
@@ -126,7 +125,10 @@ class OqtopusDevice(OqtopusModelBase):
             dict: The device information of the device.
 
         """
-        return self._device.device_info
+        try:
+            return self._device.device_info or {}
+        except json.JSONDecodeError:
+            return {}
 
     @property
     def calibrated_at(self) -> datetime:
@@ -136,7 +138,7 @@ class OqtopusDevice(OqtopusModelBase):
             datetime: The `calibrated_at` of this DevicesDeviceInfo.
 
         """
-        return self._device.calibrated_at
+        return cast("datetime", self._device.calibrated_at)
 
     @property
     def description(self) -> str:
@@ -158,7 +160,7 @@ class OqtopusDevice(OqtopusModelBase):
 
         """
         try:
-            self._device = self._device_api.get_device(self.device_id)
+            self._device = self._client.get_device(self.device_id)
         except Exception as e:
             msg = "failed to refresh device info"
             raise BackendError(msg) from e
@@ -170,7 +172,7 @@ class OqtopusDevice(OqtopusModelBase):
             str: A json string representation of the OqtopusDevice.
 
         """
-        return json.dumps(self._device.to_dict(), cls=DateTimeEncoder)
+        return json.dumps(self._device.raw.to_dict(), cls=DateTimeEncoder)
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusDevice.
@@ -179,4 +181,4 @@ class OqtopusDevice(OqtopusModelBase):
             str: A string representation of the OqtopusDevice.
 
         """
-        return self._device.to_str()
+        return self._device.raw.to_str()

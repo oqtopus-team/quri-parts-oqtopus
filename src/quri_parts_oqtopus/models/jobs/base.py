@@ -2,7 +2,12 @@ import json
 import time
 from abc import abstractmethod
 from datetime import datetime
+from typing import Any, cast
 
+from oqtopus_client import OqtopusClient
+from oqtopus_client.services.job_results import (
+    OqtopusJobResult,
+)
 from quri_parts.backend import (
     BackendError,
 )
@@ -11,12 +16,25 @@ from quri_parts_oqtopus.models.base import OqtopusModelBase
 from quri_parts_oqtopus.models.jobs.results.estimation import OqtopusEstimationResult
 from quri_parts_oqtopus.models.jobs.results.sampling import OqtopusSamplingResult
 from quri_parts_oqtopus.models.utils import DateTimeEncoder
-from quri_parts_oqtopus.rest import (
-    JobApi,
-    JobsJobDef,
-)
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
+
+
+def _str_value(value: object) -> str:
+    raw_value = value.value if hasattr(value, "value") else value
+    return str(raw_value)
+
+
+def _to_dict(value: object) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return cast("dict[str, Any]", value.to_dict())
+    if hasattr(value, "model_dump") and callable(value.model_dump):
+        return cast("dict[str, Any]", value.model_dump(mode="json", exclude_none=True))
+    if isinstance(value, dict):
+        return value
+    return {}
 
 
 class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
@@ -25,18 +43,18 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
     This class provides common functions for OQTOPUS jobs.
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
+    def __init__(self, job: OqtopusJobResult, client: OqtopusClient) -> None:
         super().__init__()
 
         if job is None:
             msg = "'job' should not be None"
             raise ValueError(msg)
-        self._job: JobsJobDef = job
+        self._job = job
 
-        if job_api is None:
-            msg = "'job_api' should not be None"
+        if client is None:
+            msg = "'client' should not be None"
             raise ValueError(msg)
-        self._job_api: JobApi = job_api
+        self._client = client
 
     @property
     def job_id(self) -> str:
@@ -46,7 +64,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The id of the job.
 
         """
-        return self._job.job_id
+        return str(self._job.job_id)
 
     @property
     def name(self) -> str:
@@ -56,7 +74,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The name of the job.
 
         """
-        return self._job.name
+        return self._job.name or ""
 
     @property
     def description(self) -> str:
@@ -66,7 +84,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The description of the job.
 
         """
-        return self._job.description
+        return self._job.description or ""
 
     @property
     def job_type(self) -> str:
@@ -76,7 +94,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The job type of the job.
 
         """
-        return self._job.job_type
+        return _str_value(self._job.job_type)
 
     @property
     def status(self) -> str:
@@ -86,7 +104,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The status of the job.
 
         """
-        return self._job.status
+        return _str_value(self._job.status)
 
     @property
     def device_id(self) -> str:
@@ -96,7 +114,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: The device id of the job.
 
         """
-        return self._job.device_id
+        return self._job.device_id or ""
 
     @property
     def shots(self) -> int:
@@ -106,7 +124,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             int: The shots of the job.
 
         """
-        return self._job.shots
+        return self._job.shots or 0
 
     @property
     def job_info(self) -> dict:
@@ -116,7 +134,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             dict: The detail information of the job.
 
         """
-        return self._job.job_info.to_dict()
+        return _to_dict(self._job.job_info)
 
     @property
     def transpiler_info(self) -> dict:
@@ -126,7 +144,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             dict: The transpiler info of the job.
 
         """
-        return self._job.transpiler_info
+        return dict(self._job.transpiler_info or {})
 
     @property
     def simulator_info(self) -> dict:
@@ -136,7 +154,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             dict: The simulator info of the job.
 
         """
-        return self._job.simulator_info
+        return dict(self._job.simulator_info or {})
 
     @property
     def mitigation_info(self) -> dict:
@@ -146,9 +164,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             dict: The mitigation info of the job.
 
         """
-        if self._job.mitigation_info:
-            return self._job.mitigation_info
-        return {}
+        return dict(self._job.mitigation_info or {})
 
     @property
     def execution_time(self) -> float:
@@ -158,7 +174,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             float: The execution time of the job.
 
         """
-        return self._job.execution_time
+        return float(self._job.execution_time or 0.0)
 
     @property
     def submitted_at(self) -> datetime:
@@ -168,7 +184,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             datetime: The `submitted_at` of the job.
 
         """
-        return self._job.submitted_at
+        return cast("datetime", self._job.submitted_at)
 
     @property
     def ready_at(self) -> datetime:
@@ -178,7 +194,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             datetime: The `ready_at` of the job.
 
         """
-        return self._job.ready_at
+        return cast("datetime", self._job.ready_at)
 
     @property
     def running_at(self) -> datetime:
@@ -188,7 +204,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             datetime: The `running_at` of the job.
 
         """
-        return self._job.running_at
+        return cast("datetime", self._job.running_at)
 
     @property
     def ended_at(self) -> datetime:
@@ -198,7 +214,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             datetime: The `ended_at` of the job.
 
         """
-        return self._job.ended_at
+        return cast("datetime", self._job.ended_at)
 
     @abstractmethod
     def result(
@@ -237,14 +253,14 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
 
         """
         try:
-            self._job = self._job_api.get_job(self._job.job_id)
+            self._job = self._client.get_job(self.job_id)
         except Exception as e:
             msg = "To refresh job is failed."
             raise BackendError(msg) from e
 
     def wait_for_completion(
         self, timeout: float | None = None, wait: float = 10.0
-    ) -> JobsJobDef | None:
+    ) -> OqtopusJobResult | None:
         """Wait until the job progress to the end.
 
         Calling this function waits until the job progress to the end such as
@@ -255,13 +271,13 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             wait: Time in seconds between queries.
 
         Returns:
-            JobsJobDef | None: If a timeout occurs, it returns None. Otherwise, it
+            OqtopusJobResult | None: If a timeout occurs, it returns None. Otherwise, it
                 returns the Job.
 
         """
         start_time = time.time()
         self.refresh()
-        while self._job.status not in JOB_FINAL_STATUS:
+        while self.status not in JOB_FINAL_STATUS:
             # check timeout
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
@@ -285,7 +301,7 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
 
         """
         try:
-            self._job_api.cancel_job(self._job.job_id)
+            self._client.cancel_job(self.job_id)
             self.refresh()
         except Exception as e:
             msg = "To cancel job is failed."
@@ -298,4 +314,22 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
             str: A json string representation of the OqtopusJobBase.
 
         """
-        return json.dumps(self._job.to_dict(), cls=DateTimeEncoder)
+        payload = {
+            "job_id": self.job_id,
+            "name": self.name,
+            "description": self.description,
+            "job_type": self.job_type,
+            "status": self.status,
+            "device_id": self.device_id,
+            "shots": self.shots,
+            "job_info": self.job_info,
+            "transpiler_info": self.transpiler_info,
+            "simulator_info": self.simulator_info,
+            "mitigation_info": self.mitigation_info,
+            "execution_time": self.execution_time,
+            "submitted_at": self.submitted_at,
+            "ready_at": self.ready_at,
+            "running_at": self.running_at,
+            "ended_at": self.ended_at,
+        }
+        return json.dumps(payload, cls=DateTimeEncoder)

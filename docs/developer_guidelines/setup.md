@@ -52,30 +52,6 @@ This command performs the following:
 - Installs all dependencies via `uv`.
 - Configures the Git commit message template.
 
-### Setting Up the Java(JDK) Environment
-
-To use `swagger-codegen-cli` to generate Python code from an OQTOPUS Cloud User API definition, install JDK:
-
-```shell
-sudo apt install -y openjdk-21-jdk
-```
-
-## Download the OQTOPUS Cloud User API definition
-
-To download the OQTOPUS Cloud User API definition, run the following command in the `spec` directory:
-
-```shell
-make download-oas
-```
-
-## Generate Python code
-
-To generate Python code, run the following command in the `spec` directory:
-
-```shell
-make generate-api
-```
-
 ## Linting and Testing
 
 ### Format Code

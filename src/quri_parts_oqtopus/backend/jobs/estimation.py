@@ -1,5 +1,6 @@
 import math
 
+from oqtopus_client import OqtopusJobSpec
 from quri_parts.backend import BackendError
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.core.operator import Operator
@@ -10,11 +11,6 @@ from quri_parts_oqtopus.backend.config import (
 )
 from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
 from quri_parts_oqtopus.models.jobs.estimation import OqtopusEstimationJob
-from quri_parts_oqtopus.rest import (
-    JobsOperatorItem,
-    JobsSubmitJobInfo,
-    JobsSubmitJobRequest,
-)
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 
@@ -141,8 +137,6 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
             msg = f"shots should be a positive integer.: {shots}"
             raise ValueError(msg)
 
-        job_type = "estimation"
-
         if transpiler_info is None:
             transpiler_info = {}
         if simulator_info is None:
@@ -156,36 +150,25 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
                 if not math.isclose(coeff.imag, 0.0, abs_tol=1e-9):
                     msg = f"Complex numbers are not supported in coefficient: {coeff}"
                     raise ValueError(msg)
-                operator_list.append(
-                    JobsOperatorItem(
-                        pauli=str(pauli),
-                        coeff=float(coeff.real),
-                    )
-                )
+                operator_list.append({"pauli": str(pauli), "coeff": float(coeff.real)})
             else:
-                operator_list.append(
-                    JobsOperatorItem(
-                        pauli=str(pauli),
-                        coeff=float(coeff),
-                    )
-                )
-        job_info = JobsSubmitJobInfo(program=[program], operator=operator_list)
-        body = JobsSubmitJobRequest(
+                operator_list.append({"pauli": str(pauli), "coeff": float(coeff)})
+        spec = OqtopusJobSpec.estimation(
+            device_id=device_id,
+            program=program,
+            shots=shots,
             name=name,
             description=description,
-            device_id=device_id,
-            job_type=job_type,
-            job_info=job_info,
             transpiler_info=transpiler_info,
             simulator_info=simulator_info,
             mitigation_info=mitigation_info,
-            shots=shots,
+            operator=operator_list,
         )
         try:
-            response_submit_job = self._job_api.submit_job(body=body)
-            response = self._job_api.get_job(response_submit_job.job_id)
+            submitted = self._client.submit_job(spec)
+            response = self._client.get_job(submitted.job_id)
         except Exception as e:
             msg = "To execute estimation on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return OqtopusEstimationJob(response, self._job_api)
+        return OqtopusEstimationJob(response, self._client)

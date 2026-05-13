@@ -78,8 +78,7 @@ Examples:
 
 """
 
-import os
-
+from oqtopus_client import OqtopusJobSpec
 from quri_parts.backend import (
     BackendError,
 )
@@ -91,10 +90,6 @@ from quri_parts_oqtopus.backend.config import (
 )
 from quri_parts_oqtopus.backend.jobs.base import OqtopusJobBackendBase
 from quri_parts_oqtopus.models.jobs.sampling import OqtopusSamplingJob
-from quri_parts_oqtopus.rest import (
-    JobsSubmitJobInfo,
-    JobsSubmitJobRequest,
-)
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 
@@ -234,33 +229,35 @@ class OqtopusSamplingBackend(OqtopusJobBackendBase):
             mitigation_info = {}
 
         try:
-            if os.getenv("OQTOPUS_ENV") == "sse_container":
-                # This section is only for inside SSE container.
-                import sse_sampler  # type: ignore[import-not-found]  # noqa: PLC0415
-
-                response = sse_sampler.req_transpile_and_exec(
-                    program, shots, transpiler_info
-                )
-                job = OqtopusSamplingJob(response, self._job_api)
-                # Workaround to avoid thread pool closing error when destructor of
-                # _job_api. Anyway the job_api cannot be used in SSE container.
-                del job._job_api  # noqa: SLF001
-            else:
-                job_info = JobsSubmitJobInfo(program=program)
-                body = JobsSubmitJobRequest(
+            if job_type == "multi_manual":
+                spec = OqtopusJobSpec.multi_manual(
+                    device_id=device_id,
+                    program=program,
+                    shots=shots,
                     name=name,
                     description=description,
-                    device_id=device_id,
-                    job_type=job_type,
-                    job_info=job_info,
                     transpiler_info=transpiler_info,
                     simulator_info=simulator_info,
                     mitigation_info=mitigation_info,
-                    shots=shots,
                 )
-                response_submit_job = self._job_api.submit_job(body=body)
-                response = self._job_api.get_job(response_submit_job.job_id)
-                job = OqtopusSamplingJob(response, self._job_api)
+            else:
+                spec = OqtopusJobSpec.sampling(
+                    device_id=device_id,
+                    program=program,
+                    shots=shots,
+                    name=name,
+                    description=description,
+                    transpiler_info=transpiler_info,
+                    simulator_info=simulator_info,
+                    mitigation_info=mitigation_info,
+                )
+
+            if self.config.url:
+                submitted = self._client.submit_job(spec)
+                response = self._client.get_job(submitted.job_id)
+            else:
+                response = self._client.run_job(spec)
+            job = OqtopusSamplingJob(response, self._client)
         except Exception as e:
             msg = "To execute sampling on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
