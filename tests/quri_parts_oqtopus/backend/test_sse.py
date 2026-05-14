@@ -194,9 +194,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
         # Assert
         assert ret_job.job_id == job.job_id
         spec = mock_submit_job.call_args.args[0]
-        assert spec.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
+        assert spec.program[0] == base64.b64encode(read_data).decode("utf-8")
         assert spec.job_type.value == "sse"
 
     def test_run_sse_invalid_arg(self) -> None:
@@ -277,9 +275,7 @@ class TestOqtopusSseBackend:  # noqa: PLR0904
 
         # Assert
         spec = mock_submit_job.call_args.args[0]
-        assert spec.program[0] == base64.b64encode(
-            read_data
-        ).decode("utf-8")
+        assert spec.program[0] == base64.b64encode(read_data).decode("utf-8")
         assert spec.job_type.value == "sse"
 
     def test_download_log(self, mocker: MockerFixture) -> None:
