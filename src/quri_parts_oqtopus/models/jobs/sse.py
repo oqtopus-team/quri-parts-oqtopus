@@ -48,16 +48,14 @@ class OqtopusSseJob(OqtopusJobBase):
         Returns:
             OqtopusSamplingResult: the result of the sampling job.
 
-        Raises:
-            BackendError: If job cannot be found or if an authentication error occurred
-                or timeout occurs, etc.
-
         """
-        try:
-            sampling_job = OqtopusSamplingJob(job=self._job, client=self._client)
-        except BackendError as e:
-            msg = f"Failed to create OqtopusSamplingJob: {e}"
-            raise BackendError(msg) from e
+        if self.status not in JOB_FINAL_STATUS:
+            self._job = self._client.wait(
+                self.job_id,
+                interval=wait,
+                timeout=timeout,
+            )
+        sampling_job = OqtopusSamplingJob(job=self._job, client=self._client)
 
         return sampling_job.result(timeout=timeout, wait=wait)
 

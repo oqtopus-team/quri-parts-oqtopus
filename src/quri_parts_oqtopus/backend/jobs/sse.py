@@ -4,6 +4,8 @@ import base64
 from pathlib import Path, PurePath
 
 from oqtopus_client import OqtopusJobSpec
+from oqtopus_client import rest as client_models
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.backend.config import OqtopusConfig
@@ -87,11 +89,38 @@ class OqtopusSseBackend(OqtopusJobBackendBase):
                 simulator_info={},
                 mitigation_info={},
             )
-            response_submit_job = self._client.submit_job(spec)
-            response = self._client.get_job(response_submit_job.job_id)
-            job = OqtopusSseJob(job=response, client=self._client)
+            submitted = self._client.submit_job(spec)
+            job = OqtopusSseJob(
+                job=_submitted_sse_job_result(submitted.job_id, spec),
+                client=self._client,
+            )
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
         return job
+
+
+def _submitted_sse_job_result(job_id: str, spec: OqtopusJobSpec) -> OqtopusJobResult:
+    program = [spec.program] if isinstance(spec.program, str) else list(spec.program)
+
+    return OqtopusJobResult(
+        job_id=job_id,
+        job_type=client_models.JobsJobType.SSE,
+        status=client_models.JobsJobStatus.SUBMITTED,
+        name=spec.name or "",
+        description=spec.description,
+        device_id=spec.device_id,
+        shots=spec.shots,
+        job_info={
+            "input": {
+                "program": program,
+                "operator": [],
+                "sse_program": None,
+            },
+            "message": None,
+        },
+        transpiler_info=spec.transpiler_info,
+        simulator_info=spec.simulator_info,
+        mitigation_info=spec.mitigation_info,
+    )

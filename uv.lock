@@ -1760,8 +1760,8 @@ wheels = [
 
 [[package]]
 name = "oqtopus-client"
-version = "1.0.2"
-source = { registry = "https://pypi.org/simple" }
+version = "1.1.0"
+source = { directory = "../oqtopus-client" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiohttp-retry" },
@@ -1771,10 +1771,30 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/94/b827865abc5bc48a81b42ea987a3869b573b0124342ea7fad82e2ad227f8/oqtopus_client-1.0.2.tar.gz", hash = "sha256:9bf05dfaca2f21bf84a022dcbe8d0ae6f6367e074725ede64aaaa0117d69e65e", size = 59998, upload-time = "2026-05-14T02:06:37.971Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/be/a6f4fe1bd34c4da069233cc191a12afd40a56c5e39f95a9b438476eee5e8/oqtopus_client-1.0.2-py3-none-any.whl", hash = "sha256:80f974a854a7d79a115ac7d477bf69f74073b928861e4cfdcb656e0a4bca3dee", size = 125142, upload-time = "2026-05-14T02:06:36.252Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp", specifier = ">=3.0.0" },
+    { name = "aiohttp-retry", specifier = ">=2.8.3" },
+    { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.0" },
+    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.0" },
+    { name = "mkdocs-gen-files", marker = "extra == 'dev'", specifier = ">=0.5.0" },
+    { name = "mkdocs-literate-nav", marker = "extra == 'dev'", specifier = ">=0.6.1" },
+    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5.0" },
+    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'", specifier = ">=0.28.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11.0" },
+    { name = "pydantic", specifier = ">=2.7.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },
+    { name = "python-dateutil", specifier = ">=2.5.3" },
+    { name = "pyyaml", specifier = ">=6.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0" },
+    { name = "types-python-dateutil", marker = "extra == 'dev'", specifier = ">=2.9.0.20250516" },
+    { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12.20241230" },
+    { name = "typing-extensions", specifier = ">=4.7.1" },
+    { name = "urllib3", specifier = ">=1.25.3,<2.1.0" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "packaging"
@@ -2593,7 +2613,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "certifi" },
-    { name = "oqtopus-client", specifier = ">=1.0.2" },
+    { name = "oqtopus-client", directory = "../oqtopus-client" },
     { name = "quri-parts-circuit", specifier = ">=0.20.3" },
     { name = "quri-parts-core", specifier = ">=0.20.3" },
     { name = "quri-parts-openqasm", specifier = ">=0.20.3" },
