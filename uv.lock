@@ -1761,7 +1761,7 @@ wheels = [
 [[package]]
 name = "oqtopus-client"
 version = "1.1.0"
-source = { directory = "../oqtopus-client" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "aiohttp-retry" },
@@ -1771,30 +1771,10 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp", specifier = ">=3.0.0" },
-    { name = "aiohttp-retry", specifier = ">=2.8.3" },
-    { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.0" },
-    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.0" },
-    { name = "mkdocs-gen-files", marker = "extra == 'dev'", specifier = ">=0.5.0" },
-    { name = "mkdocs-literate-nav", marker = "extra == 'dev'", specifier = ">=0.6.1" },
-    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5.0" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'", specifier = ">=0.28.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11.0" },
-    { name = "pydantic", specifier = ">=2.7.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },
-    { name = "python-dateutil", specifier = ">=2.5.3" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0" },
-    { name = "types-python-dateutil", marker = "extra == 'dev'", specifier = ">=2.9.0.20250516" },
-    { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12.20241230" },
-    { name = "typing-extensions", specifier = ">=4.7.1" },
-    { name = "urllib3", specifier = ">=1.25.3,<2.1.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/9c/6c/c769a611e75c245e8e91e4fae37d648ae0bb1fff04051c15836ed46a85e6/oqtopus_client-1.1.0.tar.gz", hash = "sha256:006de0752f2289d7b1aef2d32437f91d86f62b7db614189f5d5816667db3a6f1", size = 62701, upload-time = "2026-05-22T07:32:18.423Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/15/acc228a934e7960b43e1b01c447e3b017f7a85a8b5f6f957ba20636de8ef/oqtopus_client-1.1.0-py3-none-any.whl", hash = "sha256:47dc53ed0f60110e8261e417356837a7138189b27e5768123928ba47bfb12795", size = 128244, upload-time = "2026-05-22T07:32:16.947Z" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "packaging"
@@ -2613,7 +2593,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "certifi" },
-    { name = "oqtopus-client", directory = "../oqtopus-client" },
+    { name = "oqtopus-client", specifier = ">=1.1.0" },
     { name = "quri-parts-circuit", specifier = ">=0.20.3" },
     { name = "quri-parts-core", specifier = ">=0.20.3" },
     { name = "quri-parts-openqasm", specifier = ">=0.20.3" },
