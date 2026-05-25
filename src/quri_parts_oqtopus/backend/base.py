@@ -1,10 +1,9 @@
 import os
 
+from oqtopus_client import OqtopusClient
+from oqtopus_client import OqtopusConfig as ClientConfig
+
 from quri_parts_oqtopus.backend.config import OqtopusConfig
-from quri_parts_oqtopus.rest import (
-    ApiClient,
-    Configuration,
-)
 
 
 class OqtopusBackendBase:
@@ -39,14 +38,10 @@ class OqtopusBackendBase:
             else:
                 config = OqtopusConfig.from_file()
         self.config = config
-
-        # construct JobApi
-        rest_config = Configuration()
-        rest_config.host = self.config.url
-        if self.config.proxy:
-            rest_config.proxy = self.config.proxy
-        self._api_client = ApiClient(
-            configuration=rest_config,
-            header_name="q-api-token",
-            header_value=self.config.api_token,
+        self._client = OqtopusClient(
+            ClientConfig(
+                base_url=self.config.url,
+                api_token=self.config.api_token,
+                proxy=self.config.proxy,
+            )
         )

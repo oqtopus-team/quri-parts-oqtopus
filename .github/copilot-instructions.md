@@ -19,29 +19,15 @@
 ├── docs/                     # MkDocs documentation source
 ├── docs_scripts/             # Scripts used during documentation build
 ├── examples/                 # Usage examples
-├── spec/                     # OpenAPI spec and code-generation config for the REST client
 ├── src/
 │   └── quri_parts_oqtopus/   # Main package source
 │       ├── backend/          # QURI Parts backend implementation (config, devices, jobs)
 │       ├── models/           # Domain model classes (devices, jobs, results)
-│       ├── rest/             # Auto-generated REST client (do NOT edit manually)
 │       └── sampler.py        # Public sampler entry point
 └── tests/
     └── quri_parts_oqtopus/   # Unit tests mirroring src layout
         └── backend/          # Tests for backend modules
 ```
-
-### Key notes on `src/quri_parts_oqtopus/rest/`
-
-This directory is **auto-generated** from the OQTOPUS Cloud OpenAPI specification using Swagger Codegen. Do **not** edit files here manually. To regenerate:
-
-```bash
-cd spec
-make download-oas   # fetch latest openapi.yaml from oqtopus-cloud
-make generate-api   # regenerate src/quri_parts_oqtopus/rest/
-```
-
-Ruff and mypy intentionally exclude `src/quri_parts_oqtopus/rest/` (see `pyproject.toml`).
 
 ## Development Workflow
 
@@ -83,12 +69,11 @@ quri_parts_oqtopus.backend   ← implements QURI Parts Backend/Sampler interface
 quri_parts_oqtopus.models    ← domain objects (Device, Job, Results …)
     │  calls
     ▼
-quri_parts_oqtopus.rest      ← auto-generated HTTP client for OQTOPUS Cloud User API
+oqtopus_client               ← public client for OQTOPUS Cloud API access
 ```
 
 - `backend/` contains the concrete QURI Parts backend (`OqtopusBackend`) and job runners (sampling, SSE, estimation).
-- `models/` contains Pydantic-style domain models that wrap the raw REST responses.
-- `rest/` is never imported directly by user code; it is only used internally by `backend/` and `models/`.
+- `models/` contains domain models that wrap `oqtopus-client` results.
 
 ## Code Style
 

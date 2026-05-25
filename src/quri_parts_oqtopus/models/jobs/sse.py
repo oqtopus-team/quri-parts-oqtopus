@@ -1,6 +1,8 @@
 import base64
 from pathlib import Path
 
+from oqtopus_client import OqtopusClient
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import (
     BackendError,
 )
@@ -10,10 +12,6 @@ from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
 )
 from quri_parts_oqtopus.models.jobs.sampling import OqtopusSamplingJob
-from quri_parts_oqtopus.rest import (
-    JobApi,
-    JobsJobDef,
-)
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 
@@ -23,15 +21,15 @@ class OqtopusSseJob(OqtopusJobBase):
 
     Args:
         job: A result of dict type.
-        job_api: A result of dict type.
+        client: An OQTOPUS client.
 
     Raises:
-        ValueError: If ``job`` or ``job_api`` is None.
+        ValueError: If ``job`` or ``client`` is None.
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
-        super().__init__(job=job, job_api=job_api)
+    def __init__(self, job: OqtopusJobResult, client: OqtopusClient) -> None:
+        super().__init__(job=job, client=client)
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
@@ -56,7 +54,7 @@ class OqtopusSseJob(OqtopusJobBase):
 
         """
         try:
-            sampling_job = OqtopusSamplingJob(job=self._job, job_api=self._job_api)
+            sampling_job = OqtopusSamplingJob(job=self._job, client=self._client)
         except BackendError as e:
             msg = f"Failed to create OqtopusSamplingJob: {e}"
             raise BackendError(msg) from e
@@ -84,20 +82,21 @@ class OqtopusSseJob(OqtopusJobBase):
 
         """
         try:
-            response = self._job_api.get_sselog(job_id=self._job.job_id)
+            response = self._client.get_sselog(self.job_id)
         except Exception as e:
             msg = "To perform sse on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        if response is None or not response.file or not response.file_name:
+        file = getattr(response, "file", None)
+        file_name = getattr(response, "file_name", None)
+        if response is None or not file or not file_name:
             msg = (
                 "To perform sse on OQTOPUS Cloud is failed."
                 " The response does not contain valid file data."
             )
             raise BackendError(msg)
 
-        data = response.file
-        file_name = response.file_name
+        data = file
 
         if save_dir is None:
             path_save_dir = Path.cwd()
@@ -130,4 +129,4 @@ class OqtopusSseJob(OqtopusJobBase):
             str: A string representation of the OqtopusSseJob.
 
         """
-        return self._job.to_str()
+        return self.to_json()

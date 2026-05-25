@@ -1,11 +1,9 @@
+from oqtopus_client import OqtopusClient
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import BackendError
 
 from quri_parts_oqtopus.models.jobs.base import OqtopusJobBase
 from quri_parts_oqtopus.models.jobs.results.estimation import OqtopusEstimationResult
-from quri_parts_oqtopus.rest import (
-    JobApi,
-    JobsJobDef,
-)
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
 
@@ -22,8 +20,8 @@ class OqtopusEstimationJob(OqtopusJobBase):
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
-        super().__init__(job=job, job_api=job_api)
+    def __init__(self, job: OqtopusJobResult, client: OqtopusClient) -> None:
+        super().__init__(job=job, client=client)
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
@@ -47,14 +45,14 @@ class OqtopusEstimationJob(OqtopusJobBase):
                 or timeout occurs, etc.
 
         """
-        if self._job.status not in JOB_FINAL_STATUS:
+        if self.status not in JOB_FINAL_STATUS:
             job = self.wait_for_completion(timeout, wait)
             if job is None:
                 msg = f"Timeout occurred after {timeout} seconds."
                 raise BackendError(msg)
             self._job = job
-        if self._job.status in {"failed", "cancelled"}:
-            msg = f"Job ended with status {self._job.status}."
+        if self.status in {"failed", "cancelled"}:
+            msg = f"Job ended with status {self.status}."
             raise BackendError(msg)
 
         # edit json for OqtopusEstimationResult
@@ -69,4 +67,4 @@ class OqtopusEstimationJob(OqtopusJobBase):
             str: A string representation of the OqtopusEstimationJob.
 
         """
-        return self._job.to_str()
+        return self.to_json()

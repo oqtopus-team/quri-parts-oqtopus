@@ -24,6 +24,7 @@ classifiers = [
 requires-python = ">=3.10,<3.14"
 dependencies = [
   "certifi",
+  "oqtopus-client>=1.0.2",
   "quri-parts-circuit>=0.20.3",
   "quri-parts-core>=0.20.3",
   "quri-parts-openqasm>=0.20.3",
@@ -70,9 +71,6 @@ include = [
   "src/**/*.py",
   "tests/**/*.py",
 ]
-exclude = [
-  "src/quri_parts_oqtopus/rest/**/*.py",
-]
 lint.select = ["ALL"]
 lint.ignore = [
   "COM812",
@@ -101,7 +99,6 @@ lint.ignore = [
 
 [tool.mypy]
 files = ["src", "tests"]
-exclude = "src/quri_parts_oqtopus/rest" # exclude auto-generated code
 
 [tool.pytest.ini_options]
 addopts = [

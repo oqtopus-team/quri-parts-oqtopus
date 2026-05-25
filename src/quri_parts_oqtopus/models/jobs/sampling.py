@@ -1,6 +1,8 @@
 import json
 from collections import Counter
 
+from oqtopus_client import OqtopusClient
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import (
     BackendError,
 )
@@ -8,10 +10,6 @@ from quri_parts.backend import (
 from quri_parts_oqtopus.models.jobs.base import OqtopusJobBase
 from quri_parts_oqtopus.models.jobs.results.sampling import (
     OqtopusSamplingResult,
-)
-from quri_parts_oqtopus.rest import (
-    JobApi,
-    JobsJobDef,
 )
 
 JOB_FINAL_STATUS = ["succeeded", "failed", "cancelled"]
@@ -22,15 +20,15 @@ class OqtopusSamplingJob(OqtopusJobBase):
 
     Args:
         job: A result of dict type.
-        job_api: A result of dict type.
+        client: An OQTOPUS client.
 
     Raises:
-        ValueError: If ``job`` or ``job_api`` is None.
+        ValueError: If ``job`` or ``client`` is None.
 
     """
 
-    def __init__(self, job: JobsJobDef, job_api: JobApi) -> None:
-        super().__init__(job=job, job_api=job_api)
+    def __init__(self, job: OqtopusJobResult, client: OqtopusClient) -> None:
+        super().__init__(job=job, client=client)
 
     def result(
         self, timeout: float | None = None, wait: float = 10.0
@@ -54,14 +52,14 @@ class OqtopusSamplingJob(OqtopusJobBase):
                 or timeout occurs, etc.
 
         """
-        if self._job.status not in JOB_FINAL_STATUS:
+        if self.status not in JOB_FINAL_STATUS:
             job = self.wait_for_completion(timeout, wait)
             if job is None:
                 msg = f"Timeout occurred after {timeout} seconds."
                 raise BackendError(msg)
             self._job = job
-        if self._job.status in {"failed", "cancelled"}:
-            msg = f"Job ended with status {self._job.status}."
+        if self.status in {"failed", "cancelled"}:
+            msg = f"Job ended with status {self.status}."
             raise BackendError(msg)
 
         # edit json for OqtopusSamplingResult
@@ -93,4 +91,4 @@ class OqtopusSamplingJob(OqtopusJobBase):
             str: A string representation of the OqtopusSamplingJob.
 
         """
-        return self._job.to_str()
+        return self.to_json()

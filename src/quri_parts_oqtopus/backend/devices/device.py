@@ -3,9 +3,6 @@ from quri_parts_oqtopus.backend.config import (
     OqtopusConfig,
 )
 from quri_parts_oqtopus.models.devices.device import OqtopusDevice
-from quri_parts_oqtopus.rest import (
-    DeviceApi,
-)
 
 
 class OqtopusDeviceBackend(OqtopusBackendBase):
@@ -21,8 +18,6 @@ class OqtopusDeviceBackend(OqtopusBackendBase):
     ) -> None:
         super().__init__(config=config)
 
-        self._device_api: DeviceApi = DeviceApi(api_client=self._api_client)
-
     def get_devices(self) -> list[OqtopusDevice]:
         """Get all devices registered in Oqtopus Cloud.
 
@@ -30,8 +25,8 @@ class OqtopusDeviceBackend(OqtopusBackendBase):
             list[OqtopusDevice]: A list of OqtopusDevice objects.
 
         """
-        raw_devices = self._device_api.list_devices()
-        return [OqtopusDevice(dev, self._device_api) for dev in raw_devices]
+        raw_devices = self._client.list_devices()
+        return [OqtopusDevice(dev, self._client) for dev in raw_devices]
 
     def get_device(self, device_id: str) -> OqtopusDevice:
         """Get a device by its ID.
@@ -43,5 +38,5 @@ class OqtopusDeviceBackend(OqtopusBackendBase):
             OqtopusDevice: An OqtopusDevice object.
 
         """
-        raw_dev = self._device_api.get_device(device_id)
-        return OqtopusDevice(raw_dev, self._device_api)
+        raw_dev = self._client.get_device(device_id)
+        return OqtopusDevice(raw_dev, self._client)
