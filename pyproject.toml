@@ -24,7 +24,7 @@ classifiers = [
 requires-python = ">=3.10,<3.14"
 dependencies = [
   "certifi",
-  "oqtopus-client>=1.1.0",
+  "oqtopus-client>=1.1.1",
   "quri-parts-circuit>=0.20.3",
   "quri-parts-core>=0.20.3",
   "quri-parts-openqasm>=0.20.3",
