@@ -1,6 +1,7 @@
 import math
 
 from oqtopus_client import OqtopusJobSpec
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import BackendError
 from quri_parts.circuit import NonParametricQuantumCircuit
 from quri_parts.core.operator import Operator
@@ -36,7 +37,7 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
     ) -> None:
         super().__init__(config=config)
 
-    def _run_job_spec(self, spec: object) -> object:
+    def _run_job_spec(self, spec: OqtopusJobSpec) -> OqtopusJobResult:
         if self.config.url:
             submitted = self._client.submit_job(spec)
             return self._client.get_job(submitted.job_id)
