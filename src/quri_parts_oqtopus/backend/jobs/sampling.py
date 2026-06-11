@@ -79,6 +79,7 @@ Examples:
 """
 
 from oqtopus_client import OqtopusJobSpec
+from oqtopus_client.services.job_results import OqtopusJobResult
 from quri_parts.backend import (
     BackendError,
 )
@@ -114,6 +115,12 @@ class OqtopusSamplingBackend(OqtopusJobBackendBase):
         config: OqtopusConfig | None = None,
     ) -> None:
         super().__init__(config=config)
+
+    def _run_job_spec(self, spec: OqtopusJobSpec) -> OqtopusJobResult:
+        if self.config.url:
+            submitted = self._client.submit_job(spec)
+            return self._client.get_job(submitted.job_id)
+        return self._client.run_job(spec)
 
     def sample(  # noqa: PLR0917, PLR0913
         self,
@@ -228,35 +235,31 @@ class OqtopusSamplingBackend(OqtopusJobBackendBase):
         if mitigation_info is None:
             mitigation_info = {}
 
-        try:
-            if job_type == "multi_manual":
-                spec = OqtopusJobSpec.multi_manual(
-                    device_id=device_id,
-                    program=program,
-                    shots=shots,
-                    name=name,
-                    description=description,
-                    transpiler_info=transpiler_info,
-                    simulator_info=simulator_info,
-                    mitigation_info=mitigation_info,
-                )
-            else:
-                spec = OqtopusJobSpec.sampling(
-                    device_id=device_id,
-                    program=program,
-                    shots=shots,
-                    name=name,
-                    description=description,
-                    transpiler_info=transpiler_info,
-                    simulator_info=simulator_info,
-                    mitigation_info=mitigation_info,
-                )
+        if job_type == "multi_manual":
+            spec = OqtopusJobSpec.multi_manual(
+                device_id=device_id,
+                program=program,
+                shots=shots,
+                name=name,
+                description=description,
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
+            )
+        else:
+            spec = OqtopusJobSpec.sampling(
+                device_id=device_id,
+                program=program,
+                shots=shots,
+                name=name,
+                description=description,
+                transpiler_info=transpiler_info,
+                simulator_info=simulator_info,
+                mitigation_info=mitigation_info,
+            )
 
-            if self.config.url:
-                submitted = self._client.submit_job(spec)
-                response = self._client.get_job(submitted.job_id)
-            else:
-                response = self._client.run_job(spec)
+        try:
+            response = self._run_job_spec(spec)
             job = OqtopusSamplingJob(response, self._client)
         except Exception as e:
             msg = "To execute sampling on OQTOPUS Cloud is failed."
