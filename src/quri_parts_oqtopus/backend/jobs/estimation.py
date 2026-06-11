@@ -36,6 +36,12 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
     ) -> None:
         super().__init__(config=config)
 
+    def _run_job_spec(self, spec: object) -> object:
+        if self.config.url:
+            submitted = self._client.submit_job(spec)
+            return self._client.get_job(submitted.job_id)
+        return self._client.run_job(spec)
+
     def estimate(  # noqa: PLR0917, PLR0913
         self,
         program: NonParametricQuantumCircuit,
@@ -165,11 +171,7 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
             operator=operator_list,
         )
         try:
-            if self.config.url:
-                submitted = self._client.submit_job(spec)
-                response = self._client.get_job(submitted.job_id)
-            else:
-                response = self._client.run_job(spec)
+            response = self._run_job_spec(spec)
             job = OqtopusEstimationJob(response, self._client)
         except Exception as e:
             msg = "To execute estimation on OQTOPUS Cloud is failed."
