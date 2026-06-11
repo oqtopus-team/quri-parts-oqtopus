@@ -165,10 +165,14 @@ class OqtopusEstimationBackend(OqtopusJobBackendBase):
             operator=operator_list,
         )
         try:
-            submitted = self._client.submit_job(spec)
-            response = self._client.get_job(submitted.job_id)
+            if self.config.url:
+                submitted = self._client.submit_job(spec)
+                response = self._client.get_job(submitted.job_id)
+            else:
+                response = self._client.run_job(spec)
+            job = OqtopusEstimationJob(response, self._client)
         except Exception as e:
             msg = "To execute estimation on OQTOPUS Cloud is failed."
             raise BackendError(msg) from e
 
-        return OqtopusEstimationJob(response, self._client)
+        return job
