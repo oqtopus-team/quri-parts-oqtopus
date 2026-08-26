@@ -19,6 +19,9 @@ class OqtopusBackendBase:
             If this parameter is ``None`` and the environment variables do not exist,
             the ``default`` section in the ``~/.oqtopus`` file is read.
 
+            If the resolved configuration does not specify a proxy, the
+            ``OQTOPUS_PROXY`` environment variable is used as a fallback.
+
     """
 
     def __init__(self, config: OqtopusConfig | None = None) -> None:
@@ -38,10 +41,15 @@ class OqtopusBackendBase:
             else:
                 config = OqtopusConfig.from_file()
         self.config = config
+        proxy = (
+            self.config.proxy
+            if self.config.proxy is not None
+            else os.getenv("OQTOPUS_PROXY")
+        )
         self._client = OqtopusClient(
             ClientConfig(
                 base_url=self.config.url,
                 api_token=self.config.api_token,
-                proxy=self.config.proxy,
+                proxy=proxy,
             )
         )
