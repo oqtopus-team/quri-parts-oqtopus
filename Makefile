@@ -26,7 +26,7 @@ test: ## Run tests
 verify: format lint test ## Run all verification steps (formatting, linting, testing)
 
 docs-lint: ## Run documentation linting
-	@uv run pymarkdownlnt scan docs
+	@uv run pymarkdownlnt scan -r docs
 
 docs-build: ## Build documentation
 	@uv run mkdocs build
