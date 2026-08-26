@@ -5,7 +5,6 @@
 
 As shown in the diagram below, the feature branches (`feature/xxx`) are branched off from the `main` branch for development. The `main` branch is the release branch.
 
-
 ```mermaid
 gitGraph LR:
     commit tag:"release-v1.0.0"
