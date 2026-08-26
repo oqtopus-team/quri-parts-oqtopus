@@ -15,8 +15,9 @@ from types import SimpleNamespace
 from unittest.mock import mock_open, patch
 
 import pytest
-from oqtopus_client import OqtopusClient
+from oqtopus_client import OqtopusClient, OqtopusJobSpec
 from oqtopus_client import OqtopusConfig as ClientConfig
+from oqtopus_client import rest as client_models
 from oqtopus_client.services.job_results import (
     OqtopusMultiManualJobResult,
     OqtopusSamplingJobResult,
@@ -604,6 +605,114 @@ class TestOqtopusSamplingBackend:
         assert backend._client.base_url == "dummy_url"  # noqa: SLF001
         assert backend._client._config.api_token == "dummy_api_token"  # noqa: S105, SLF001
         assert backend._client._config.proxy == "https://dummy:1234"  # noqa: SLF001
+
+    def test_init__explicit_config_uses_proxy_env_fallback(self, mocker: MockerFixture):
+        # Arrange
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
+
+        # Act
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
+
+        # Assert
+        assert backend._client._config.proxy == "https://env-proxy:1234"  # noqa: SLF001
+
+    def test_init__explicit_config_proxy_takes_precedence(self, mocker: MockerFixture):
+        # Arrange
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
+
+        # Act
+        backend = OqtopusSamplingBackend(
+            OqtopusConfig(
+                "dummy_url",
+                "dummy_api_token",
+                "https://config-proxy:1234",
+            )
+        )
+
+        # Assert
+        assert backend._client._config.proxy == "https://config-proxy:1234"  # noqa: SLF001
+
+    def test_init__without_proxy_keeps_none(self, mocker: MockerFixture):
+        # Arrange
+        mocker.patch.dict("os.environ", {}, clear=True)
+
+        # Act
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
+
+        # Assert
+        assert backend._client._config.proxy is None  # noqa: SLF001
+
+    def test_submit_job_passes_env_proxy_to_storage(self, mocker: MockerFixture):
+        # Arrange
+        observed: dict[str, object] = {}
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
+
+        class FakeJobApi:
+            def register_job_id(self, _request_timeout: float | None = None) -> str:
+                return "register"
+
+            def submit_job(
+                self,
+                _job_id: str,
+                _request: object,
+                _request_timeout: float | None = None,
+            ) -> str:
+                return "submit"
+
+        def fake_initialize_rest_api(client: object) -> None:
+            client._job_api = FakeJobApi()  # type: ignore[attr-defined]  # noqa: SLF001
+
+        async def fake_call_rest(  # noqa: RUF029
+            _client: object, call: object
+        ) -> object:
+            if call == "register":
+                return client_models.JobsRegisterJobResponse(
+                    job_id="dummy_job_id",
+                    presigned_url=client_models.JobsJobInfoUploadPresignedURL(
+                        url="https://example.invalid/upload",
+                        fields=client_models.JobsJobInfoUploadPresignedURLFields(
+                            key="dummy_job_id/input.zip"
+                        ),
+                    ),
+                )
+            if call == "submit":
+                return client_models.SuccessSuccessResponse(message="ok")
+            raise AssertionError(call)
+
+        async def fake_upload(  # noqa: RUF029
+            _presigned_url: client_models.JobsJobInfoUploadPresignedURL,
+            _data: dict[str, object],
+            *,
+            timeout_s: int = 60,
+            proxy: str | None = None,
+        ) -> None:
+            observed["timeout_s"] = timeout_s
+            observed["proxy"] = proxy
+
+        mocker.patch(
+            "oqtopus_client.services.client._AsyncOqtopusClient._initialize_rest_api",
+            new=fake_initialize_rest_api,
+        )
+        mocker.patch(
+            "oqtopus_client.services.client._AsyncOqtopusClient._call_rest",
+            new=fake_call_rest,
+        )
+        mocker.patch(
+            "oqtopus_client.services.client.OqtopusStorage.upload",
+            new=fake_upload,
+        )
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
+
+        # Act
+        backend._client.submit_job(  # noqa: SLF001
+            OqtopusJobSpec.sampling(
+                device_id="dummy_device_id",
+                program="OPENQASM 3; qubit[1] q;",
+            )
+        )
+
+        # Assert
+        assert observed["proxy"] == "https://env-proxy:1234"
 
     def test_init__not_use_env(self, mocker: MockerFixture):
         # Arrange
