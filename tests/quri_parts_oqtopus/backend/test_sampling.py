@@ -606,29 +606,19 @@ class TestOqtopusSamplingBackend:
         assert backend._client._config.api_token == "dummy_api_token"  # noqa: S105, SLF001
         assert backend._client._config.proxy == "https://dummy:1234"  # noqa: SLF001
 
-    def test_init__explicit_config_uses_proxy_env_fallback(
-        self, mocker: MockerFixture
-    ):
+    def test_init__explicit_config_uses_proxy_env_fallback(self, mocker: MockerFixture):
         # Arrange
-        mocker.patch.dict(
-            "os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"}
-        )
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
 
         # Act
-        backend = OqtopusSamplingBackend(
-            OqtopusConfig("dummy_url", "dummy_api_token")
-        )
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
 
         # Assert
         assert backend._client._config.proxy == "https://env-proxy:1234"  # noqa: SLF001
 
-    def test_init__explicit_config_proxy_takes_precedence(
-        self, mocker: MockerFixture
-    ):
+    def test_init__explicit_config_proxy_takes_precedence(self, mocker: MockerFixture):
         # Arrange
-        mocker.patch.dict(
-            "os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"}
-        )
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
 
         # Act
         backend = OqtopusSamplingBackend(
@@ -647,9 +637,7 @@ class TestOqtopusSamplingBackend:
         mocker.patch.dict("os.environ", {}, clear=True)
 
         # Act
-        backend = OqtopusSamplingBackend(
-            OqtopusConfig("dummy_url", "dummy_api_token")
-        )
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
 
         # Assert
         assert backend._client._config.proxy is None  # noqa: SLF001
@@ -657,9 +645,7 @@ class TestOqtopusSamplingBackend:
     def test_submit_job_passes_env_proxy_to_storage(self, mocker: MockerFixture):
         # Arrange
         observed: dict[str, object] = {}
-        mocker.patch.dict(
-            "os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"}
-        )
+        mocker.patch.dict("os.environ", {"OQTOPUS_PROXY": "https://env-proxy:1234"})
 
         class FakeJobApi:
             def register_job_id(self, _request_timeout: float | None = None) -> str:
@@ -715,9 +701,7 @@ class TestOqtopusSamplingBackend:
             "oqtopus_client.services.client.OqtopusStorage.upload",
             new=fake_upload,
         )
-        backend = OqtopusSamplingBackend(
-            OqtopusConfig("dummy_url", "dummy_api_token")
-        )
+        backend = OqtopusSamplingBackend(OqtopusConfig("dummy_url", "dummy_api_token"))
 
         # Act
         backend._client.submit_job(  # noqa: SLF001
