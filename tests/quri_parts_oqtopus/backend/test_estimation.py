@@ -14,13 +14,15 @@ def test_estimation_result_keeps_mitigation_details():
             "method": "local_readout_mitigation",
             "raw_counts": None,
             "quasi_probabilities": None,
-            "expectation_values": [{
-                "pauli": "X 0 X 1",
-                "coefficient": 1.5,
-                "before_expectation_value": 0.8,
-                "after_expectation_value": 1.0,
-                "standard_deviation_upper_bound": 0.04,
-            }],
+            "expectation_values": [
+                {
+                    "pauli": "X 0 X 1",
+                    "coefficient": 1.5,
+                    "before_expectation_value": 0.8,
+                    "after_expectation_value": 1.0,
+                    "standard_deviation_upper_bound": 0.04,
+                }
+            ],
         }
     }
     job_raw = OqtopusEstimationJobResult(
