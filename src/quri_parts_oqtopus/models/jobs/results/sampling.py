@@ -44,7 +44,11 @@ class OqtopusSamplingResult(SamplingResult):
 
     """
 
-    def __init__(self, result: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        result: dict[str, Any],
+        mitigation_details: str | None = None,
+    ) -> None:
         super().__init__()
 
         if "counts" not in result:
@@ -52,6 +56,7 @@ class OqtopusSamplingResult(SamplingResult):
             raise ValueError(msg)
 
         self._result = result
+        self._mitigation_details = mitigation_details
         self._counts: SamplingCounts = Counter(result.get("counts"))
         self._divided_counts: dict[str, SamplingCounts] | None = None
         if result.get("divided_counts"):
@@ -72,6 +77,11 @@ class OqtopusSamplingResult(SamplingResult):
     def divided_counts(self) -> dict | None:
         """Returns divided_counts."""
         return self._divided_counts
+
+    @property
+    def mitigation_details(self) -> str | None:
+        """Returns opaque error-mitigation details encoded as JSON."""
+        return self._mitigation_details
 
     def __repr__(self) -> str:
         """Return a string representation.

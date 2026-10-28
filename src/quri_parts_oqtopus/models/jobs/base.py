@@ -37,6 +37,22 @@ def _to_dict(value: object) -> dict[str, Any]:
     return {}
 
 
+def _to_json_string(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        payload = value.to_dict()
+    elif hasattr(value, "model_dump") and callable(value.model_dump):
+        payload = value.model_dump(mode="json", exclude_none=True)
+    elif isinstance(value, dict):
+        payload = value
+    else:
+        return None
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
 class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
     """A base class for OQTOPUS jobs.
 
@@ -165,6 +181,23 @@ class OqtopusJobBase(OqtopusModelBase):  # noqa: PLR0904
 
         """
         return dict(self._job.mitigation_info or {})
+
+    @property
+    def mitigation_details(self) -> str | None:
+        """The intermediate error-mitigation details of the job.
+
+        Returns:
+            str | None: Opaque mitigation details encoded as JSON when available.
+
+        """
+        details = getattr(self._job, "mitigation_details", None)
+        if details is None:
+            result = self.job_info.get("result")
+            if isinstance(result, dict):
+                details = result.get("mitigation_details")
+        if details is None:
+            return None
+        return _to_json_string(details)
 
     @property
     def execution_time(self) -> float:

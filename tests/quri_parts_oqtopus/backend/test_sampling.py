@@ -85,12 +85,16 @@ def _to_result(
     job_type: str,
     program: list[str],
     result: dict[str, object],
+    mitigation_details: dict[str, object] | None = None,
 ) -> OqtopusSamplingJobResult:
     result_cls = (
         OqtopusMultiManualJobResult
         if job_type == "multi_manual"
         else OqtopusSamplingJobResult
     )
+    job_result: dict[str, object] = {"sampling": result}
+    if mitigation_details is not None:
+        job_result["mitigation_details"] = mitigation_details
     return result_cls(
         job_id="dummy_job_id",
         name="dummy_name",
@@ -106,7 +110,7 @@ def _to_result(
                 "transpiled_program": 'OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; rz(1.5707963267948932) q[0]; sx q[0]; rz(1.5707963267948966) q[0]; cx q[0], q[1]; c = measure q;',  # noqa: E501
                 "virtual_physical_mapping": '{"0": 0, "1": 1}',
             },
-            "result": {"sampling": result},
+            "result": job_result,
         },
         transpiler_info={
             "transpiler_lib": "qiskit",
@@ -281,6 +285,28 @@ class TestOqtopusSamplingJob:
         assert job.ready_at == datetime.datetime(2000, 1, 2, 3, 4, 2)  # noqa: DTZ001
         assert job.running_at == datetime.datetime(2000, 1, 2, 3, 4, 3)  # noqa: DTZ001
         assert job.ended_at == datetime.datetime(2000, 1, 2, 3, 4, 4)  # noqa: DTZ001
+
+    def test_mitigation_details(self):
+        mitigation_details = {
+            "ro_error_mitigation": {
+                "method": "local_readout_mitigation",
+                "raw_counts": {"00": 90, "01": 10},
+                "quasi_probabilities": {"00": 1.01, "01": -0.01},
+                "expectation_values": None,
+            }
+        }
+        job_raw = _to_result(
+            status="succeeded",
+            job_type="sampling",
+            program=[qasm_data_with_measure],
+            result={"counts": {"00": 100}},
+            mitigation_details=mitigation_details,
+        )
+        job = OqtopusSamplingJob(job=job_raw, client=get_dummy_client())
+
+        assert job.mitigation_details is not None
+        assert json.loads(job.mitigation_details) == mitigation_details
+        assert job.result().mitigation_details == job.mitigation_details
 
     def test_refresh(self, mocker: MockerFixture):
         # Arrange

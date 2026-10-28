@@ -28,10 +28,15 @@ class OqtopusEstimationResult:
 
     """
 
-    def __init__(self, result: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        result: dict[str, Any],
+        mitigation_details: str | None = None,
+    ) -> None:
         super().__init__()
 
         self._result = result
+        self._mitigation_details = mitigation_details
 
     @property
     def exp_value(self) -> float | None:
@@ -42,6 +47,11 @@ class OqtopusEstimationResult:
     def stds(self) -> float | None:
         """Returns the  standard deviation."""
         return self._result.get("stds")
+
+    @property
+    def mitigation_details(self) -> str | None:
+        """Returns opaque error-mitigation details encoded as JSON."""
+        return self._mitigation_details
 
     def __repr__(self) -> str:
         """Return a string representation.

@@ -63,7 +63,8 @@ class OqtopusSamplingJob(OqtopusJobBase):
             raise BackendError(msg)
 
         # edit json for OqtopusSamplingResult
-        result = self.job_info["result"]["sampling"]
+        job_result = self.job_info["result"]
+        result = job_result["sampling"]
         if isinstance(result["counts"], str):
             result["counts"] = json.loads(result["counts"])
         result["counts"] = Counter({
@@ -82,7 +83,10 @@ class OqtopusSamplingJob(OqtopusJobBase):
                 for index in result["divided_counts"]
             }
 
-        return OqtopusSamplingResult(result)
+        return OqtopusSamplingResult(
+            result,
+            mitigation_details=self.mitigation_details,
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusSamplingJob.
