@@ -56,9 +56,13 @@ class OqtopusEstimationJob(OqtopusJobBase):
             raise BackendError(msg)
 
         # edit json for OqtopusEstimationResult
-        result = self.job_info["result"]["estimation"]
+        job_result = self.job_info["result"]
+        result = job_result["estimation"]
 
-        return OqtopusEstimationResult(result)
+        return OqtopusEstimationResult(
+            result,
+            mitigation_details=self.mitigation_details,
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the OqtopusEstimationJob.
